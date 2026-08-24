@@ -1,0 +1,74 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.cache
+*.dll
+*.pdb
+*.nupkg
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.DotSettings.user
+
+# Node / Expo / React Native
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Environment and secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.env.local
+appsettings.Development.json
+appsettings.*.local.json
+secrets.json
+
+# IDE
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Test / coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# SQL Server local
+*.mdf
+*.ldf
+
+# Logs
+logs/
+*.log
+
+# Misc
+*.tmp
+*.temp

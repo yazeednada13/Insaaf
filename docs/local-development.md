@@ -1,0 +1,94 @@
+# Insaaf — Local Development
+
+**Phase:** 0 (documentation only — no `src/` projects until Phase 1)
+
+## Principles
+
+- **Local-first** for MVP development phases (0–10).
+- **No cloud infrastructure** in early phases unless explicitly approved by founder.
+- Production hosting is selected in **Phase 11** (Azure App Service + Azure SQL is current candidate).
+
+## Prerequisites
+
+| Tool | Version (verified on founder machine) | Purpose |
+|------|----------------------------------------|---------|
+| .NET SDK | 9.0.x | Backend (Phase 1+) |
+| Node.js | 22.x | Mobile tooling (Phase 1+) |
+| Git | 2.47+ | Version control |
+| SQL Server | 2019+ or Docker | Database (Phase 1+) |
+
+Optional for mobile (Phase 1+):
+
+- Expo Go app on physical device, or Android emulator / iOS simulator
+- Watchman (macOS) for React Native file watching
+
+## SQL Server — local options
+
+### Option A: Local SQL Server instance
+
+Install SQL Server Developer Edition or use an existing local instance.
+
+Example connection string pattern (use User Secrets or `.env` locally — **never commit secrets**):
+
+```text
+Server=localhost;Database=Insaaf;Trusted_Connection=True;TrustServerCertificate=True
+```
+
+### Option B: SQL Server in Docker
+
+Example (run manually when Phase 1 begins):
+
+```bash
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrong!Passw0rd" \
+  -p 1433:1433 --name insaaf-sql -d mcr.microsoft.com/mssql/server:2022-latest
+```
+
+Use a strong password and store credentials outside the repository.
+
+## Backend (Phase 1+)
+
+After Phase 1 scaffold:
+
+```bash
+cd src/backend
+dotnet build
+dotnet run --project Insaaf.API
+```
+
+Swagger will be available at the URL shown in console output.
+
+## Mobile (Phase 1+)
+
+After Phase 1 Expo scaffold:
+
+```bash
+cd src/mobile
+npm install
+npx expo start
+```
+
+Configure API base URL in mobile config to point to local backend (e.g. `http://localhost:5xxx`).
+
+## Environment files
+
+- Use `.env.local` or User Secrets for connection strings and API keys.
+- `.gitignore` excludes `.env`, `*.env.local`, and secrets.
+- Never commit real credentials.
+
+## CI vs local
+
+GitHub Actions CI (`.github/workflows/ci.yml`) runs backend build/test and mobile lint/tsc when `src/backend` and `src/mobile` exist (Phase 1+). Foundation job validates docs structure in Phase 0.
+
+## Troubleshooting
+
+| Issue | Check |
+|-------|-------|
+| SQL connection fails | Server running, port 1433, firewall, connection string |
+| Expo cannot reach API | Use machine LAN IP for device testing; HTTPS/cleartext rules on Android |
+| RTL layout issues | Test Arabic strings early; see `.cursor/rules/ui-ux.mdc` |
+
+## Related docs
+
+- [architecture.md](architecture.md)
+- [implementation-plan.md](implementation-plan.md)
+- [figma/README.md](figma/README.md)
