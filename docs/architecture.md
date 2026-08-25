@@ -120,6 +120,7 @@ See [decisions.md](decisions.md) for ADRs.
 2. **Phase gates** — founder approval between phases
 3. **Documentation** — update `project-progress.md` and ADRs on significant changes
 4. **Definition of Done** — compile, tests, Figma alignment (UI), docs updated
+5. **Git** — founder executes all state-changing Git operations; Lead Agent provides Git Checkpoints only (see [git-workflow.md](git-workflow.md), ADR-010)
 
 ## Repository layout (target)
 
@@ -139,6 +140,7 @@ Insaaf/
 - [project-progress.md](project-progress.md)
 - [decisions.md](decisions.md)
 - [local-development.md](local-development.md)
+- [git-workflow.md](git-workflow.md)
 - [figma/README.md](figma/README.md)
 - `.cursor/rules/` — Cursor agent rules (do not modify without approval)
 

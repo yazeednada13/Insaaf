@@ -1,3 +1,132 @@
 ---
+description: Insaaf founder-controlled Git — agent advises only; never modifies repository state
 alwaysApply: true
 ---
+
+# Insaaf Git Rules (Founder-Controlled)
+
+The **founder** executes all Git operations. The Lead Agent **guides** only.
+
+## 1. Strict execution rule — agent MUST NOT
+
+Never execute commands that **change repository state**:
+
+- `git add`, `commit`, `push`, `pull`, `merge`, `rebase`, `checkout`, `switch`, `reset`, `stash`, `clone`
+- Creating or deleting branches
+- Modifying remotes
+- Rewriting history
+
+## 2. Read-only inspection — agent MAY
+
+When needed for planning or guidance (prefer known conversation state when sufficient):
+
+- `git status`, `git branch`, `git log`, `git remote -v`, `git diff`, `git diff --stat`
+
+Inspection only. Never modify state.
+
+## 3. Branch workflow
+
+```text
+main          ← production-ready
+  ↑
+develop       ← integration
+  ↑
+feature/*     ← implementation slices
+```
+
+Flow: `feature/*` → `develop` → `main`
+
+Do not develop features directly on `main`.
+
+Example branches: `feature/backend-foundation`, `feature/authentication`, `feature/restaurants`, `feature/reviews-read`, `feature/qr-verification`, `feature/social-core`, `feature/social-feed`, `feature/profiles`
+
+Full reference: `docs/git-workflow.md`
+
+## 4. Before implementation
+
+Tell the founder:
+
+1. Which branch to use
+2. Whether new `feature/*` branch is needed
+3. Recommended branch name
+4. Whether working tree should be clean
+5. Brief why
+
+Do not create or switch branches. Wait for founder confirmation.
+
+## 5. During implementation
+
+Do not commit, push, or merge automatically.
+
+After a **meaningful** logical unit (complete task, coherent feature, tests/docs for a unit, safe restore point), provide a **Git Checkpoint**. Not after every trivial edit.
+
+## 6. Git Checkpoint format
+
+```text
+### Git Checkpoint
+
+Status: Ready for commit | Ready for push | Ready for PR
+
+Branch:
+feature/...
+
+Changes:
+- ...
+
+Recommended commit:
+feat: short description
+
+Why now?
+One sentence.
+
+Next Git action:
+1. Review changes.
+2. Run Git commands manually.
+3. Commit / push / open PR as appropriate.
+
+I will not execute these Git operations.
+```
+
+## 7. Commits — Conventional Commits
+
+Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+
+Good: `feat: establish backend solution structure`, `docs: update implementation progress`
+
+Avoid: `update`, `changes`, `fix`, `final`, `stuff`, `work`
+
+Small, meaningful, one logical change per commit.
+
+## 8. Pull requests
+
+When feature is complete and verified, recommend `feature/*` → `develop`.
+
+Provide: PR title, target branch, description, checklist.
+
+Never create, approve, or merge PRs.
+
+Release: `develop` → `main` when integration is production-ready.
+
+## 9. State ladder — never conflate
+
+```text
+Files changed locally → Committed → Pushed → PR opened → PR merged
+```
+
+Never assume committed, pushed, or merged without founder confirmation or read-only proof.
+
+## 10. Learning
+
+Brief WHY when recommending Git actions. No automatic Git tutorials.
+
+## 11. Alignment
+
+Follow `docs/architecture.md`, `docs/implementation-plan.md`, `docs/project-progress.md`, `docs/decisions.md`, and other `.cursor/rules/*.mdc`.
+
+## 12. Agent loop
+
+```text
+Plan → Founder approval → Implement → Verify → Git Checkpoint → Founder Git → Continue
+```
+
+Founder owns repository history. Agent is advisor and orchestrator, not Git operator.

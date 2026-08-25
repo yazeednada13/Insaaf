@@ -108,6 +108,25 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-010: Founder-controlled Git
+
+**Status:** Accepted  
+**Date:** 2026-08-26
+
+**Decision:** The **founder** executes all Git operations that change repository state (add, commit, push, pull, merge, branches, remotes, history). The **Lead Agent** guides via Git Checkpoints only.
+
+**Read-only inspection allowed for agent:** `git status`, `git branch`, `git log`, `git remote -v`, `git diff`, `git diff --stat`.
+
+**Workflow:** `feature/*` → `develop` → `main`. Conventional Commits. PRs created and merged by founder.
+
+**Reference:** [git-workflow.md](git-workflow.md), [.cursor/rules/git.mdc](../.cursor/rules/git.mdc)
+
+**Rationale:** Founder owns repository history and learns Git while building; agent remains orchestrator, not Git operator.
+
+**Historical note:** Phase 0 initial commit was agent-executed under prior approval; this ADR applies going forward.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

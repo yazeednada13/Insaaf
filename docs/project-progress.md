@@ -1,6 +1,6 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-08-24
+**Last updated:** 2026-08-26
 
 ## Current state
 
@@ -30,6 +30,13 @@
 ---
 
 ## Completed work log
+
+### 2026-08-26 — Founder-controlled Git workflow adopted
+
+- ADR-010: founder executes Git; Lead Agent advises via Git Checkpoints only
+- Created `docs/git-workflow.md`
+- Completed `.cursor/rules/git.mdc`
+- Cross-linked `architecture.md` and `README.md`
 
 ### 2026-08-24 — Phase 0 complete
 
@@ -65,5 +72,6 @@
 ## Notes
 
 - Do **not** start Phase 1 without explicit founder approval.
+- **Git:** Founder performs all state-changing Git operations; see [git-workflow.md](git-workflow.md).
 - After each phase: summarize, report build/test status, stop for approval.
 - Update this file when tasks complete.
