@@ -1,0 +1,6 @@
+@Insaaf.API_HostAddress = http://localhost:5232
+
+GET {{Insaaf.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
