@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Insaaf",
+    "slug": "insaaf",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "insaaf",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
