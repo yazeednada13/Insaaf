@@ -6,7 +6,7 @@ Mobile application for trustworthy restaurant reviews and social food discovery 
 
 | Item | State |
 |------|-------|
-| Phase | **0 — Foundation** (in progress) |
+| Phase | **0 — Foundation** (complete) |
 | Application code | Not started (`src/` does not exist yet) |
 | Architecture | Approved by founder (2026-08-24) |
 
@@ -37,6 +37,7 @@ Mobile application for trustworthy restaurant reviews and social food discovery 
 | [docs/project-progress.md](docs/project-progress.md) | Current phase and tasks |
 | [docs/decisions.md](docs/decisions.md) | Architecture decision records |
 | [docs/local-development.md](docs/local-development.md) | Local dev setup |
+| [docs/git-workflow.md](docs/git-workflow.md) | Founder-controlled Git workflow |
 | [docs/figma/README.md](docs/figma/README.md) | Figma design source |
 
 ## Git workflow
@@ -46,6 +47,12 @@ main          — production-ready releases
 develop       — integration (default working branch)
 feature/*     — vertical slices (e.g. feature/authentication)
 ```
+
+Flow: `feature/*` → `develop` → `main`
+
+**Founder-controlled:** The founder performs all Git operations (commit, push, PR, merge). The Lead Agent recommends branches, commits, and checkpoints only.
+
+See [docs/git-workflow.md](docs/git-workflow.md) and ADR-010 in [docs/decisions.md](docs/decisions.md).
 
 Use meaningful conventional commits. Open PRs to `develop` even when working solo.
 
