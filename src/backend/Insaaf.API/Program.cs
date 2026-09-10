@@ -1,6 +1,8 @@
+using Insaaf.API.Extensions;
 using Insaaf.API.Middleware;
 using Insaaf.Application;
 using Insaaf.Infrastructure;
+using Insaaf.Infrastructure.Identity;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -19,7 +21,7 @@ try
 
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddInsaafSwagger();
 
     var app = builder.Build();
 
@@ -35,9 +37,19 @@ try
         });
     }
 
-    app.UseHttpsRedirection();
+    if (!app.Configuration.GetValue<bool>("UseInMemoryDatabase"))
+    {
+        app.UseHttpsRedirection();
+    }
+
+    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        IdentitySeed.SeedAsync(app.Services).GetAwaiter().GetResult();
+    });
 
     app.Run();
 }
