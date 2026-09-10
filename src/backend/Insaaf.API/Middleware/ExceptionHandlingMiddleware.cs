@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Insaaf.Application.Auth;
 using Insaaf.Application.Common.Models;
 
 namespace Insaaf.API.Middleware;
@@ -24,6 +25,23 @@ public sealed class ExceptionHandlingMiddleware
         try
         {
             await _next(context);
+        }
+        catch (AuthException ex)
+        {
+            if (context.Response.HasStarted)
+            {
+                throw;
+            }
+
+            var errors = new List<ApiError>
+            {
+                new() { Code = ex.Code, Message = ex.Message },
+            };
+
+            var envelope = ApiResponse<object>.Fail(errors, CreateMeta(context));
+            context.Response.StatusCode = ex.StatusCode;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(envelope, JsonOptions));
         }
         catch (Exception ex)
         {
