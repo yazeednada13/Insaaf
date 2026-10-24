@@ -21,6 +21,13 @@ Figma is the **primary visual source of truth** for Insaaf mobile UI. This folde
 3. Save exports under `docs/figma/` (e.g. `tokens.json`, `colors.md`, component screenshots).
 4. Map tokens to `src/mobile/constants/` during Phase 1+ mobile work.
 
+## Exported token docs
+
+| Doc | Scope |
+|-----|-------|
+| [auth-tokens.md](auth-tokens.md) | Login, register, forgot password |
+| [restaurant-tokens.md](restaurant-tokens.md) | Discovery, search, filter, restaurant detail (Phase 3) |
+
 ## Screen implementation checklist
 
 For each screen (per `docs/architecture.md` and `.cursor/rules/ui-ux.mdc`):

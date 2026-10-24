@@ -16,6 +16,8 @@ export const colors = {
   textPrimary: '#202522',
   textSecondary: '#999999',
   textMuted: '#888888',
+  textBody: '#555555',
+  textPlaceholder: '#AAAAAA',
   textLabel: '#444444',
   textDivider: '#BBBBBB',
   primary: '#24352A',
@@ -23,6 +25,17 @@ export const colors = {
   accent: '#B77945',
   border: '#E9DFC9',
   error: '#C62828',
+  overlay: 'rgba(32, 37, 34, 0.5)',
+  divider: 'rgba(0,0,0,0.06)',
+} as const;
+
+export const restaurantLayout = {
+  horizontalPadding: 20,
+  headerPaddingTop: 48,
+  heroHeight: 220,
+  cardImage: 72,
+  chipRadius: 999,
+  cardRadius: 16,
 } as const;
 
 export const radius = {

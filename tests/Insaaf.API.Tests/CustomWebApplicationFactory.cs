@@ -1,5 +1,6 @@
 using Insaaf.Infrastructure.Identity;
 using Insaaf.Infrastructure.Persistence;
+using Insaaf.Infrastructure.Persistence.Seeding;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         context.Database.EnsureCreated();
         IdentitySeed.SeedAsync(host.Services).GetAwaiter().GetResult();
+        RestaurantSeed.SeedAsync(host.Services).GetAwaiter().GetResult();
 
         return host;
     }

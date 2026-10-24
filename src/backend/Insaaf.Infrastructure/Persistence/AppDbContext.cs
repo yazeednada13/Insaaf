@@ -16,10 +16,19 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<Restaurant> Restaurants => Set<Restaurant>();
+
+    public DbSet<Category> Categories => Set<Category>();
+
+    public DbSet<RestaurantCategory> RestaurantCategories => Set<RestaurantCategory>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.ApplyConfiguration(new ApplicationUserConfiguration());
         builder.ApplyConfiguration(new RefreshTokenConfiguration());
+        builder.ApplyConfiguration(new RestaurantConfiguration());
+        builder.ApplyConfiguration(new CategoryConfiguration());
+        builder.ApplyConfiguration(new RestaurantCategoryConfiguration());
     }
 }

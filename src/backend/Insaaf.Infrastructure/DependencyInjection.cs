@@ -1,8 +1,10 @@
 using System.Text;
 using Insaaf.Application.Auth.Abstractions;
+using Insaaf.Domain.Repositories;
 using Insaaf.Infrastructure.Auth;
 using Insaaf.Infrastructure.Identity;
 using Insaaf.Infrastructure.Persistence;
+using Insaaf.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<IUserAccountService, IdentityUserAccountService>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IRestaurantRepository, RestaurantRepository>();
 
         return services;
     }
