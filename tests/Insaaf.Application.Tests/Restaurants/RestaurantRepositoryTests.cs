@@ -57,6 +57,55 @@ public sealed class RestaurantRepositoryTests
     }
 
     [Fact]
+    public async Task SearchAsync_MatchesDescriptionAndCityCaseInsensitively()
+    {
+        await using var context = CreateContext();
+        var unique = Guid.NewGuid().ToString("N")[..8];
+        var amman = CreateRestaurant("مطعم أول", $"Fresh GRILL {unique}", PriceLevel.Moderate, true);
+        var otherCity = CreateRestaurant("مطعم ثاني", $"fresh grill {unique}", PriceLevel.Moderate, true);
+        otherCity.City = "Irbid";
+        context.Restaurants.AddRange(amman, otherCity);
+        await context.SaveChangesAsync();
+
+        var repository = new RestaurantRepository(context);
+
+        var byDescription = await repository.SearchAsync(new RestaurantSearchCriteria { Search = $"grill {unique}" });
+        Assert.Equal(2, byDescription.TotalCount);
+
+        var byCity = await repository.SearchAsync(new RestaurantSearchCriteria
+        {
+            Search = unique,
+            City = "IRBID",
+        });
+        Assert.Single(byCity.Items);
+        Assert.Equal(otherCity.Id, byCity.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task SearchAsync_PaginatesOrderedByName()
+    {
+        await using var context = CreateContext();
+        var unique = Guid.NewGuid().ToString("N")[..8];
+        var names = new[] { "e", "c", "a", "d", "b" }.Select(letter => $"{letter}-{unique}").ToList();
+        context.Restaurants.AddRange(names.Select(name => CreateRestaurant(name, "وصف", PriceLevel.Budget, true)));
+        await context.SaveChangesAsync();
+
+        var repository = new RestaurantRepository(context);
+
+        var secondPage = await repository.SearchAsync(new RestaurantSearchCriteria
+        {
+            Search = unique,
+            Page = 2,
+            PageSize = 2,
+        });
+
+        Assert.Equal(5, secondPage.TotalCount);
+        Assert.Equal(2, secondPage.Page);
+        Assert.Equal(2, secondPage.PageSize);
+        Assert.Equal([$"c-{unique}", $"d-{unique}"], secondPage.Items.Select(item => item.Name));
+    }
+
+    [Fact]
     public async Task GetByIdAsync_ReturnsNull_ForInactiveRestaurant()
     {
         await using var context = CreateContext();

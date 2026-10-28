@@ -1,17 +1,42 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-09-06
+**Last updated:** 2026-10-29
 
 ## Current state
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 2 — Authentication (**implementation complete** — founder gates pending) |
+| **CURRENT PHASE** | 3 — Restaurants (**Backend track complete and verified** — Mobile track not started) |
 | **CURRENT FEATURE** | — |
-| **CURRENT TASK** | — |
-| **COMPLETED** | Phase 2 — tasks 2.1–2.11 (implementation + gap fixes) |
-| **NEXT** | Founder: apply EF migrations (`AddIdentityAndRefreshTokens` + `AddApplicationUserFullName`), SQL Server E2E smoke test, manual Figma device review, commit/PR; then **Phase 3 — Restaurants** (awaiting approval) |
-| **BLOCKERS** | Founder must run `dotnet ef database update` before auth works against SQL Server; manual Figma runtime verification on device/emulator |
+| **CURRENT TASK** | — (awaiting founder instruction `Phase 3 — Mobile`) |
+| **COMPLETED** | Phase 3 Backend — tasks 3.1 (BE portion), 3.2–3.10; see [phase3-backend-report.md](phase3-backend-report.md) |
+| **NEXT** | Founder: review Backend report, Git checkpoint; then instruct `Phase 3 — Mobile` (Tasks 3.1 Mobile portion, 3.11–3.15) |
+| **BLOCKERS** | None for Backend. Mobile: Figma screen verification and device QA (see report §8–§9) |
+
+## Phase 3 checklist
+
+Task IDs from the approved Phase 3 plan. Statuses are evidence-based (2026-10-29).
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 3.1 | Backend portion | Domain/API contract (`phase3-restaurant-contract.md`) | Verified |
+| 3.1 | Mobile portion | Restaurant Figma tokens (`figma/restaurant-tokens.md`) | Doc exists; Figma comparison pending (Mobile track) |
+| 3.2 | Backend | Domain entities, enum, `IRestaurantRepository` + criteria | Verified |
+| 3.3 | Backend | EF configurations + `AddRestaurants` migration | Verified (founder confirmed DB up to date) |
+| 3.4 | Backend | `RestaurantRepository` | Verified |
+| 3.5 | Backend | Application service, DTOs, validator, DI | Verified |
+| 3.6 | Backend | `GET /api/v1/restaurants` | Verified (tests + InMemory + SQL Server smoke) |
+| 3.7 | Backend | `GET /api/v1/restaurants/{id}` | Verified |
+| 3.8 | Backend | Amman pilot seed | Verified (SQL Server seeded 12; idempotent on restart) |
+| 3.9 | Backend | Backend tests | Verified — 43/43 passing |
+| 3.10 | Backend | Backend verification gate | Verified (Release build/test, Swagger, SQL Server smoke) |
+| 3.11 | Mobile | Mobile API integration | Code exists; unverified (Mobile track) |
+| 3.12 | Mobile | Discovery/list screen | Partial (components only) |
+| 3.13 | Mobile | Search/filter interaction | Not started |
+| 3.14 | Mobile | Restaurant detail screen | Not started |
+| 3.15 | Mobile | Mobile verification | Not started |
+
+---
 
 ## Phase 2 checklist
 
@@ -117,8 +142,8 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 |-------|------|--------|
 | 0 | Foundation | **Complete** |
 | 1 | Skeleton | **Complete** |
-| 2 | Authentication | **Complete** (founder gates pending) |
-| 3 | Restaurants | Not started |
+| 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
+| 3 | Restaurants | **Backend complete** — Mobile not started |
 | 4 | Reviews read foundation | Not started |
 | 5 | QR verified review write | Not started |
 | 6 | Social core | Not started |

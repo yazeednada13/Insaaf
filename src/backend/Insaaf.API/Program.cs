@@ -21,6 +21,7 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
     builder.Services.AddControllers();
+    builder.Services.AddInsaafApiErrorResponses();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddInsaafSwagger();
 

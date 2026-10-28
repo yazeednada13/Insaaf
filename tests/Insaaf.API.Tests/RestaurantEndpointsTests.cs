@@ -33,6 +33,38 @@ public sealed class RestaurantEndpointsTests : IClassFixture<CustomWebApplicatio
     {
         var response = await _client.GetAsync("/api/v1/restaurants");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantListResultDto>>(JsonOptions);
+        Assert.NotNull(envelope);
+        Assert.False(envelope.Success);
+        Assert.Contains(envelope.Errors!, error => error.Code == "unauthorized");
+    }
+
+    [Fact]
+    public async Task List_ReturnsUnauthorizedEnvelope_WhenTokenIsInvalid()
+    {
+        using var request = Authorized(HttpMethod.Get, "/api/v1/restaurants", "not-a-jwt");
+
+        var response = await _client.SendAsync(request);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantListResultDto>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.False(envelope!.Success);
+        Assert.Contains(envelope.Errors!, error => error.Code == "unauthorized");
+    }
+
+    [Fact]
+    public async Task List_ReturnsValidationEnvelope_WhenQueryValueIsMalformed()
+    {
+        var token = await GetAccessTokenAsync();
+        using var request = Authorized(HttpMethod.Get, "/api/v1/restaurants?priceLevel=abc", token);
+
+        var response = await _client.SendAsync(request);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantListResultDto>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False(envelope!.Success);
+        Assert.Contains(envelope.Errors!, error => error.Code == "validation_error");
     }
 
     [Fact]
@@ -68,6 +100,41 @@ public sealed class RestaurantEndpointsTests : IClassFixture<CustomWebApplicatio
         Assert.NotNull(envelope?.Data);
         Assert.Contains(envelope.Data.Items, item => item.Name.Contains("السفير"));
         Assert.All(envelope.Data.Items, item => Assert.Contains(item.Categories, category => category.Slug == "lebanese"));
+    }
+
+    [Fact]
+    public async Task List_FiltersByPriceLevel()
+    {
+        var token = await GetAccessTokenAsync();
+        using var request = Authorized(HttpMethod.Get, "/api/v1/restaurants?priceLevel=4", token);
+
+        var response = await _client.SendAsync(request);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantListResultDto>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(envelope?.Data);
+        Assert.NotEmpty(envelope.Data.Items);
+        Assert.All(envelope.Data.Items, item => Assert.Equal(PriceLevel.Premium, item.PriceLevel));
+    }
+
+    [Fact]
+    public async Task List_ReturnsRequestedPage()
+    {
+        var token = await GetAccessTokenAsync();
+        var all = await GetListAsync(token);
+
+        using var request = Authorized(HttpMethod.Get, "/api/v1/restaurants?page=2&pageSize=5", token);
+        var response = await _client.SendAsync(request);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantListResultDto>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(envelope?.Data);
+        Assert.Equal(2, envelope.Data.Page);
+        Assert.Equal(5, envelope.Data.PageSize);
+        Assert.Equal(all.TotalCount, envelope.Data.TotalCount);
+        Assert.Equal(
+            all.Items.Skip(5).Take(5).Select(item => item.Id),
+            envelope.Data.Items.Select(item => item.Id));
     }
 
     [Fact]
