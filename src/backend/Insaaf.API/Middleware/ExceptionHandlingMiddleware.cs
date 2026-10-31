@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Insaaf.Application.Auth;
 using Insaaf.Application.Common.Models;
+using Insaaf.Application.Restaurants;
 
 namespace Insaaf.API.Middleware;
 
@@ -28,20 +29,11 @@ public sealed class ExceptionHandlingMiddleware
         }
         catch (AuthException ex)
         {
-            if (context.Response.HasStarted)
-            {
-                throw;
-            }
-
-            var errors = new List<ApiError>
-            {
-                new() { Code = ex.Code, Message = ex.Message },
-            };
-
-            var envelope = ApiResponse<object>.Fail(errors, CreateMeta(context));
-            context.Response.StatusCode = ex.StatusCode;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(envelope, JsonOptions));
+            await WriteDomainErrorAsync(context, ex.Code, ex.Message, ex.StatusCode);
+        }
+        catch (RestaurantException ex)
+        {
+            await WriteDomainErrorAsync(context, ex.Code, ex.Message, ex.StatusCode);
         }
         catch (Exception ex)
         {
@@ -66,6 +58,28 @@ public sealed class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(envelope, JsonOptions));
         }
+    }
+
+    private static async Task WriteDomainErrorAsync(
+        HttpContext context,
+        string code,
+        string message,
+        int statusCode)
+    {
+        if (context.Response.HasStarted)
+        {
+            throw new InvalidOperationException("The response has already started.");
+        }
+
+        var errors = new List<ApiError>
+        {
+            new() { Code = code, Message = message },
+        };
+
+        var envelope = ApiResponse<object>.Fail(errors, CreateMeta(context));
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(JsonSerializer.Serialize(envelope, JsonOptions));
     }
 
     private static ApiMeta CreateMeta(HttpContext context) =>

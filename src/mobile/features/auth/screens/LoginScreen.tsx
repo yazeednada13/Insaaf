@@ -13,7 +13,7 @@ import { GoogleSignInButton } from '@/features/auth/components/GoogleSignInButto
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { loginSchema, type LoginFormValues } from '@/features/auth/validation/authSchemas';
 import { AuthApiError } from '@/services/auth/authErrors';
-import { colors, fonts, typography } from '@/constants/theme';
+import { colors, fonts, textAlignStart, typography } from '@/constants/theme';
 
 export function LoginScreen() {
   const { login, isAuthenticated, isBootstrapping } = useAuth();
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.arabicRegular,
     fontSize: typography.body,
     lineHeight: typography.lineHeightBody,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
   serverError: {
     color: colors.error,
     fontFamily: fonts.arabicRegular,
     fontSize: typography.label,
     lineHeight: typography.lineHeightBody,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
 });

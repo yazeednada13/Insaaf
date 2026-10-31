@@ -3,6 +3,7 @@ using Insaaf.API.Middleware;
 using Insaaf.Application;
 using Insaaf.Infrastructure;
 using Insaaf.Infrastructure.Identity;
+using Insaaf.Infrastructure.Persistence.Seeding;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -20,6 +21,7 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
     builder.Services.AddControllers();
+    builder.Services.AddInsaafApiErrorResponses();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddInsaafSwagger();
 
@@ -49,6 +51,7 @@ try
     app.Lifetime.ApplicationStarted.Register(() =>
     {
         IdentitySeed.SeedAsync(app.Services).GetAwaiter().GetResult();
+        RestaurantSeed.SeedAsync(app.Services).GetAwaiter().GetResult();
     });
 
     app.Run();

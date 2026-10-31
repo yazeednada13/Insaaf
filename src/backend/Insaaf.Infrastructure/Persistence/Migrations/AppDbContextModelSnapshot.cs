@@ -22,6 +22,30 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Categories", (string)null);
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -56,6 +80,109 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.Restaurant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("PriceLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TimeZoneId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("City");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("Restaurants", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.RestaurantCategory", b =>
+                {
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RestaurantId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("RestaurantCategories", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.RestaurantOpeningHours", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("ClosesAt")
+                        .HasColumnType("time");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("OpensAt")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RestaurantId", "DayOfWeek");
+
+                    b.ToTable("RestaurantOpeningHours", (string)null);
                 });
 
             modelBuilder.Entity("Insaaf.Infrastructure.Identity.ApplicationUser", b =>
@@ -259,6 +386,36 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.RestaurantCategory", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Category", "Category")
+                        .WithMany("RestaurantCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Domain.Entities.Restaurant", "Restaurant")
+                        .WithMany("RestaurantCategories")
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Restaurant");
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.RestaurantOpeningHours", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Restaurant", "Restaurant")
+                        .WithMany("OpeningHours")
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -308,6 +465,18 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.Category", b =>
+                {
+                    b.Navigation("RestaurantCategories");
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.Restaurant", b =>
+                {
+                    b.Navigation("OpeningHours");
+
+                    b.Navigation("RestaurantCategories");
                 });
 #pragma warning restore 612, 618
         }

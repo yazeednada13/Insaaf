@@ -212,6 +212,10 @@ public sealed class AuthEndpointsTests : IClassFixture<CustomWebApplicationFacto
     {
         var response = await _client.GetAsync("/api/v1/auth/me");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>(JsonOptions);
+        Assert.NotNull(envelope);
+        Assert.Contains(envelope.Errors!, error => error.Code == "unauthorized");
     }
 
     [Fact]

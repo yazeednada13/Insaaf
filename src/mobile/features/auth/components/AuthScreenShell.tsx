@@ -15,6 +15,7 @@ import {
   fonts,
   spacing,
   typography,
+  textAlignStart,
 } from '@/constants/theme';
 
 interface AuthScreenShellProps {
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.arabicRegular,
     fontSize: typography.subtitle,
     lineHeight: typography.lineHeightBody,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
   title: {
     color: colors.textPrimary,
@@ -91,6 +92,6 @@ const styles = StyleSheet.create({
     fontSize: typography.title,
     lineHeight: typography.lineHeightTitle,
     marginBottom: spacing.xs,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
 });

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 import type { LoginRequest, RegisterRequest, UserDto } from '@/types/auth';
 import * as authApi from '@/services/auth/authApi';
@@ -52,12 +53,16 @@ export function useCurrentUserQuery(enabled: boolean) {
 export function useSetCurrentUser() {
   const queryClient = useQueryClient();
 
-  return (user: UserDto | null) => {
-    if (user) {
-      queryClient.setQueryData(authQueryKeys.currentUser, user);
-      return;
-    }
+  // Stable identity: AuthProvider's bootstrap depends on this callback.
+  return useCallback(
+    (user: UserDto | null) => {
+      if (user) {
+        queryClient.setQueryData(authQueryKeys.currentUser, user);
+        return;
+      }
 
-    queryClient.removeQueries({ queryKey: authQueryKeys.currentUser });
-  };
+      queryClient.removeQueries({ queryKey: authQueryKeys.currentUser });
+    },
+    [queryClient],
+  );
 }

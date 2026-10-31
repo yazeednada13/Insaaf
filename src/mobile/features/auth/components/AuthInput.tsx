@@ -13,6 +13,7 @@ import {
   fonts,
   radius,
   typography,
+  textAlignStart,
 } from '@/constants/theme';
 
 interface AuthInputProps extends TextInputProps {
@@ -31,7 +32,7 @@ export function AuthInput({ label, error, style, onFocus, onBlur, ...props }: Au
       <TextInput
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { borderColor }, style]}
-        textAlign="right"
+        textAlign={textAlignStart}
         onBlur={(event) => {
           setIsFocused(false);
           onBlur?.(event);
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.arabicRegular,
     fontSize: typography.label,
     lineHeight: typography.lineHeightBody,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
   input: {
     backgroundColor: colors.surface,
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeightBody,
     paddingHorizontal: authLayout.inputPaddingHorizontal,
     paddingVertical: authLayout.inputPaddingVertical,
-    textAlign: 'right',
+    textAlign: textAlignStart,
     width: '100%',
   },
   label: {
@@ -76,6 +77,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.arabicMedium,
     fontSize: typography.label,
     lineHeight: typography.lineHeightBody,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
 });

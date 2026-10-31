@@ -16,7 +16,7 @@ import {
   type RegisterFormValues,
 } from '@/features/auth/validation/authSchemas';
 import { AuthApiError } from '@/services/auth/authErrors';
-import { colors, fonts, typography } from '@/constants/theme';
+import { colors, fonts, textAlignStart, typography } from '@/constants/theme';
 
 export function RegisterScreen() {
   const { register, isAuthenticated, isBootstrapping } = useAuth();
@@ -183,6 +183,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.arabicRegular,
     fontSize: typography.label,
     lineHeight: typography.lineHeightBody,
-    textAlign: 'right',
+    textAlign: textAlignStart,
   },
 });
