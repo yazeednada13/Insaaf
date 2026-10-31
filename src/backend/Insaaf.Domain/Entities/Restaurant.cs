@@ -28,5 +28,10 @@ public sealed class Restaurant
 
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>IANA time zone of the restaurant (e.g. "Asia/Amman"); opening status is unknown when null.</summary>
+    public string? TimeZoneId { get; set; }
+
     public ICollection<RestaurantCategory> RestaurantCategories { get; set; } = [];
+
+    public ICollection<RestaurantOpeningHours> OpeningHours { get; set; } = [];
 }

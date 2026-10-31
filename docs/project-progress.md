@@ -1,26 +1,26 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-10-29
+**Last updated:** 2026-11-01
 
 ## Current state
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 3 — Restaurants (**Backend track complete and verified** — Mobile track not started) |
+| **CURRENT PHASE** | 3 — Restaurants (**Backend + Mobile complete** — closing via Git delivery) |
 | **CURRENT FEATURE** | — |
-| **CURRENT TASK** | — (awaiting founder instruction `Phase 3 — Mobile`) |
-| **COMPLETED** | Phase 3 Backend — tasks 3.1 (BE portion), 3.2–3.10; see [phase3-backend-report.md](phase3-backend-report.md) |
-| **NEXT** | Founder: review Backend report, Git checkpoint; then instruct `Phase 3 — Mobile` (Tasks 3.1 Mobile portion, 3.11–3.15) |
-| **BLOCKERS** | None for Backend. Mobile: Figma screen verification and device QA (see report §8–§9) |
+| **CURRENT TASK** | — |
+| **COMPLETED** | Phase 3 — tasks 3.1–3.15 + founder-approved additions (opening hours, distance, error envelopes); see [phase3-report.md](phase3-report.md) |
+| **NEXT** | Founder: commit/push `feature/phase3-restaurants`, merge into `develop`, push; then Phase 4 approval gate |
+| **BLOCKERS** | None. Known limitations in [phase3-report.md](phase3-report.md) §9 (notably native RTL configuration before production) |
 
 ## Phase 3 checklist
 
-Task IDs from the approved Phase 3 plan. Statuses are evidence-based (2026-10-29).
+Task IDs from the approved Phase 3 plan. Statuses are evidence-based (2026-11-01).
 
 | Task | Track | Description | Status |
 |------|-------|-------------|--------|
 | 3.1 | Backend portion | Domain/API contract (`phase3-restaurant-contract.md`) | Verified |
-| 3.1 | Mobile portion | Restaurant Figma tokens (`figma/restaurant-tokens.md`) | Doc exists; Figma comparison pending (Mobile track) |
+| 3.1 | Mobile portion | Restaurant Figma tokens (`figma/restaurant-tokens.md`) | Verified against Figma Make source |
 | 3.2 | Backend | Domain entities, enum, `IRestaurantRepository` + criteria | Verified |
 | 3.3 | Backend | EF configurations + `AddRestaurants` migration | Verified (founder confirmed DB up to date) |
 | 3.4 | Backend | `RestaurantRepository` | Verified |
@@ -28,13 +28,13 @@ Task IDs from the approved Phase 3 plan. Statuses are evidence-based (2026-10-29
 | 3.6 | Backend | `GET /api/v1/restaurants` | Verified (tests + InMemory + SQL Server smoke) |
 | 3.7 | Backend | `GET /api/v1/restaurants/{id}` | Verified |
 | 3.8 | Backend | Amman pilot seed | Verified (SQL Server seeded 12; idempotent on restart) |
-| 3.9 | Backend | Backend tests | Verified — 43/43 passing |
+| 3.9 | Backend | Backend tests | Verified — 61/61 passing (Release) |
 | 3.10 | Backend | Backend verification gate | Verified (Release build/test, Swagger, SQL Server smoke) |
-| 3.11 | Mobile | Mobile API integration | Code exists; unverified (Mobile track) |
-| 3.12 | Mobile | Discovery/list screen | Partial (components only) |
-| 3.13 | Mobile | Search/filter interaction | Not started |
-| 3.14 | Mobile | Restaurant detail screen | Not started |
-| 3.15 | Mobile | Mobile verification | Not started |
+| 3.11 | Mobile | Mobile API integration | Verified (typecheck; app-built requests against SQL Server) |
+| 3.12 | Mobile | Discovery/list screen | Done — founder-verified on device |
+| 3.13 | Mobile | Search/filter interaction | Done — founder-verified on device |
+| 3.14 | Mobile | Restaurant detail screen | Done — founder-verified on device; no write-review CTA |
+| 3.15 | Mobile | Mobile verification | Done — typecheck, lint, Android/iOS bundles, founder device check (limitations in report §9) |
 
 ---
 
@@ -143,7 +143,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 0 | Foundation | **Complete** |
 | 1 | Skeleton | **Complete** |
 | 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
-| 3 | Restaurants | **Backend complete** — Mobile not started |
+| 3 | Restaurants | **Complete** (pending Git delivery to `develop`) |
 | 4 | Reviews read foundation | Not started |
 | 5 | QR verified review write | Not started |
 | 6 | Social core | Not started |

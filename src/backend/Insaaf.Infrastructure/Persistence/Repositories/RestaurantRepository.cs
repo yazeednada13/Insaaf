@@ -1,6 +1,8 @@
+using System.Linq.Expressions;
 using Insaaf.Domain.Entities;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Repositories.Projections;
+using Insaaf.Domain.Rules;
 using Microsoft.EntityFrameworkCore;
 
 namespace Insaaf.Infrastructure.Persistence.Repositories;
@@ -53,7 +55,11 @@ public sealed class RestaurantRepository : IRestaurantRepository
                         join.Category.Slug))
                     .ToList(),
                 null,
-                0))
+                0,
+                restaurant.TimeZoneId,
+                restaurant.OpeningHours
+                    .Select(hours => new OpeningHoursProjection(hours.DayOfWeek, hours.OpensAt, hours.ClosesAt))
+                    .ToList()))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<RestaurantListItemProjection>
@@ -90,8 +96,21 @@ public sealed class RestaurantRepository : IRestaurantRepository
                         join.Category.Slug))
                     .ToList(),
                 null,
-                0))
+                0,
+                restaurant.TimeZoneId,
+                restaurant.OpeningHours
+                    .Select(hours => new OpeningHoursProjection(hours.DayOfWeek, hours.OpensAt, hours.ClosesAt))
+                    .ToList()))
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> GetTimeZoneIdsAsync(CancellationToken cancellationToken = default)
+    {
+        return await ActiveRestaurants()
+            .Where(restaurant => restaurant.TimeZoneId != null)
+            .Select(restaurant => restaurant.TimeZoneId!)
+            .Distinct()
+            .ToListAsync(cancellationToken);
     }
 
     private IQueryable<Restaurant> ActiveRestaurants() =>
@@ -138,6 +157,55 @@ public sealed class RestaurantRepository : IRestaurantRepository
             query = query.Where(_ => false);
         }
 
+        if (criteria.OpenAt is not null)
+        {
+            query = query.Where(OpenInAnyZone(criteria.OpenAt));
+        }
+
         return query;
+    }
+
+    // LINQ form of OpeningHoursRules.IsOpenAt, one term per time zone, combined with OR.
+    // Restaurants without a time zone never match (their status is unknown).
+    private static Expression<Func<Restaurant, bool>> OpenInAnyZone(IReadOnlyList<LocalTimeInZone> zones)
+    {
+        Expression<Func<Restaurant, bool>>? combined = null;
+
+        foreach (var zone in zones)
+        {
+            var timeZoneId = zone.TimeZoneId;
+            var day = zone.Day;
+            var previousDay = OpeningHoursRules.PreviousDay(zone.Day);
+            var time = zone.Time;
+
+            Expression<Func<Restaurant, bool>> openInZone = restaurant =>
+                restaurant.TimeZoneId == timeZoneId
+                && restaurant.OpeningHours.Any(hours =>
+                    (hours.DayOfWeek == day
+                        && hours.OpensAt <= time
+                        && (hours.ClosesAt <= hours.OpensAt || time < hours.ClosesAt))
+                    || (hours.DayOfWeek == previousDay
+                        && hours.ClosesAt <= hours.OpensAt
+                        && time < hours.ClosesAt));
+
+            combined = combined is null ? openInZone : OrElse(combined, openInZone);
+        }
+
+        return combined ?? (_ => false);
+    }
+
+    private static Expression<Func<Restaurant, bool>> OrElse(
+        Expression<Func<Restaurant, bool>> left,
+        Expression<Func<Restaurant, bool>> right)
+    {
+        var parameter = left.Parameters[0];
+        var rightBody = new ParameterReplacer(right.Parameters[0], parameter).Visit(right.Body);
+        return Expression.Lambda<Func<Restaurant, bool>>(Expression.OrElse(left.Body, rightBody), parameter);
+    }
+
+    private sealed class ParameterReplacer(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == from ? to : base.VisitParameter(node);
     }
 }

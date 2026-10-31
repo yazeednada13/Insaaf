@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios';
 
-import type { ApiError, ApiResponse } from '@/services/api/types';
+import type { ApiResponse } from '@/services/api/types';
 
 export class RestaurantApiError extends Error {
   readonly code: string;

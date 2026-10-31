@@ -11,6 +11,9 @@ declare module 'expo-router' {
         | { pathname: `/login`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/register`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/forgot-password`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/restaurants`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/restaurants/search`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownInputParams & { id: string | number } }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownInputParams };
       hrefOutputParams:
         | { pathname: import('expo-router').RelativePathString; params?: import('expo-router').UnknownOutputParams }
@@ -19,6 +22,9 @@ declare module 'expo-router' {
         | { pathname: `/login`; params?: import('expo-router').UnknownOutputParams }
         | { pathname: `/register`; params?: import('expo-router').UnknownOutputParams }
         | { pathname: `/forgot-password`; params?: import('expo-router').UnknownOutputParams }
+        | { pathname: `/restaurants`; params?: import('expo-router').UnknownOutputParams }
+        | { pathname: `/restaurants/search`; params?: import('expo-router').UnknownOutputParams }
+        | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownOutputParams & { id: string } }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownOutputParams };
       href:
         | import('expo-router').RelativePathString
@@ -27,6 +33,9 @@ declare module 'expo-router' {
         | `/login${`?${string}` | `#${string}` | ''}`
         | `/register${`?${string}` | `#${string}` | ''}`
         | `/forgot-password${`?${string}` | `#${string}` | ''}`
+        | `/restaurants${`?${string}` | `#${string}` | ''}`
+        | `/restaurants/search${`?${string}` | `#${string}` | ''}`
+        | `/restaurants/${string}${`?${string}` | `#${string}` | ''}`
         | `/_sitemap${`?${string}` | `#${string}` | ''}`
         | { pathname: import('expo-router').RelativePathString; params?: import('expo-router').UnknownInputParams }
         | { pathname: import('expo-router').ExternalPathString; params?: import('expo-router').UnknownInputParams }
@@ -34,6 +43,9 @@ declare module 'expo-router' {
         | { pathname: `/login`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/register`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/forgot-password`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/restaurants`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/restaurants/search`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownInputParams & { id: string | number } }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownInputParams };
     }
   }

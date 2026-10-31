@@ -132,6 +132,10 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Property<int>("PriceLevel")
                         .HasColumnType("int");
 
+                    b.Property<string>("TimeZoneId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("City");
@@ -154,6 +158,31 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("RestaurantCategories", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.RestaurantOpeningHours", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("ClosesAt")
+                        .HasColumnType("time");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("OpensAt")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RestaurantId", "DayOfWeek");
+
+                    b.ToTable("RestaurantOpeningHours", (string)null);
                 });
 
             modelBuilder.Entity("Insaaf.Infrastructure.Identity.ApplicationUser", b =>
@@ -376,6 +405,17 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Navigation("Restaurant");
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.RestaurantOpeningHours", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Restaurant", "Restaurant")
+                        .WithMany("OpeningHours")
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -434,6 +474,8 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Insaaf.Domain.Entities.Restaurant", b =>
                 {
+                    b.Navigation("OpeningHours");
+
                     b.Navigation("RestaurantCategories");
                 });
 #pragma warning restore 612, 618

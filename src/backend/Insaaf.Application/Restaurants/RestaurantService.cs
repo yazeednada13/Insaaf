@@ -1,3 +1,4 @@
+using Insaaf.Application.Auth.Abstractions;
 using Insaaf.Application.Restaurants.Dtos;
 using Insaaf.Application.Restaurants.Validation;
 using Insaaf.Domain.Enums;
@@ -9,10 +10,12 @@ namespace Insaaf.Application.Restaurants;
 public sealed class RestaurantService : IRestaurantService
 {
     private readonly IRestaurantRepository _restaurantRepository;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
-    public RestaurantService(IRestaurantRepository restaurantRepository)
+    public RestaurantService(IRestaurantRepository restaurantRepository, IDateTimeProvider dateTimeProvider)
     {
         _restaurantRepository = restaurantRepository;
+        _dateTimeProvider = dateTimeProvider;
     }
 
     public async Task<RestaurantListResultDto> SearchAsync(
@@ -25,12 +28,20 @@ public sealed class RestaurantService : IRestaurantService
             throw new RestaurantException("validation_error", string.Join(' ', validationErrors));
         }
 
+        var utcNow = _dateTimeProvider.UtcNow;
+        IReadOnlyList<LocalTimeInZone>? openAt = null;
+        if (query.OpenNow == true)
+        {
+            var timeZoneIds = await _restaurantRepository.GetTimeZoneIdsAsync(cancellationToken);
+            openAt = OpeningHoursCalculator.LocalTimesFor(timeZoneIds, utcNow);
+        }
+
         var result = await _restaurantRepository.SearchAsync(
-            ToSearchCriteria(query),
+            ToSearchCriteria(query, openAt),
             cancellationToken);
 
         return new RestaurantListResultDto(
-            result.Items.Select(ToListItemDto).ToList(),
+            result.Items.Select(item => ToListItemDto(item, utcNow)).ToList(),
             result.Page,
             result.PageSize,
             result.TotalCount);
@@ -49,10 +60,12 @@ public sealed class RestaurantService : IRestaurantService
                 RestaurantStatusCodes.NotFound);
         }
 
-        return ToDetailDto(restaurant);
+        return ToDetailDto(restaurant, _dateTimeProvider.UtcNow);
     }
 
-    private static RestaurantSearchCriteria ToSearchCriteria(RestaurantSearchQuery query) =>
+    private static RestaurantSearchCriteria ToSearchCriteria(
+        RestaurantSearchQuery query,
+        IReadOnlyList<LocalTimeInZone>? openAt) =>
         new()
         {
             Search = NormalizeOptional(query.Search),
@@ -62,6 +75,7 @@ public sealed class RestaurantService : IRestaurantService
                 ? null
                 : (PriceLevel)query.PriceLevel.Value,
             CategorySlug = NormalizeOptional(query.Category),
+            OpenAt = openAt,
             Page = query.Page,
             PageSize = query.PageSize,
         };
@@ -69,7 +83,7 @@ public sealed class RestaurantService : IRestaurantService
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static RestaurantListItemDto ToListItemDto(RestaurantListItemProjection item) =>
+    private static RestaurantListItemDto ToListItemDto(RestaurantListItemProjection item, DateTime utcNow) =>
         new(
             item.Id,
             item.Name,
@@ -81,10 +95,14 @@ public sealed class RestaurantService : IRestaurantService
             item.ImageUrl,
             item.Categories.Select(ToCategoryDto).ToList(),
             item.AverageRating,
-            item.ReviewCount);
+            item.ReviewCount,
+            OpeningHoursCalculator.Evaluate(item.TimeZoneId, item.OpeningHours, utcNow).IsOpen);
 
-    private static RestaurantDetailDto ToDetailDto(RestaurantDetailProjection item) =>
-        new(
+    private static RestaurantDetailDto ToDetailDto(RestaurantDetailProjection item, DateTime utcNow)
+    {
+        var status = OpeningHoursCalculator.Evaluate(item.TimeZoneId, item.OpeningHours, utcNow);
+
+        return new(
             item.Id,
             item.Name,
             item.Description,
@@ -97,7 +115,10 @@ public sealed class RestaurantService : IRestaurantService
             item.ImageUrl,
             item.Categories.Select(ToCategoryDto).ToList(),
             item.AverageRating,
-            item.ReviewCount);
+            item.ReviewCount,
+            status.IsOpen,
+            status.TodayHours);
+    }
 
     private static CategoryDto ToCategoryDto(CategoryProjection category) =>
         new(category.Id, category.Name, category.Slug);

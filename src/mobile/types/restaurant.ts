@@ -18,6 +18,8 @@ export interface RestaurantListItemDto {
   categories: CategoryDto[];
   averageRating: number | null;
   reviewCount: number;
+  /** null when the restaurant has no opening-hours data. */
+  isOpen: boolean | null;
 }
 
 export interface RestaurantListResultDto {
@@ -41,6 +43,10 @@ export interface RestaurantDetailDto {
   categories: CategoryDto[];
   averageRating: number | null;
   reviewCount: number;
+  /** null when the restaurant has no opening-hours data. */
+  isOpen: boolean | null;
+  /** Today's local hours, e.g. "10:00 ص — 1:00 ص"; null when closed all day or unknown. */
+  todayHours: string | null;
 }
 
 export interface RestaurantSearchParams {
@@ -49,6 +55,7 @@ export interface RestaurantSearchParams {
   minRating?: number;
   priceLevel?: PriceLevel;
   category?: string;
+  openNow?: boolean;
   page?: number;
   pageSize?: number;
 }

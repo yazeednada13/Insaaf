@@ -23,6 +23,12 @@
       "expo-asset",
       "expo-font",
       "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يستخدم إنصاف موقعك لعرض المسافة إلى المطاعم."
+        }
+      ],
       "expo-splash-screen",
       "expo-status-bar"
     ],

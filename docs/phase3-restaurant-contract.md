@@ -395,6 +395,20 @@ Uses existing Axios client + Bearer interceptor (Phase 2).
 
 ---
 
+## 8a. Approved contract changes (2026-11-01, founder-approved during Phase 3)
+
+| Change | Detail |
+|--------|--------|
+| Opening status | `isOpen: boolean \| null` on list items and detail; `null` when the restaurant has no time zone or no opening hours |
+| Today's hours | `todayHours: string \| null` on detail only, e.g. `"10:00 ص — 1:00 ص"` (restaurant local time) |
+| `openNow` query param | `GET /api/v1/restaurants?openNow=true` returns only restaurants open now in their local time |
+| Error envelopes | 401 now returns `{ code: "unauthorized" }`; malformed query values return 400 `validation_error` (was ProblemDetails) |
+| Data model | `Restaurants.TimeZoneId` (IANA, nullable) + `RestaurantOpeningHours` (day, opens, closes; closes ≤ opens = past midnight) — migration `AddRestaurantOpeningHours` |
+
+Section 1 "Opening hours / `isOpen` / `openNow` filter backend — Deferred" is superseded by this addendum. Full detail: [phase3-report.md](phase3-report.md).
+
+---
+
 ## 9. Related documents
 
 - [figma/restaurant-tokens.md](figma/restaurant-tokens.md) — UI tokens and screen copy

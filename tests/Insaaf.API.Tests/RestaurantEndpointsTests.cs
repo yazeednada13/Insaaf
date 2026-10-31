@@ -138,6 +138,50 @@ public sealed class RestaurantEndpointsTests : IClassFixture<CustomWebApplicatio
     }
 
     [Fact]
+    public async Task List_ReportsOpeningStatusOnlyForRestaurantsWithHours()
+    {
+        var token = await GetAccessTokenAsync();
+        var list = await GetListAsync(token);
+
+        // Seed hours come from Figma for three restaurants; the rest have unknown status.
+        var withStatus = list.Items.Where(item => item.IsOpen is not null).Select(item => item.Name).Order();
+        Assert.Equal(["Tonino Italiano", "سوشي هيكاري", "مطعم السفير"], withStatus);
+        Assert.Null(list.Items.Single(item => item.Name == "Burger Makers").IsOpen);
+    }
+
+    [Fact]
+    public async Task List_OpenNow_ReturnsOnlyOpenRestaurants()
+    {
+        var token = await GetAccessTokenAsync();
+        using var request = Authorized(HttpMethod.Get, "/api/v1/restaurants?openNow=true&pageSize=50", token);
+
+        var response = await _client.SendAsync(request);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantListResultDto>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(envelope?.Data);
+        // The server-side filter and the per-item status apply the same rule at request time.
+        Assert.All(envelope.Data.Items, item => Assert.True(item.IsOpen));
+        Assert.Equal(envelope.Data.Items.Count, envelope.Data.TotalCount);
+    }
+
+    [Fact]
+    public async Task Detail_ReturnsTodayHours_ForRestaurantWithHours()
+    {
+        var token = await GetAccessTokenAsync();
+        var list = await GetListAsync(token);
+        var id = list.Items.Single(item => item.Name == "مطعم السفير").Id;
+
+        using var request = Authorized(HttpMethod.Get, $"/api/v1/restaurants/{id}", token);
+        var response = await _client.SendAsync(request);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<RestaurantDetailDto>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(envelope!.Data!.IsOpen);
+        Assert.Equal("10:00 ص — 1:00 ص", envelope.Data.TodayHours);
+    }
+
+    [Fact]
     public async Task List_ReturnsEmpty_WhenMinRatingIsSet()
     {
         var token = await GetAccessTokenAsync();

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -64,7 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshMutation, syncUser]);
 
+  // The stored refresh token is single-use (rotation + reuse detection), so startup
+  // refresh must run exactly once; a second call with the same token revokes the session.
+  const hasBootstrapped = useRef(false);
+
   useEffect(() => {
+    if (hasBootstrapped.current) {
+      return;
+    }
+
+    hasBootstrapped.current = true;
     void bootstrap();
   }, [bootstrap]);
 

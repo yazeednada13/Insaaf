@@ -19,11 +19,20 @@ public static class RestaurantSeed
             await context.Database.EnsureCreatedAsync(cancellationToken);
         }
 
-        if (await context.Restaurants.AnyAsync(cancellationToken))
+        if (!await context.Restaurants.AnyAsync(cancellationToken))
         {
-            return;
+            await SeedRestaurantsAsync(context, logger, cancellationToken);
         }
 
+        // Runs on every startup so databases seeded before opening hours existed are backfilled.
+        await EnsurePilotOpeningDataAsync(context, logger, cancellationToken);
+    }
+
+    private static async Task SeedRestaurantsAsync(
+        AppDbContext context,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
         var categories = await EnsureCategoriesAsync(context, cancellationToken);
         var now = DateTime.UtcNow;
 
@@ -198,6 +207,79 @@ public static class RestaurantSeed
         logger.LogInformation("Seeded {Count} Amman restaurants.", restaurants.Length);
     }
 
+    /// <summary>
+    /// Pilot time zone and opening hours. Hours come from the Figma Make design data (data/mock.ts),
+    /// applied to every day of the week, for the three seed restaurants whose Figma hours are
+    /// unambiguous. They are design data, not verified real-world hours; restaurants without
+    /// hours report an unknown opening status.
+    /// </summary>
+    private static async Task EnsurePilotOpeningDataAsync(
+        AppDbContext context,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        var restaurants = await context.Restaurants
+            .Include(restaurant => restaurant.OpeningHours)
+            .Where(restaurant => restaurant.City == PilotCity)
+            .ToListAsync(cancellationToken);
+
+        var updated = 0;
+        foreach (var restaurant in restaurants)
+        {
+            var changed = false;
+
+            if (restaurant.TimeZoneId is null)
+            {
+                restaurant.TimeZoneId = PilotTimeZoneId;
+                changed = true;
+            }
+
+            if (restaurant.OpeningHours.Count == 0
+                && PilotDailyHours.TryGetValue(restaurant.Name, out var daily))
+            {
+                // Added through the DbSet so EF inserts them; a preset key added via the tracked
+                // parent's collection would be treated as an existing row and updated instead.
+                context.RestaurantOpeningHours.AddRange(Enum.GetValues<DayOfWeek>().Select(day =>
+                    new RestaurantOpeningHours
+                    {
+                        Id = Guid.NewGuid(),
+                        RestaurantId = restaurant.Id,
+                        DayOfWeek = day,
+                        OpensAt = daily.OpensAt,
+                        ClosesAt = daily.ClosesAt,
+                    }));
+
+                changed = true;
+            }
+
+            if (changed)
+            {
+                updated++;
+            }
+        }
+
+        if (updated > 0)
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Applied pilot opening data to {Count} Amman restaurants.", updated);
+        }
+    }
+
+    private const string PilotCity = "عمّان";
+
+    private const string PilotTimeZoneId = "Asia/Amman";
+
+    private static readonly IReadOnlyDictionary<string, (TimeOnly OpensAt, TimeOnly ClosesAt)> PilotDailyHours =
+        new Dictionary<string, (TimeOnly, TimeOnly)>
+        {
+            // Figma "12:00 م — 11:00 م"
+            ["سوشي هيكاري"] = (new TimeOnly(12, 0), new TimeOnly(23, 0)),
+            // Figma "10:00 ص — 1:00 ص" (past midnight)
+            ["مطعم السفير"] = (new TimeOnly(10, 0), new TimeOnly(1, 0)),
+            // Figma "1:00 م — 11:00 م"
+            ["Tonino Italiano"] = (new TimeOnly(13, 0), new TimeOnly(23, 0)),
+        };
+
     private static async Task<Dictionary<string, Category>> EnsureCategoriesAsync(
         AppDbContext context,
         CancellationToken cancellationToken)
@@ -259,7 +341,7 @@ public static class RestaurantSeed
             Id = Guid.NewGuid(),
             Name = name,
             Description = description,
-            City = "عمّان",
+            City = PilotCity,
             Address = address,
             Latitude = latitude,
             Longitude = longitude,

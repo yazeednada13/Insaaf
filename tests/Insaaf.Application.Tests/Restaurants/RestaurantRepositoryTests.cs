@@ -106,6 +106,44 @@ public sealed class RestaurantRepositoryTests
     }
 
     [Fact]
+    public async Task SearchAsync_OpenAt_MatchesRuleIncludingPastMidnight()
+    {
+        await using var context = CreateContext();
+        var unique = Guid.NewGuid().ToString("N")[..8];
+        var lunch = CreateRestaurant($"lunch-{unique}", "وصف", PriceLevel.Budget, true);
+        lunch.TimeZoneId = "UTC";
+        lunch.OpeningHours.Add(Hours(DayOfWeek.Sunday, 12, 23));
+        var lateNight = CreateRestaurant($"late-{unique}", "وصف", PriceLevel.Budget, true);
+        lateNight.TimeZoneId = "UTC";
+        lateNight.OpeningHours.Add(Hours(DayOfWeek.Saturday, 10, 1));
+        var noTimeZone = CreateRestaurant($"unknown-{unique}", "وصف", PriceLevel.Budget, true);
+        noTimeZone.OpeningHours.Add(Hours(DayOfWeek.Sunday, 0, 23));
+        context.Restaurants.AddRange(lunch, lateNight, noTimeZone);
+        await context.SaveChangesAsync();
+
+        var repository = new RestaurantRepository(context);
+
+        var afterMidnight = await repository.SearchAsync(new RestaurantSearchCriteria
+        {
+            Search = unique,
+            OpenAt = [new LocalTimeInZone("UTC", DayOfWeek.Sunday, new TimeOnly(0, 30))],
+        });
+        Assert.Equal(lateNight.Id, Assert.Single(afterMidnight.Items).Id);
+
+        var afternoon = await repository.SearchAsync(new RestaurantSearchCriteria
+        {
+            Search = unique,
+            OpenAt = [new LocalTimeInZone("UTC", DayOfWeek.Sunday, new TimeOnly(13, 0))],
+        });
+        Assert.Equal(lunch.Id, Assert.Single(afternoon.Items).Id);
+
+        var noZones = await repository.SearchAsync(new RestaurantSearchCriteria { Search = unique, OpenAt = [] });
+        Assert.Empty(noZones.Items);
+
+        Assert.Equal(["UTC"], await repository.GetTimeZoneIdsAsync());
+    }
+
+    [Fact]
     public async Task GetByIdAsync_ReturnsNull_ForInactiveRestaurant()
     {
         await using var context = CreateContext();
@@ -159,6 +197,15 @@ public sealed class RestaurantRepositoryTests
             PriceLevel = price,
             IsActive = isActive,
             CreatedAt = DateTime.UtcNow,
+        };
+
+    private static RestaurantOpeningHours Hours(DayOfWeek day, int opensHour, int closesHour) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            DayOfWeek = day,
+            OpensAt = new TimeOnly(opensHour, 0),
+            ClosesAt = new TimeOnly(closesHour, 0),
         };
 
     private static void Link(Restaurant restaurant, Category category)

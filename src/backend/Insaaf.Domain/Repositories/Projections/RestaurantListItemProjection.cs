@@ -13,4 +13,6 @@ public sealed record RestaurantListItemProjection(
     string? ImageUrl,
     IReadOnlyList<CategoryProjection> Categories,
     decimal? AverageRating,
-    int ReviewCount);
+    int ReviewCount,
+    string? TimeZoneId,
+    IReadOnlyList<OpeningHoursProjection> OpeningHours);

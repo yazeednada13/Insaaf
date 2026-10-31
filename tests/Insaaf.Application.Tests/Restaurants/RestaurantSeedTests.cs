@@ -1,3 +1,4 @@
+using Insaaf.Domain.Entities;
 using Insaaf.Domain.Enums;
 using Insaaf.Infrastructure.Persistence;
 using Insaaf.Infrastructure.Persistence.Seeding;
@@ -49,6 +50,62 @@ public sealed class RestaurantSeedTests
         Assert.Equal(
             restaurants.Count,
             restaurants.Select(restaurant => (restaurant.Latitude, restaurant.Longitude)).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task SeedAsync_AppliesPilotOpeningData_Once()
+    {
+        await using var provider = CreateProvider();
+
+        await RestaurantSeed.SeedAsync(provider);
+        await RestaurantSeed.SeedAsync(provider);
+
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var restaurants = await context.Restaurants.Include(restaurant => restaurant.OpeningHours).ToListAsync();
+
+        Assert.All(restaurants, restaurant => Assert.Equal("Asia/Amman", restaurant.TimeZoneId));
+        var withHours = restaurants.Where(restaurant => restaurant.OpeningHours.Count > 0).ToList();
+        Assert.Equal(
+            ["Tonino Italiano", "سوشي هيكاري", "مطعم السفير"],
+            withHours.Select(restaurant => restaurant.Name).Order());
+        Assert.All(withHours, restaurant => Assert.Equal(7, restaurant.OpeningHours.Count));
+    }
+
+    [Fact]
+    public async Task SeedAsync_BackfillsOpeningData_ForPreviouslySeededDatabase()
+    {
+        await using var provider = CreateProvider();
+        using (var scope = provider.CreateScope())
+        {
+            // A row created before opening hours existed: no time zone, no hours.
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Restaurants.Add(new Restaurant
+            {
+                Id = Guid.NewGuid(),
+                Name = "مطعم السفير",
+                Description = "وصف",
+                City = "عمّان",
+                Latitude = 31.95,
+                Longitude = 35.92,
+                PriceLevel = PriceLevel.Moderate,
+                CreatedAt = DateTime.UtcNow,
+            });
+            await context.SaveChangesAsync();
+        }
+
+        await RestaurantSeed.SeedAsync(provider);
+
+        using var verifyScope = provider.CreateScope();
+        var verifyContext = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var restaurant = await verifyContext.Restaurants.Include(item => item.OpeningHours).SingleAsync();
+        Assert.Equal("Asia/Amman", restaurant.TimeZoneId);
+        Assert.Equal(7, restaurant.OpeningHours.Count);
+        Assert.All(restaurant.OpeningHours, hours =>
+        {
+            Assert.Equal(new TimeOnly(10, 0), hours.OpensAt);
+            Assert.Equal(new TimeOnly(1, 0), hours.ClosesAt);
+        });
     }
 
     private static ServiceProvider CreateProvider()
