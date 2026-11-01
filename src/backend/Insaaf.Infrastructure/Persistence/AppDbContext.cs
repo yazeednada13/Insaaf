@@ -24,6 +24,8 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
 
     public DbSet<RestaurantOpeningHours> RestaurantOpeningHours => Set<RestaurantOpeningHours>();
 
+    public DbSet<Review> Reviews => Set<Review>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -33,5 +35,6 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
         builder.ApplyConfiguration(new CategoryConfiguration());
         builder.ApplyConfiguration(new RestaurantCategoryConfiguration());
         builder.ApplyConfiguration(new RestaurantOpeningHoursConfiguration());
+        builder.ApplyConfiguration(new ReviewConfiguration());
     }
 }

@@ -1,6 +1,7 @@
 using Insaaf.Application.Auth.Abstractions;
 using Insaaf.Application.Restaurants.Dtos;
 using Insaaf.Application.Restaurants.Validation;
+using Insaaf.Application.Reviews;
 using Insaaf.Domain.Enums;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Repositories.Projections;
@@ -94,7 +95,7 @@ public sealed class RestaurantService : IRestaurantService
             item.PriceLevel,
             item.ImageUrl,
             item.Categories.Select(ToCategoryDto).ToList(),
-            item.AverageRating,
+            RatingMath.RoundAverage(item.AverageRating),
             item.ReviewCount,
             OpeningHoursCalculator.Evaluate(item.TimeZoneId, item.OpeningHours, utcNow).IsOpen);
 
@@ -114,11 +115,19 @@ public sealed class RestaurantService : IRestaurantService
             item.Phone,
             item.ImageUrl,
             item.Categories.Select(ToCategoryDto).ToList(),
-            item.AverageRating,
+            RatingMath.RoundAverage(item.AverageRating),
             item.ReviewCount,
             status.IsOpen,
-            status.TodayHours);
+            status.TodayHours,
+            item.RatingBreakdown is null ? null : ToRatingBreakdownDto(item.RatingBreakdown));
     }
+
+    private static RatingBreakdownDto ToRatingBreakdownDto(RatingBreakdownProjection breakdown) =>
+        new(
+            RatingMath.RoundAverage(breakdown.Food),
+            RatingMath.RoundAverage(breakdown.Service),
+            RatingMath.RoundAverage(breakdown.Value),
+            RatingMath.RoundAverage(breakdown.Atmosphere));
 
     private static CategoryDto ToCategoryDto(CategoryProjection category) =>
         new(category.Id, category.Name, category.Slug);

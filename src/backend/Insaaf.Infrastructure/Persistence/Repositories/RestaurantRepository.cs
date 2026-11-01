@@ -54,8 +54,9 @@ public sealed class RestaurantRepository : IRestaurantRepository
                         join.Category.Name,
                         join.Category.Slug))
                     .ToList(),
-                null,
-                0,
+                // Aggregates are correlated subqueries in the same SELECT (no N+1), public reviews only.
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal?)review.Rating),
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Count(),
                 restaurant.TimeZoneId,
                 restaurant.OpeningHours
                     .Select(hours => new OpeningHoursProjection(hours.DayOfWeek, hours.OpensAt, hours.ClosesAt))
@@ -95,14 +96,24 @@ public sealed class RestaurantRepository : IRestaurantRepository
                         join.Category.Name,
                         join.Category.Slug))
                     .ToList(),
-                null,
-                0,
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal?)review.Rating),
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Count(),
                 restaurant.TimeZoneId,
                 restaurant.OpeningHours
                     .Select(hours => new OpeningHoursProjection(hours.DayOfWeek, hours.OpensAt, hours.ClosesAt))
-                    .ToList()))
+                    .ToList(),
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Any()
+                    ? new RatingBreakdownProjection(
+                        restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal)review.FoodRating),
+                        restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal)review.ServiceRating),
+                        restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal)review.ValueRating),
+                        restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal)review.AtmosphereRating))
+                    : null))
             .SingleOrDefaultAsync(cancellationToken);
     }
+
+    public Task<bool> IsActiveAsync(Guid id, CancellationToken cancellationToken = default) =>
+        ActiveRestaurants().AnyAsync(restaurant => restaurant.Id == id, cancellationToken);
 
     public async Task<IReadOnlyList<string>> GetTimeZoneIdsAsync(CancellationToken cancellationToken = default)
     {
@@ -149,12 +160,14 @@ public sealed class RestaurantRepository : IRestaurantRepository
                 restaurant.RestaurantCategories.Any(join => join.Category.Slug.ToLower() == slug));
         }
 
-        // Phase 3: no Review entity. AverageRating is always null and ReviewCount is 0.
-        // When minRating is set, restaurants with zero reviews are excluded (all rows today).
-        // Phase 4 should replace this with a Reviews aggregate join.
+        // Compares the unrounded average of public reviews; restaurants without public reviews
+        // have a null average and never match.
         if (criteria.MinRating is not null)
         {
-            query = query.Where(_ => false);
+            var minRating = criteria.MinRating.Value;
+            query = query.Where(restaurant =>
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal?)review.Rating)
+                >= minRating);
         }
 
         if (criteria.OpenAt is not null)

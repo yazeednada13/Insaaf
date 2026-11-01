@@ -34,4 +34,6 @@ public sealed class Restaurant
     public ICollection<RestaurantCategory> RestaurantCategories { get; set; } = [];
 
     public ICollection<RestaurantOpeningHours> OpeningHours { get; set; } = [];
+
+    public ICollection<Review> Reviews { get; set; } = [];
 }
