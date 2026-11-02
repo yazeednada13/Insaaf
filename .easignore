@@ -1,0 +1,29 @@
+# Files excluded from EAS Build uploads (replaces .gitignore for EAS).
+# EAS uploads from the repository root; the build only needs the Expo app in src/mobile.
+
+# Not part of the mobile app
+src/backend/
+tests/
+docs/
+.github/
+.cursor/
+CLAUDE.md
+
+# Generated / local
+**/node_modules/
+**/.expo/
+**/dist/
+**/web-build/
+**/bin/
+**/obj/
+src/mobile/android/
+src/mobile/ios/
+
+# Secrets — never upload
+.env
+.env.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision

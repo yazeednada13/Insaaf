@@ -15,7 +15,6 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { I18nManager } from 'react-native';
 
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 
@@ -35,12 +34,9 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  useEffect(() => {
-    I18nManager.allowRTL(true);
-    if (!I18nManager.isRTL) {
-      I18nManager.forceRTL(true);
-    }
-  }, []);
+  // RTL is configured natively by the expo-localization plugin (app.json: supportsRTL + forcesRTL),
+  // so layout is right-to-left from the first frame. Expo Go cannot apply that native config; use the
+  // development build (expo-dev-client) to run the app.
 
   useEffect(() => {
     if (fontsLoaded) {

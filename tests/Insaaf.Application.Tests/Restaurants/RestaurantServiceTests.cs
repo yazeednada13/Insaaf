@@ -142,12 +142,44 @@ public sealed class RestaurantServiceTests
                 null,
                 0,
                 "UTC",
-                [new OpeningHoursProjection(DayOfWeek.Sunday, new TimeOnly(10, 0), new TimeOnly(1, 0))]));
+                [new OpeningHoursProjection(DayOfWeek.Sunday, new TimeOnly(10, 0), new TimeOnly(1, 0))],
+                null));
 
         var result = await CreateService().GetByIdAsync(id);
 
         Assert.True(result.IsOpen);
         Assert.Equal("10:00 ص — 1:00 ص", result.TodayHours);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_RoundsAverageAndBreakdown()
+    {
+        var id = Guid.NewGuid();
+        _repository
+            .Setup(repo => repo.GetByIdAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RestaurantDetailProjection(
+                id,
+                "مطعم",
+                "وصف",
+                "عمّان",
+                null,
+                31.95,
+                35.92,
+                PriceLevel.Budget,
+                null,
+                null,
+                [],
+                4.25m,
+                4,
+                null,
+                [],
+                new RatingBreakdownProjection(4.666666m, 3.333333m, 5m, 4.05m)));
+
+        var result = await CreateService().GetByIdAsync(id);
+
+        Assert.Equal(4.3m, result.AverageRating);
+        Assert.Equal(4, result.ReviewCount);
+        Assert.Equal(new RatingBreakdownDto(4.7m, 3.3m, 5m, 4.1m), result.RatingBreakdown);
     }
 
     [Fact]

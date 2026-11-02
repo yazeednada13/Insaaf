@@ -17,4 +17,5 @@ public sealed record RestaurantDetailProjection(
     decimal? AverageRating,
     int ReviewCount,
     string? TimeZoneId,
-    IReadOnlyList<OpeningHoursProjection> OpeningHours);
+    IReadOnlyList<OpeningHoursProjection> OpeningHours,
+    RatingBreakdownProjection? RatingBreakdown);

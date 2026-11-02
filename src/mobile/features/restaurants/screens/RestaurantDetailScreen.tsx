@@ -1,16 +1,28 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Fragment, useState } from 'react';
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChevronLeftIcon, PhoneIcon } from '@/features/restaurants/components/RestaurantIcons';
 import {
-  RestaurantListEmptyState,
   RestaurantListErrorState,
   SkeletonBlock,
 } from '@/features/restaurants/components/RestaurantListStates';
 import { StarRating } from '@/features/restaurants/components/StarRating';
 import { useRestaurantDetailQuery } from '@/features/restaurants/hooks/useRestaurantQueries';
+import { RatingBreakdownCard } from '@/features/reviews/components/RatingBreakdownCard';
+import { RestaurantReviewsList } from '@/features/reviews/components/RestaurantReviewsList';
+import { useRestaurantReviewsQuery } from '@/features/reviews/hooks/useRestaurantReviewsQuery';
 import { RestaurantApiError } from '@/services/restaurants/restaurantErrors';
 import { colors, fonts, lineHeights, restaurantLayout, textAlignStart } from '@/constants/theme';
 import {
@@ -41,6 +53,14 @@ function openDirections(restaurant: RestaurantDetailDto) {
   void Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${destination}`);
 }
 
+// Load the next reviews page when the scroll position is this close to the bottom.
+const LOAD_MORE_THRESHOLD = 200;
+
+function isNearBottom({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) {
+  const { contentOffset, contentSize, layoutMeasurement } = nativeEvent;
+  return layoutMeasurement.height + contentOffset.y >= contentSize.height - LOAD_MORE_THRESHOLD;
+}
+
 function BackButton() {
   return (
     <Pressable accessibilityLabel="رجوع" accessibilityRole="button" onPress={goBack} style={styles.heroButton}>
@@ -54,6 +74,19 @@ export function RestaurantDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detailQuery = useRestaurantDetailQuery(id);
   const [tab, setTab] = useState<DetailTab>('details');
+  // Fetched when the reviews tab is first opened; cached afterwards.
+  const reviewsQuery = useRestaurantReviewsQuery(id, tab === 'reviews');
+
+  const onContentScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (
+      tab === 'reviews'
+      && reviewsQuery.hasNextPage
+      && !reviewsQuery.isFetchingNextPage
+      && isNearBottom(event)
+    ) {
+      void reviewsQuery.fetchNextPage();
+    }
+  };
 
   // Figma renders screens below the 44px status bar, so the hero starts under the safe area.
   const screenStyle = [styles.screen, { paddingTop: insets.top }];
@@ -163,14 +196,16 @@ export function RestaurantDetailScreen() {
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} onScroll={onContentScroll} scrollEventThrottle={100}>
         {tab === 'details' ? (
           <View style={styles.sections}>
             <View style={styles.card}>
               <Text style={styles.cardTitle}>عن المطعم</Text>
               <Text style={styles.description}>{restaurant.description}</Text>
             </View>
-            {/* "متوسط التقييمات" sub-ratings arrive with reviews in Phase 4. */}
+            {restaurant.ratingBreakdown ? (
+              <RatingBreakdownCard breakdown={restaurant.ratingBreakdown} />
+            ) : null}
             {restaurant.phone ? (
               <View style={styles.card}>
                 <View style={styles.phoneRow}>
@@ -181,8 +216,8 @@ export function RestaurantDetailScreen() {
             ) : null}
           </View>
         ) : (
-          // Read-only placeholder until Phase 4. No write-review action in MVP (ADR-004).
-          <RestaurantListEmptyState title="لا توجد تقييمات بعد" />
+          // Read-only list (Phase 4). No write-review action in MVP (ADR-004).
+          <RestaurantReviewsList query={reviewsQuery} />
         )}
       </ScrollView>
     </View>

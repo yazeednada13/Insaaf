@@ -1,5 +1,9 @@
 node_modules/
 .expo/
+
+# Native projects are generated from app.json (Continuous Native Generation: expo prebuild / expo run)
+/android
+/ios
 dist/
 web-build/
 *.jks

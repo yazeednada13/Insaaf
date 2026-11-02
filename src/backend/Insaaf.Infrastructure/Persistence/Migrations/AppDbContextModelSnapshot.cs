@@ -185,6 +185,71 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.ToTable("RestaurantOpeningHours", (string)null);
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.Review", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AtmosphereRating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FoodRating")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ServiceRating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ValueRating")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("VisitTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("RestaurantId", "IsVerified", "CreatedAt");
+
+                    b.ToTable("Reviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Reviews_AtmosphereRating", "[AtmosphereRating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_Reviews_FoodRating", "[FoodRating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_Reviews_Rating", "[Rating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_Reviews_ServiceRating", "[ServiceRating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_Reviews_ValueRating", "[ValueRating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_Reviews_VerifiedRequiresVisitToken", "[IsVerified] = 0 OR [VisitTokenId] IS NOT NULL");
+                        });
+                });
+
             modelBuilder.Entity("Insaaf.Infrastructure.Identity.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -416,6 +481,23 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Navigation("Restaurant");
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.Review", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Restaurant", "Restaurant")
+                        .WithMany("Reviews")
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -477,6 +559,8 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Navigation("OpeningHours");
 
                     b.Navigation("RestaurantCategories");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

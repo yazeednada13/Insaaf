@@ -35,9 +35,13 @@ public sealed record RestaurantListResultDto(
     int PageSize,
     int TotalCount);
 
+/// <summary>Averages of the detailed ratings over public reviews, rounded to one decimal.</summary>
+public sealed record RatingBreakdownDto(decimal Food, decimal Service, decimal Value, decimal Atmosphere);
+
 /// <remarks>
 /// <c>IsOpen</c> is null when the restaurant has no opening-hours data; <c>TodayHours</c> is
 /// today's local periods (e.g. "10:00 ص — 1:00 ص"), or null when it has none today.
+/// <c>AverageRating</c> and <c>RatingBreakdown</c> are null when there are no public reviews.
 /// </remarks>
 public sealed record RestaurantDetailDto(
     Guid Id,
@@ -54,4 +58,5 @@ public sealed record RestaurantDetailDto(
     decimal? AverageRating,
     int ReviewCount,
     bool? IsOpen,
-    string? TodayHours);
+    string? TodayHours,
+    RatingBreakdownDto? RatingBreakdown);
