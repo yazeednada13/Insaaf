@@ -31,9 +31,16 @@ public sealed class Restaurant
     /// <summary>IANA time zone of the restaurant (e.g. "Asia/Amman"); opening status is unknown when null.</summary>
     public string? TimeZoneId { get; set; }
 
+    /// <summary>True once the restaurant has a partnership agreement with Insaaf (visit tokens allowed).</summary>
+    public bool IsPartner { get; set; }
+
+    public DateTime? PartnerSince { get; set; }
+
     public ICollection<RestaurantCategory> RestaurantCategories { get; set; } = [];
 
     public ICollection<RestaurantOpeningHours> OpeningHours { get; set; } = [];
 
     public ICollection<Review> Reviews { get; set; } = [];
+
+    public ICollection<VisitToken> VisitTokens { get; set; } = [];
 }

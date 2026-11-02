@@ -1,17 +1,33 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-02
 
 ## Current state
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 4 — Reviews read foundation (**Backend + Mobile complete** — closing via Git delivery) |
+| **CURRENT PHASE** | 5 — QR verified review write (**Backend complete**; Mobile not started) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phase 3 (merged, PR #3). Phase 4 — tasks 4.1–4.7 + native RTL fix (development build); see [phase4-report.md](phase4-report.md) |
-| **NEXT** | Founder: commit/push `feature/phase4-reviews-read`, PR into `develop` (CI green), merge; then Phase 5 approval gate |
-| **BLOCKERS** | None. Limitations in [phase4-report.md](phase4-report.md) §12 (no review data until Phase 5; device testing via development build) |
+| **COMPLETED** | Phase 4 (merged, PR #4). Phase 5 Backend — tasks 5.1–5.5 + backend part of 5.9; see [phase5-report.md](phase5-report.md) |
+| **NEXT** | Founder: review the Backend report; optional Git checkpoint on `feature/phase5-qr-verification`; then `Phase 5 — Mobile` |
+| **BLOCKERS** | None. Mobile needs `expo-camera` + a new EAS development build (founder) |
+
+## Phase 5 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 5.1 | Backend | `VisitToken`, rules, partnership, `AddVisitTokens` migration | Verified (migration applied by founder) |
+| 5.2 | Backend | `IVisitTokenRepository`, codec, `VisitTokenIssuer`, revoke/summary | Verified |
+| 5.3 | Backend | Atomic redeem + review (transaction + concurrency) | Verified (SQL Server: 5 parallel → one 201, four 409) |
+| 5.4 | Backend | `POST /verification/visits/resolve`, `POST /verification/reviews`, rate limiting | Verified |
+| 5.5 | Backend | Admin: partnership, issue, revoke, summary | Verified |
+| 5.6 | Mobile | Camera + scan screen | Not started |
+| 5.7 | Mobile | Verified review form | Not started |
+| 5.8 | Mobile | Scan entry point (BottomNav) | Not started |
+| 5.9 | Both | Tests + verification + report | Backend done (130/130, smoke 16/16); Mobile not started |
+
+---
 
 ## Phase 4 checklist
 
@@ -158,8 +174,8 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 1 | Skeleton | **Complete** |
 | 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
 | 3 | Restaurants | **Complete** (merged to `develop` via PR #3, `daa4489`) |
-| 4 | Reviews read foundation | **Complete** (pending Git delivery to `develop`) |
-| 5 | QR verified review write | Not started |
+| 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
+| 5 | QR verified review write | **In progress** (Backend complete 2026-11-02; Mobile pending) |
 | 6 | Social core | Not started |
 | 7 | Feed and following | Not started |
 | 8 | Profiles | Not started |

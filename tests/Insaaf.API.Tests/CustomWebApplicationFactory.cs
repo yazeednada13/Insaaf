@@ -9,7 +9,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Insaaf.API.Tests;
 
-public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
+public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"InsaafTests_{Guid.NewGuid():N}";
 
@@ -20,6 +20,12 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("InMemoryDatabaseName", _databaseName);
         builder.UseSetting("Jwt:SigningKey", "IntegrationTestSigningKey_32CharsMin!");
         builder.UseSetting("Identity:SeedAdmin:Enabled", "false");
+        ConfigureTestSettings(builder);
+    }
+
+    /// <summary>Extra settings for specialised factories (e.g. low rate limits).</summary>
+    protected virtual void ConfigureTestSettings(IWebHostBuilder builder)
+    {
     }
 
     protected override IHost CreateHost(IHostBuilder builder)

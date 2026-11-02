@@ -22,6 +22,7 @@ try
 
     builder.Services.AddControllers();
     builder.Services.AddInsaafApiErrorResponses();
+    builder.Services.AddInsaafRateLimiting(builder.Configuration);
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddInsaafSwagger();
 
@@ -46,6 +47,8 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+    // After authentication so verification limits are partitioned per user.
+    app.UseRateLimiter();
     app.MapControllers();
 
     app.Lifetime.ApplicationStarted.Register(() =>

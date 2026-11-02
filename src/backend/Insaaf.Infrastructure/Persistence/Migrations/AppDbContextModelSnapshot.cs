@@ -114,6 +114,11 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsPartner")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<double>("Latitude")
                         .HasColumnType("float");
 
@@ -124,6 +129,9 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("PartnerSince")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(32)
@@ -232,6 +240,10 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("VisitTokenId")
+                        .IsUnique()
+                        .HasFilter("[VisitTokenId] IS NOT NULL");
+
                     b.HasIndex("RestaurantId", "IsVerified", "CreatedAt");
 
                     b.ToTable("Reviews", null, t =>
@@ -247,6 +259,71 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_Reviews_ValueRating", "[ValueRating] BETWEEN 1 AND 5");
 
                             t.HasCheckConstraint("CK_Reviews_VerifiedRequiresVisitToken", "[IsVerified] = 0 OR [VisitTokenId] IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.VisitToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IssuanceChannel")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("IssuanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("IssuedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RedeemedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RedeemedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IssuanceId");
+
+                    b.HasIndex("IssuedByUserId");
+
+                    b.HasIndex("RedeemedByUserId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("RestaurantId", "RedeemedAt", "RevokedAt");
+
+                    b.ToTable("VisitTokens", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_VisitTokens_ExpiresAfterIssued", "[ExpiresAt] > [IssuedAt]");
+
+                            t.HasCheckConstraint("CK_VisitTokens_ManualRequiresIssuer", "[IssuanceChannel] <> 1 OR [IssuedByUserId] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_VisitTokens_RedeemerRequiresRedemption", "[RedeemedByUserId] IS NULL OR [RedeemedAt] IS NOT NULL");
                         });
                 });
 
@@ -495,6 +572,32 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Insaaf.Domain.Entities.VisitToken", null)
+                        .WithMany()
+                        .HasForeignKey("VisitTokenId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Restaurant");
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.VisitToken", b =>
+                {
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("IssuedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("RedeemedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Insaaf.Domain.Entities.Restaurant", "Restaurant")
+                        .WithMany("VisitTokens")
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Restaurant");
                 });
 
@@ -561,6 +664,8 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Navigation("RestaurantCategories");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("VisitTokens");
                 });
 #pragma warning restore 612, 618
         }
