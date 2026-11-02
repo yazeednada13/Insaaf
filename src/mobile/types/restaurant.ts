@@ -47,6 +47,15 @@ export interface RestaurantDetailDto {
   isOpen: boolean | null;
   /** Today's local hours, e.g. "10:00 ص — 1:00 ص"; null when closed all day or unknown. */
   todayHours: string | null;
+  /** Averages of the detailed ratings over public reviews; null when there are none. */
+  ratingBreakdown: RatingBreakdownDto | null;
+}
+
+export interface RatingBreakdownDto {
+  food: number;
+  service: number;
+  value: number;
+  atmosphere: number;
 }
 
 export interface RestaurantSearchParams {

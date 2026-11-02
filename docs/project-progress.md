@@ -6,12 +6,12 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 4 — Reviews read foundation (**Backend track complete** — Mobile track not started) |
+| **CURRENT PHASE** | 4 — Reviews read foundation (**Backend + Mobile complete** — closing via Git delivery) |
 | **CURRENT FEATURE** | — |
-| **CURRENT TASK** | — (awaiting founder instruction `Phase 4 — Mobile`) |
-| **COMPLETED** | Phase 3 (merged, PR #3). Phase 4 Backend — tasks 4.1–4.4 + backend part of 4.7; see [phase4-report.md](phase4-report.md) |
-| **NEXT** | Founder: review Phase 4 Backend report, Git checkpoint; then instruct `Phase 4 — Mobile` (4.5, 4.6, mobile part of 4.7) |
-| **BLOCKERS** | None. No review data in SQL Server until Phase 5 (by decision D8) |
+| **CURRENT TASK** | — |
+| **COMPLETED** | Phase 3 (merged, PR #3). Phase 4 — tasks 4.1–4.7 + native RTL fix (development build); see [phase4-report.md](phase4-report.md) |
+| **NEXT** | Founder: commit/push `feature/phase4-reviews-read`, PR into `develop` (CI green), merge; then Phase 5 approval gate |
+| **BLOCKERS** | None. Limitations in [phase4-report.md](phase4-report.md) §12 (no review data until Phase 5; device testing via development build) |
 
 ## Phase 4 checklist
 
@@ -21,9 +21,9 @@
 | 4.2 | Backend | `IReviewRepository`, projections, aggregates | Verified |
 | 4.3 | Backend | `GET /api/v1/restaurants/{id}/reviews` (read-only) | Verified |
 | 4.4 | Backend | Rating aggregates on restaurant detail | Verified |
-| 4.5 | Mobile | Review list in Restaurant Details (Figma) | Not started |
-| 4.6 | Mobile | Empty review state | Not started |
-| 4.7 | Both | Tests + verification + report | Backend part done (95/95); Mobile part pending |
+| 4.5 | Mobile | Review list in Restaurant Details (Figma) | Done — checks + founder device test |
+| 4.6 | Mobile | Empty review state | Done — founder device test |
+| 4.7 | Both | Tests + verification + report | Done — 95/95, mobile checks, RTL verified on development build |
 
 ---
 
@@ -158,7 +158,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 1 | Skeleton | **Complete** |
 | 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
 | 3 | Restaurants | **Complete** (merged to `develop` via PR #3, `daa4489`) |
-| 4 | Reviews read foundation | **Backend complete** — Mobile not started |
+| 4 | Reviews read foundation | **Complete** (pending Git delivery to `develop`) |
 | 5 | QR verified review write | Not started |
 | 6 | Social core | Not started |
 | 7 | Feed and following | Not started |

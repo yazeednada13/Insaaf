@@ -34,6 +34,8 @@ export const colors = {
   heroGradient: 'rgba(0,0,0,0.5)',
   openStatusBackground: 'rgba(36,53,42,0.08)',
   closedStatusBackground: 'rgba(0,0,0,0.05)',
+  verifiedBackground: 'rgba(36,53,42,0.08)',
+  verifiedBorder: 'rgba(36,53,42,0.15)',
 } as const;
 
 /**

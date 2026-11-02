@@ -3,7 +3,7 @@
 **Date:** 2026-11-01
 **Branch:** `feature/phase4-reviews-read` (from `develop` @ `daa4489`; the founder manages Git)
 **References:** the approved Master Plan (Phase 4), the approved Phase 4 plan (decisions D1–D10), [decisions.md](decisions.md) ADR-004/ADR-009, Figma Make `DfKJchmPebiHH9dRYaYMuS`
-**Report status:** ✅ **Backend Track complete** · ⏳ Mobile Track hasn't started yet (it starts on the founder's explicit request)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ✅ Phase 4 ready to close (2026-11-02)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -21,9 +21,9 @@ Phase 4 lays the read-only foundation for reviews. A restaurant's detail shows i
 | 4.2 | `IReviewRepository` + projections + aggregates | ✅ Verified | 7 repository tests (InMemory) + SQL Server smoke |
 | 4.3 | Read-only reviews list endpoint | ✅ Verified | Service + API tests + SQL Server smoke (200/400/401/404/405) |
 | 4.4 | Aggregates on restaurant detail | ✅ Verified | Rounding tests + API (`averageRating`, `ratingBreakdown`, `minRating`) |
-| 4.5 | Mobile review list | ⏳ Mobile Track | — |
-| 4.6 | Empty state | ⏳ Mobile Track | — |
-| 4.7 | Tests + verification + report | 🟡 Backend part complete | 95/95 Release; the Mobile part pending |
+| 4.5 | Mobile review list | ✅ | typecheck, lint, bundles; the app's URL against SQL Server; founder device test (§12) |
+| 4.6 | Empty state | ✅ | Founder device test: "لا توجد تقييمات بعد" with no write-review button |
+| 4.7 | Tests + verification + report | ✅ | 95/95 Release; mobile checks; founder-verified RTL on the development app; this report |
 
 ### Applied decisions (approved with the plan)
 | # | Decision | Implementation |
@@ -34,7 +34,10 @@ Phase 4 lays the read-only foundation for reviews. A restaurant's detail shows i
 | D4 | Aggregates in the existing detail | ✅ `ratingBreakdown` in `GET /restaurants/{id}` |
 | D8 | No reviews in the real seed | ✅ The seed wasn't touched; review data exists only in the tests |
 | D10 | Text 2000 | ✅ `nvarchar(2000)` |
-| D5, D6, D7, D9 | Mobile decisions | ⏳ Mobile Track |
+| D5 | Hidden ReviewCard parts | ✅ The action row, photos, reply and restaurant line hidden; name not tappable |
+| D6 | `timeAgo` on the device | ✅ `utils/relativeTime.ts`, verified on 16 cases |
+| D7 | Hide the الكل / زيارات موثقة chips | ✅ |
+| D9 | Defer the verification sheet | ✅ The badge isn't tappable |
 
 ### Deviations from the plan's wording (same contract, recorded honestly)
 1. **The aggregates** are computed inside the restaurant detail query (`RestaurantRepository.GetByIdAsync`) instead of a separate `GetRatingSummaryAsync` method on `IReviewRepository`. **Why:** one query to the database instead of two, and it serves 4.4 directly.
@@ -215,4 +218,119 @@ The service rounds them to one decimal. **There's no N+1:** the number of querie
 ---
 
 ## 11. Mobile Track
-⏳ Not started. It starts only on the founder's explicit request ("Phase 4 — Mobile"). The plan: 4.5 (the review list per Figma), 4.6 (the empty state), 4.7 (QA + device), with decisions D5/D6/D7/D9 as approved.
+
+### 11.1 Overview
+| Task | What was implemented |
+|---|---|
+| 4.5 | **The reviews tab:** a paged list of `ReviewCard`s per Figma (avatar 44 with the initial letter, name + "زيارة موثقة" badge, stars + time, text truncated at 120 characters with "اقرأ المزيد / عرض أقل"), with the next page loading automatically at the end of the list. **The details tab:** the "متوسط التقييمات" card (4 bars) shows only when public reviews exist. **The info bar:** a real `averageRating` and `reviewCount` |
+| 4.6 | Loading skeleton (`ReviewCardSkeleton`), error + "إعادة المحاولة", empty "لا توجد تقييمات بعد". **No write-review button** |
+| Root RTL fix (founder decision) | `expo-localization` with `forcesRTL` + `expo-dev-client`; removed `forceRTL` from JavaScript; testing through a development app built on EAS Build |
+
+### 11.2 Application structure (new/modified)
+| Area | File | Responsibility |
+|---|---|---|
+| Types | `types/review.ts`; `types/restaurant.ts` (+`ratingBreakdown`) | The contract |
+| Service | `services/reviews/reviewsApi.ts` | `GET /restaurants/{id}/reviews` (reuses `restaurantErrors`) |
+| Hook | `features/reviews/hooks/useRestaurantReviewsQuery.ts` | `useInfiniteQuery`, key `['reviews','restaurant',id,sort]` |
+| Components | `features/reviews/components/{ReviewCard, VerifiedBadge, UserAvatar, RatingBreakdownCard, ReviewCardSkeleton, RestaurantReviewsList}.tsx` | UI per Figma + states |
+| Utility | `utils/relativeTime.ts` | Arabic `timeAgo` |
+| Screen | `features/restaurants/screens/RestaurantDetailScreen.tsx` | Wiring the tabs + loading pages on scroll |
+| Theme | `constants/theme.ts` | `verifiedBackground`/`verifiedBorder` |
+| RTL and build | `app.json` (plugin `expo-localization` + `com.insaaf.app` + EAS `projectId`/`owner`), `app/_layout.tsx`, `eas.json`, `.easignore` (repo root), `.gitignore` (`/android`, `/ios`) | Native RTL + the development app |
+
+### 11.3 User journeys and states
+**The journey:** Explore → restaurant → the info bar (☆☆☆☆☆ (0 تقييم) with no reviews) → "التقييمات" tab → skeleton → list or "لا توجد تقييمات بعد" → scrolling to the end loads the next page.
+
+| State | Display |
+|---|---|
+| Loading | Two `ReviewCardSkeleton` with the `.skeleton` shimmer |
+| Loading the next page | One more skeleton at the end of the list |
+| Error | The Arabic message from `restaurantErrors` + "إعادة المحاولة" |
+| Empty | 64px sand circle + "لا توجد تقييمات بعد" |
+| Success | `ReviewCard` list with `fade-in` |
+
+### 11.4 State management
+- **Server data:** TanStack Query only, with no global state.
+  - The reviews list is an `useInfiniteQuery` that fetches only when the reviews tab is first opened (`enabled: tab === 'reviews'`), then stays cached (30s).
+  - The next page is computed from `page * pageSize < totalCount`.
+- **The aggregates:** come from the existing restaurant detail query (`['restaurants','detail',id]`) with no extra request.
+- **Local state:** the current tab, and expanding a card's text.
+
+### 11.5 API data flow
+```text
+RestaurantDetailScreen (tab = 'reviews')
+  → useRestaurantReviewsQuery(id, enabled)
+  → reviewsApi.listRestaurantReviews(id, { sort: 'newest', page, pageSize: 20 })
+  → Axios (+ Bearer from the interceptor) → GET /api/v1/restaurants/{id}/reviews?sort=newest&page=1&pageSize=20
+  ← { success, data: { items[], page, pageSize, totalCount } } → unwrapRestaurantResponse
+  → pages.flatMap(items) → RestaurantReviewsList → ReviewCard
+ScrollView.onScroll (≤200px from the bottom) → fetchNextPage() when hasNextPage
+```
+
+### 11.6 RTL and Figma
+**The Figma sources** (read directly): `ReviewCard.tsx`, `VerifiedBadge.tsx`, `UserAvatar.tsx`, `RestaurantScreen.tsx`. Colours, sizes, line heights and spacing were applied as specified.
+
+**RTL: the root cause and the fix.**
+- **The cause (documented):** before SDK 58, Expo Go disables RTL and *"resets RTL preferences when opening… individual projects"*. `forceRTL` in JavaScript only took effect after a manual reload, which explains why it "was fixed, then came back" in Phase 3 and Phase 4.
+- **The fix:** `["expo-localization", { supportsRTL: true, forcesRTL: true }]`.
+  - Verified from the library's native source (`LocalizationModule.kt:55-62`, `LocalizationModule.swift:24-25, 68-70`): it applies `allowRTL + forceRTL` natively before React loads.
+  - Verified with `expo config --type introspect`: `ExpoLocalization_forcesRTL: true` in `Info.plist` and the Android resources.
+- **The consequence:** testing is now through **our development app** (`expo-dev-client`, built on EAS Build), not Expo Go. In Expo Go the app shows LTR, and that's expected.
+- **On the device (2026-11-02, founder-verified):** "استكشاف" on the right, "التفاصيل" on the right, and RTL stays after a full close and reopen.
+
+**Not built from Figma (decisions):** D5 (the hidden card parts), D7 (the chips), D9 (the sheet). **Proposed, not from Figma:** "الآن", the weeks, and the date after 30 days in `timeAgo` (D6). **Not in Figma:** a 5★…1★ histogram (not built) and a dedicated empty state (we used the approved existing pattern).
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| Mobile `tsc --noEmit` | ✅ Clean |
+| Mobile lint | ✅ 0 errors (1 warning in `client.ts`, Phase 2) |
+| `expo export` Android + iOS | ✅ 3.6MB / 3.3MB |
+| `formatRelativeTime` (16 cases, run with Node) | ✅ Every Figma example matches |
+| The app's URL against SQL Server | ✅ `.../reviews?sort=newest&page=1&pageSize=20` → 200; the detail returns `ratingBreakdown` |
+| `expo config --type introspect` | ✅ `forcesRTL` in the native files |
+| Founder device test (development app) | ✅ RTL on the main screens and after a restart; "All things are correct" |
+
+**Not verified on the device:** a list **with data** and the "متوسط التقييمات" card, because there are no reviews in SQL Server (D8). Their behaviour is verified through backend tests (data, sorting, rounding) and code review only. **Not verified:** iOS on a device (the development app was built for Android only).
+
+### 11.8 Educational summary (Mobile)
+1. **`useInfiniteQuery`:** TanStack Query keeps the pages as a list (`pages`), and gives us `fetchNextPage` / `hasNextPage`. The screen only decides when to ask for more (near the end of the scroll).
+2. **Lazy fetching:** `enabled: tab === 'reviews'` means no request until you open the tab, and after that the data is cached.
+3. **The aggregates without a new request:** they come with the detail itself (Backend 4.4), so the "متوسط التقييمات" card shows with no wait.
+4. **RTL is a native setting, not a JavaScript one:** layout direction is decided when the app starts, before JS loads. That's why the right place to force it is native (`expo-localization`), not `I18nManager` in JS.
+5. **Expo Go vs the development app:** Expo Go is a general-purpose app that can't read our native settings. `expo-dev-client` is our own app with our native settings, and we load our JS into it from Metro, as in Expo Go.
+
+---
+
+## 12. Consolidated Phase 4 status
+
+| ID | Track | Status | Acceptance criteria |
+|---|---|---|---|
+| 4.1 | Backend | ✅ | An additive migration applied; CHECK constraints; no creation path |
+| 4.2 | Backend | ✅ | One public rule; no N+1; aggregates in SQL |
+| 4.3 | Backend | ✅ | GET only (POST → 405); sorting + stable pagination; 401/400/404 |
+| 4.4 | Backend | ✅ | Real `averageRating`/`reviewCount`/`ratingBreakdown`/`minRating` |
+| 4.5 | Mobile | ✅ | A list per Figma with states and pagination; no write button |
+| 4.6 | Mobile | ✅ | An empty state verified on the device |
+| 4.7 | Both | ✅ | 95/95; mobile checks; device test; this report |
+
+**The Master Plan gate** (*"Restaurant detail displays verified review list and aggregates; APIs support read-only review data"*): ✅ met. The read-only API is verified against SQL Server; the list and aggregates are implemented and shown; with real data they're verified through tests until Phase 5.
+
+### Limitations and founder actions
+| # | Item | Required action |
+|---|---|---|
+| 1 | No reviews in SQL Server (D8) | Comes naturally with Phase 5 (creation through QR) |
+| 2 | `VisitTokenId` has no FK | Phase 5 |
+| 3 | `minRating` compares the unrounded average | Change it if you want |
+| 4 | Testing is now through the development app (Expo Go shows LTR) | Rebuild the development app after any change to native libraries or `app.json` |
+| 5 | Android permissions `READ/WRITE_EXTERNAL_STORAGE` added automatically by libraries | Review them before publishing to the stores |
+| 6 | iOS not tested on a device | Needs an iOS EAS build + an Apple account, or SDK 58 for Expo Go |
+| 7 | `.easignore` excludes the backend and docs from EAS uploads | If you add new files the app needs outside `src/mobile`, update it |
+| 8 | Carried over from Phase 3 | `BottomNav`, Burger Makers' hours, `appsettings.json` machine name, `dotnet-ef` 9.0.6 |
+
+### Files changed in Phase 4 (summary)
+- **Backend:** `src/backend/**` (Reviews across all four layers + `RestaurantRepository`/`RestaurantService`/DTOs + `RestaurantsController` + migration `20261101001634_AddReviews`).
+- **Tests:** `tests/Insaaf.Application.Tests/Reviews/*`, `tests/Insaaf.API.Tests/ReviewEndpointsTests.cs`, `RestaurantServiceTests.cs`.
+- **Mobile:** `src/mobile/{types/review.ts, types/restaurant.ts, services/reviews/*, features/reviews/**, features/restaurants/screens/RestaurantDetailScreen.tsx, utils/relativeTime.ts, constants/theme.ts, app/_layout.tsx, app.json, eas.json, package.json, package-lock.json, .gitignore}`.
+- **The repo root:** `.easignore`.
+- **Docs:** `docs/phase4-report.md`, `docs/project-progress.md`.
