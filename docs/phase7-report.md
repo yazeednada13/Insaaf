@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase7-feed-following` (from `develop` after the Phase 6 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 7), the approved Phase 7 plan (decisions D-1…D-9), [decisions.md](decisions.md) ADR-004/ADR-013, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ActivityScreen.tsx`, `ProfileScreen.tsx`, `ReviewCard.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⏳ Mobile Track not started (waiting for `Phase 7 — Mobile`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ⏳ Phase 7 awaiting the founder's actions (§12)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -212,4 +212,107 @@ All routes need `[Authorize]` and use the envelope `{ success, data, errors: [{c
 ---
 
 ## 11. Mobile Track
-⏳ **Not started.** Waiting for the founder's instruction: `Phase 7 — Mobile`.
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 7.4 | Follow/Unfollow on Review Detail | ✅ Verified on device | Founder results 3, 4, 5, 10, 11, 12 |
+| 7.5 | Feed in the النشاط tab | ✅ Verified on device | Founder results 1, 2, 6, 7, 8, 9, 13 |
+| 7.6 (Mobile) | Tests and verification | ✅ | typecheck, lint, bundles; founder device checklist |
+
+**Applied decisions:** D-1 (Follow/Unfollow on Review Detail), D-3 (النشاط tab, "المتابعة" chip), D-5 (empty state with a button to Explore, labelled "استكشف المطاعم"), D-9 (hidden Figma items).
+
+**Deviations from the plan's wording:**
+1. The follow button is smaller than Figma's profile button, because it sits in the reviewer row.
+2. `ReviewCard` gained a `stack` prop that selects which tab's Review Detail route to open.
+
+### 11.2 Application structure (new/modified)
+| File | Responsibility |
+|---|---|
+| `app/(tabs)/activity/_layout.tsx`, `index.tsx`, `review/[reviewId].tsx` | The النشاط tab's stack |
+| `features/social/screens/FeedScreen.tsx` | Header, chip, feed, and all its states |
+| `features/social/hooks/useFeedQuery.ts` | Cursor paging |
+| `features/social/hooks/useFollowUser.ts` | Follow and unfollow with instant update and rollback |
+
+Modified: `ReviewDetailScreen.tsx` (follow button), `ReviewCard.tsx` (restaurant line, `stack`), `BottomNav.tsx` (النشاط), `useReviewLike.ts` and `useReviewComments.ts` (feed cache), `socialApi.ts`, `types/social.ts`, `types/review.ts`, `types/expo-router.d.ts`, `app/(tabs)/_layout.tsx`.
+
+### 11.3 User journeys and states
+```text
+Review Detail ──"متابعة"──► النشاط feed ──card──► Review Detail (Back returns to the feed)
+                                 │
+                                 └── restaurant line ──► restaurant page
+```
+- **Loading:** review card skeletons, plus a spinner for the next page.
+- **Empty:** "لا توجد تقييمات بعد", the hint, and "استكشف المطاعم".
+- **Error:** an error state with retry.
+- **Refresh:** pull to refresh.
+- **Failed follow:** the button returns to its previous state.
+
+### 11.4 State management
+- **TanStack Query only:** `useInfiniteQuery` for the feed, `useMutation` for follow. No global state.
+- **Follow:** the state is written into every cached review by that user, restored on failure, and the feed is refreshed on success.
+- **Likes and comments:** `useReviewLike` now also updates the feed cache, and comment changes invalidate it.
+
+### 11.5 API data flow
+`FeedScreen` → `useFeedQuery` → `socialApi.getFeed` → `apiClient` → `GET /api/v1/feed`. The response's `nextCursor` becomes the next page's `cursor`. `FollowButton` → `useFollowUser` → `followUser`/`unfollowUser` → `/api/v1/users/{id}/follow`.
+
+### 11.6 RTL and Figma
+- **RTL:** confirmed by the founder on the device (result 13).
+- **Not built from Figma:** the "الإشعارات" chip, Home sections, "عرض الكل", the verified info sheet.
+- **No Figma design:** the follow button's placement, the empty state, and its button.
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ (after the last change) |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` |
+| `expo export` Android | ✅ (after the last change) |
+| `expo export` iOS | ✅ (before the last change, a type-only fix; not rerun) |
+| Real API | ✅ The device ran against the real API and SQL Server |
+
+**Founder device results (Android, 2026-11-05):** every item passed.
+| # | Check | Result |
+|---|---|---|
+| 1 | النشاط tab and order | ✅ |
+| 2 | Empty feed and Explore button | ✅ |
+| 3–4 | Follow button visible; follows instantly | ✅ |
+| 5 | Follow persists after reopening | ✅ |
+| 6 | Followed review in the feed; pull to refresh | ✅ |
+| 7 | Card opens details; Back returns to the feed | ✅ |
+| 8 | Like and comment update the feed's counts | ✅ |
+| 9 | Restaurant line opens the restaurant | ✅ |
+| 10 | No follow button on own review; own review not in the feed | ✅ |
+| 11 | Unfollow from the same place removes the review | ✅ |
+| 12 | Offline follow returns to its previous state | ✅ |
+| 13 | RTL | ✅ |
+
+**Not verified:**
+- iOS on a real device (deferred to Phase 10).
+- Feed paging beyond 20 reviews on a device: the development data has only 2 reviews.
+- There are no automated tests for Mobile components.
+
+### 11.8 Educational summary (Mobile)
+- **Tabs own their stacks:** each tab keeps its own navigation history, so Review Detail has a route in both. That's why Back returns to the place you came from.
+- **Cursor on the client:** the app never reads the cursor; it just passes back what the server gave it.
+- **One cache again:** a like in the feed and on the detail screen is the same data, kept in step by updating every cached copy.
+- **Optimistic follow:** the button changes first, and a failure restores it, as with likes.
+
+---
+
+## 12. Consolidated Phase 7 status
+| ID | Track | Status |
+|---|---|---|
+| 7.1–7.3 | Backend | ✅ Verified (193/193, smoke 16/16 on SQL Server) |
+| 7.4–7.5 | Mobile | ✅ Verified on an Android device |
+| 7.6 | Both | ✅ Pagination, no N+1, checks and device checklist |
+
+**The Phase 7 gate:** follow and unfollow from Review Detail ✅; followed users' verified reviews in the feed ✅; the user's own, hidden and inactive-restaurant reviews never shown ✅; paging without duplicates ✅; no N+1 (one SQL command) ✅.
+
+### Limitations and founder actions
+1. **Git:** commit, push, then a PR into `develop`.
+2. **Unfollow access:** only from a review of that person, until Phase 8's lists.
+3. **Feed performance:** re-measure with realistic data in Phase 10.
+4. **Test data:** `smoke7-…` accounts and device test data remain in the development database.
+
+### Files changed in Phase 7 (summary)
+Backend files in §2, Mobile files in §11.2, plus `docs/phase7-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`. One migration: `AddUserFollows`. No new dependencies.

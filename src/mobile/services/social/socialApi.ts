@@ -4,16 +4,19 @@ import { apiClient } from '@/services/api/client';
 import type { ApiResponse } from '@/services/api/types';
 import type { ReviewDetailDto } from '@/types/review';
 import type {
+  FeedResultDto,
   ReviewCommentDeletedDto,
   ReviewCommentDto,
   ReviewCommentListResultDto,
   ReviewLikeStateDto,
+  UserFollowStateDto,
 } from '@/types/social';
 
 const SOCIAL_ERROR_MESSAGES: Record<string, string> = {
   validation_error: 'تحقق من نص التعليق وحاول مرة أخرى.',
   not_found: 'هذا المحتوى غير متاح.',
   comment_forbidden: 'يمكنك حذف تعليقاتك فقط.',
+  cannot_follow_self: 'لا يمكنك متابعة نفسك.',
   rate_limited: 'محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.',
   unauthorized: 'يرجى تسجيل الدخول للمتابعة.',
   network_error: 'تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.',
@@ -76,6 +79,21 @@ export function likeReview(reviewId: string): Promise<ReviewLikeStateDto> {
 
 export function unlikeReview(reviewId: string): Promise<ReviewLikeStateDto> {
   return request(() => apiClient.delete<ApiResponse<ReviewLikeStateDto>>(`/api/v1/reviews/${reviewId}/like`));
+}
+
+/** Repeat-safe: the server keeps one follow per pair. */
+export function followUser(userId: string): Promise<UserFollowStateDto> {
+  return request(() => apiClient.put<ApiResponse<UserFollowStateDto>>(`/api/v1/users/${userId}/follow`));
+}
+
+export function unfollowUser(userId: string): Promise<UserFollowStateDto> {
+  return request(() => apiClient.delete<ApiResponse<UserFollowStateDto>>(`/api/v1/users/${userId}/follow`));
+}
+
+export function getFeed(cursor: string | undefined, limit: number): Promise<FeedResultDto> {
+  return request(() =>
+    apiClient.get<ApiResponse<FeedResultDto>>('/api/v1/feed', { params: { cursor, limit } }),
+  );
 }
 
 export function listComments(

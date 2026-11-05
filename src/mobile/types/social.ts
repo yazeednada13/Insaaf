@@ -1,6 +1,6 @@
-import type { ReviewerDto } from '@/types/review';
+import type { ReviewerDto, ReviewListItemDto } from '@/types/review';
 
-// Phase 6 social contract (docs/phase6-report.md §5).
+// Social contracts (docs/phase6-report.md §5, docs/phase7-report.md §5).
 
 export interface ReviewLikeStateDto {
   reviewId: string;
@@ -28,4 +28,24 @@ export interface ReviewCommentListResultDto {
 export interface ReviewCommentDeletedDto {
   reviewId: string;
   commentCount: number;
+}
+
+export interface UserFollowStateDto {
+  userId: string;
+  isFollowedByMe: boolean;
+}
+
+export interface FeedItemDto extends ReviewListItemDto {
+  restaurant: {
+    id: string;
+    name: string;
+    city: string;
+    address: string | null;
+  };
+}
+
+export interface FeedResultDto {
+  items: FeedItemDto[];
+  /** Opaque; null on the last page. */
+  nextCursor: string | null;
 }

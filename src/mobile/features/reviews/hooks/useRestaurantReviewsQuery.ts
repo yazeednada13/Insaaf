@@ -10,7 +10,10 @@ export const reviewQueryKeys = {
   restaurantLists: ['reviews', 'restaurant'] as const,
   restaurant: (restaurantId: string, sort: ReviewSort) =>
     ['reviews', 'restaurant', restaurantId, sort] as const,
+  /** Every cached review detail. */
+  details: ['reviews', 'detail'] as const,
   detail: (reviewId: string) => ['reviews', 'detail', reviewId] as const,
+  feed: ['reviews', 'feed'] as const,
   comments: (reviewId: string) => ['reviews', 'comments', reviewId] as const,
 };
 

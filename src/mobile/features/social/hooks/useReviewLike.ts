@@ -9,7 +9,7 @@ import {
 import { reviewQueryKeys } from '@/features/reviews/hooks/useRestaurantReviewsQuery';
 import type { SocialApiError } from '@/services/social/socialApi';
 import * as socialApi from '@/services/social/socialApi';
-import type { ReviewDetailDto, ReviewListResultDto } from '@/types/review';
+import type { ReviewDetailDto, ReviewListItemDto } from '@/types/review';
 import type { ReviewLikeStateDto } from '@/types/social';
 
 interface LikeInput {
@@ -21,19 +21,22 @@ interface LikeContext {
   snapshots: [QueryKey, unknown][];
 }
 
-/** Writes the like state into every cached copy of the review: its lists and its detail. */
+/** Restaurant lists and the feed share this shape. */
+type ReviewPages = InfiniteData<{ items: ReviewListItemDto[] }>;
+
+/** Writes the like state into every cached copy of the review: lists, feed and detail. */
 function applyLikeState(queryClient: QueryClient, reviewId: string, state: Omit<ReviewLikeStateDto, 'reviewId'>) {
-  queryClient.setQueriesData<InfiniteData<ReviewListResultDto>>(
-    { queryKey: reviewQueryKeys.restaurantLists },
-    (data) =>
-      data && {
-        ...data,
-        pages: data.pages.map((page) => ({
-          ...page,
-          items: page.items.map((item) => (item.id === reviewId ? { ...item, ...state } : item)),
-        })),
-      },
-  );
+  const update = (data: ReviewPages | undefined) =>
+    data && {
+      ...data,
+      pages: data.pages.map((page) => ({
+        ...page,
+        items: page.items.map((item) => (item.id === reviewId ? { ...item, ...state } : item)),
+      })),
+    };
+
+  queryClient.setQueriesData<ReviewPages>({ queryKey: reviewQueryKeys.restaurantLists }, update);
+  queryClient.setQueryData<ReviewPages>(reviewQueryKeys.feed, update);
   queryClient.setQueryData<ReviewDetailDto>(
     reviewQueryKeys.detail(reviewId),
     (data) => data && { ...data, ...state },
@@ -52,10 +55,12 @@ export function useReviewLike() {
       like ? socialApi.likeReview(reviewId) : socialApi.unlikeReview(reviewId),
     onMutate: async ({ reviewId, like }) => {
       await queryClient.cancelQueries({ queryKey: reviewQueryKeys.restaurantLists });
+      await queryClient.cancelQueries({ queryKey: reviewQueryKeys.feed });
       await queryClient.cancelQueries({ queryKey: reviewQueryKeys.detail(reviewId) });
 
       const snapshots: [QueryKey, unknown][] = [
         ...queryClient.getQueriesData({ queryKey: reviewQueryKeys.restaurantLists }),
+        [reviewQueryKeys.feed, queryClient.getQueryData(reviewQueryKeys.feed)],
         [reviewQueryKeys.detail(reviewId), queryClient.getQueryData(reviewQueryKeys.detail(reviewId))],
       ];
 
@@ -84,9 +89,12 @@ function findLikeState(queryClient: QueryClient, reviewId: string) {
     return detail;
   }
 
-  for (const [, data] of queryClient.getQueriesData<InfiniteData<ReviewListResultDto>>({
-    queryKey: reviewQueryKeys.restaurantLists,
-  })) {
+  const caches = [
+    ...queryClient.getQueriesData<ReviewPages>({ queryKey: reviewQueryKeys.restaurantLists }),
+    [reviewQueryKeys.feed, queryClient.getQueryData<ReviewPages>(reviewQueryKeys.feed)] as const,
+  ];
+
+  for (const [, data] of caches) {
     const item = data?.pages.flatMap((page) => page.items).find((review) => review.id === reviewId);
     if (item) {
       return item;

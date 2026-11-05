@@ -30,6 +30,7 @@ import {
   useDeleteCommentMutation,
   useReviewCommentsQuery,
 } from '@/features/social/hooks/useReviewComments';
+import { useFollowUser } from '@/features/social/hooks/useFollowUser';
 import { useReviewDetailQuery } from '@/features/social/hooks/useReviewDetailQuery';
 import { useReviewLike } from '@/features/social/hooks/useReviewLike';
 import type { ReviewDetailDto } from '@/types/review';
@@ -62,7 +63,29 @@ function DetailedRating({ label, value }: { label: string; value: number }) {
   );
 }
 
+// Decision D-1: Figma has this button on the profile (Phase 8); until then it lives here, and it's
+// also the only place to unfollow. Styled like Figma's profile button, in a compact size.
+function FollowButton({ userId, isFollowing }: { userId: string; isFollowing: boolean }) {
+  const followMutation = useFollowUser();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: isFollowing, disabled: followMutation.isPending }}
+      disabled={followMutation.isPending}
+      hitSlop={6}
+      onPress={() => followMutation.mutate({ userId, follow: !isFollowing })}
+      style={[styles.followButton, isFollowing && styles.followingButton]}
+    >
+      <Text style={[styles.followLabel, isFollowing && styles.followingLabel]}>
+        {isFollowing ? 'تتابع' : 'متابعة'}
+      </Text>
+    </Pressable>
+  );
+}
+
 function ReviewContent({ review }: { review: ReviewDetailDto }) {
+  const { user } = useAuth();
   const likeMutation = useReviewLike();
   const reviewerName = review.reviewer.fullName ?? review.reviewer.userName ?? '';
 
@@ -86,7 +109,12 @@ function ReviewContent({ review }: { review: ReviewDetailDto }) {
             </Text>
           </Pressable>
         </View>
-        <Text style={styles.reviewerTime}>{formatRelativeTime(review.createdAt)}</Text>
+        <View style={styles.reviewerSide}>
+          <Text style={styles.reviewerTime}>{formatRelativeTime(review.createdAt)}</Text>
+          {user?.id === review.reviewer.id ? null : (
+            <FollowButton isFollowing={review.isReviewerFollowedByMe} userId={review.reviewer.id} />
+          )}
+        </View>
       </View>
 
       <View style={styles.ratingsCard}>
@@ -326,6 +354,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4,
   },
+  followButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  followLabel: {
+    color: colors.primaryForeground,
+    fontFamily: fonts.arabicSemiBold,
+    fontSize: 12,
+    lineHeight: lineHeights.xs,
+  },
+  followingButton: {
+    backgroundColor: colors.border,
+  },
+  followingLabel: {
+    color: colors.textPrimary,
+  },
   header: {
     alignItems: 'center',
     borderBottomColor: colors.divider,
@@ -408,6 +454,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: lineHeights.base,
     textAlign: textAlignStart,
+  },
+  reviewerSide: {
+    alignItems: 'flex-end',
+    gap: 6,
   },
   reviewerText: {
     flex: 1,

@@ -9,23 +9,36 @@ import { VerifiedBadge } from '@/features/reviews/components/VerifiedBadge';
 import { CommentIcon, HeartIcon } from '@/features/social/components/ReviewActionIcons';
 import { useReviewLike } from '@/features/social/hooks/useReviewLike';
 import { colors, fonts, lineHeights, restaurantLayout, textAlignStart } from '@/constants/theme';
+import { formatLocation } from '@/types/restaurant';
 import type { ReviewListItemDto } from '@/types/review';
+import type { FeedItemDto } from '@/types/social';
 import { formatRelativeTime } from '@/utils/relativeTime';
 
 // Figma ReviewCard.tsx: text longer than 120 characters is truncated behind "اقرأ المزيد".
 const PREVIEW_LENGTH = 120;
 
+interface ReviewCardProps {
+  review: ReviewListItemDto & Partial<Pick<FeedItemDto, 'restaurant'>>;
+  /** The tab whose stack opens Review Detail, so Back returns to this list. */
+  stack?: 'restaurants' | 'activity';
+}
+
 /**
  * Figma ReviewCard.tsx: reviewer, verified badge, rating, time, text, like and comment actions. The
- * restaurant line (redundant on its own page), photos, official reply and save are not rendered.
+ * restaurant line shows only when the review carries a restaurant (the feed); it's redundant on the
+ * restaurant's own page. Photos, official reply and save are not rendered.
  */
-export function ReviewCard({ review }: { review: ReviewListItemDto }) {
+export function ReviewCard({ review, stack = 'restaurants' }: ReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
   const likeMutation = useReviewLike();
   const reviewerName = review.reviewer.fullName ?? review.reviewer.userName ?? '';
   const isLong = review.text.length > PREVIEW_LENGTH;
+  const { restaurant } = review;
   const openDetail = () =>
-    router.push({ pathname: '/restaurants/review/[reviewId]', params: { reviewId: review.id } });
+    router.push({
+      pathname: stack === 'activity' ? '/activity/review/[reviewId]' : '/restaurants/review/[reviewId]',
+      params: { reviewId: review.id },
+    });
 
   return (
     <FadeInView>
@@ -38,6 +51,19 @@ export function ReviewCard({ review }: { review: ReviewListItemDto }) {
               <Text style={styles.name}>{reviewerName}</Text>
               {review.isVerified ? <VerifiedBadge /> : null}
             </View>
+            {restaurant ? (
+              <Pressable
+                accessibilityRole="link"
+                hitSlop={4}
+                onPress={() =>
+                  router.navigate({ pathname: '/restaurants/[id]', params: { id: restaurant.id } })
+                }
+              >
+                <Text style={styles.restaurant}>
+                  {restaurant.name} · {formatLocation(restaurant.city, restaurant.address)}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
           <View style={styles.meta}>
             <StarRating rating={review.rating} />
@@ -141,6 +167,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  restaurant: {
+    color: colors.accent,
+    fontFamily: fonts.arabicRegular,
+    fontSize: 12,
+    lineHeight: lineHeights.xs,
+    marginTop: 2,
+    textAlign: textAlignStart,
   },
   text: {
     color: colors.textPrimary,

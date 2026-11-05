@@ -15,8 +15,8 @@ interface TabConfig {
   prominent?: boolean;
 }
 
-// Figma BottomNav.tsx. Decision D-N1: only the tabs whose screens exist are shown (استكشاف + مسح);
-// الرئيسية, النشاط and ملفي are added in their phases.
+// Figma BottomNav.tsx. Decision D-N1: only the tabs whose screens exist are shown; الرئيسية and ملفي
+// are added in their phases.
 const TABS: Record<string, TabConfig> = {
   restaurants: {
     label: 'استكشاف',
@@ -41,6 +41,15 @@ const TABS: Record<string, TabConfig> = {
         <Path d="M3 11h5" />
         <Path d="M11 3v5" />
         <Path d="M11 11h2v2h-2z" />
+      </Svg>
+    ),
+  },
+  activity: {
+    label: 'النشاط',
+    icon: (active) => (
+      <Svg fill={active ? colors.primary : 'none'} height={22} stroke={active ? colors.primary : INACTIVE} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} viewBox="0 0 24 24" width={22}>
+        <Path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <Path d="M13.73 21a2 2 0 01-3.46 0" />
       </Svg>
     ),
   },
