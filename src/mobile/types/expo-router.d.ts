@@ -16,6 +16,8 @@ declare module 'expo-router' {
         | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownInputParams & { id: string | number } }
         | { pathname: `/restaurants/review/[reviewId]`; params: import('expo-router').UnknownInputParams & { reviewId: string | number } }
         | { pathname: `/scan`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/activity`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/activity/review/[reviewId]`; params: import('expo-router').UnknownInputParams & { reviewId: string | number } }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownInputParams };
       hrefOutputParams:
         | { pathname: import('expo-router').RelativePathString; params?: import('expo-router').UnknownOutputParams }
@@ -29,6 +31,8 @@ declare module 'expo-router' {
         | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownOutputParams & { id: string } }
         | { pathname: `/restaurants/review/[reviewId]`; params: import('expo-router').UnknownOutputParams & { reviewId: string } }
         | { pathname: `/scan`; params?: import('expo-router').UnknownOutputParams }
+        | { pathname: `/activity`; params?: import('expo-router').UnknownOutputParams }
+        | { pathname: `/activity/review/[reviewId]`; params: import('expo-router').UnknownOutputParams & { reviewId: string } }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownOutputParams };
       href:
         | import('expo-router').RelativePathString
@@ -41,6 +45,8 @@ declare module 'expo-router' {
         | `/restaurants/search${`?${string}` | `#${string}` | ''}`
         | `/restaurants/${string}${`?${string}` | `#${string}` | ''}`
         | `/scan${`?${string}` | `#${string}` | ''}`
+        | `/activity${`?${string}` | `#${string}` | ''}`
+        | `/activity/review/${string}${`?${string}` | `#${string}` | ''}`
         | `/_sitemap${`?${string}` | `#${string}` | ''}`
         | { pathname: import('expo-router').RelativePathString; params?: import('expo-router').UnknownInputParams }
         | { pathname: import('expo-router').ExternalPathString; params?: import('expo-router').UnknownInputParams }
@@ -53,6 +59,8 @@ declare module 'expo-router' {
         | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownInputParams & { id: string | number } }
         | { pathname: `/restaurants/review/[reviewId]`; params: import('expo-router').UnknownInputParams & { reviewId: string | number } }
         | { pathname: `/scan`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/activity`; params?: import('expo-router').UnknownInputParams }
+        | { pathname: `/activity/review/[reviewId]`; params: import('expo-router').UnknownInputParams & { reviewId: string | number } }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownInputParams };
     }
   }

@@ -32,6 +32,7 @@ function useRefreshAfterCommentChange(reviewId: string) {
     void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.comments(reviewId) });
     void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(reviewId) });
     void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.restaurantLists });
+    void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.feed });
   };
 }
 

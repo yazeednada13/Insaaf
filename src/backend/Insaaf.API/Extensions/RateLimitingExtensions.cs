@@ -16,6 +16,7 @@ public static class RateLimitingExtensions
     public const string VerificationCreatePolicy = "verification-create";
     public const string SocialLikePolicy = "social-like";
     public const string SocialCommentPolicy = "social-comment";
+    public const string SocialFollowPolicy = "social-follow";
 
     public static IServiceCollection AddInsaafRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
@@ -23,6 +24,7 @@ public static class RateLimitingExtensions
         var createPerMinute = configuration.GetValue("RateLimiting:VerificationCreatePerMinute", 5);
         var likesPerMinute = configuration.GetValue("RateLimiting:SocialLikePerMinute", 60);
         var commentsPerMinute = configuration.GetValue("RateLimiting:SocialCommentPerMinute", 10);
+        var followsPerMinute = configuration.GetValue("RateLimiting:SocialFollowPerMinute", 30);
 
         services.AddRateLimiter(options =>
         {
@@ -39,6 +41,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(VerificationCreatePolicy, httpContext => PerUserFixedWindow(httpContext, createPerMinute));
             options.AddPolicy(SocialLikePolicy, httpContext => PerUserFixedWindow(httpContext, likesPerMinute));
             options.AddPolicy(SocialCommentPolicy, httpContext => PerUserFixedWindow(httpContext, commentsPerMinute));
+            options.AddPolicy(SocialFollowPolicy, httpContext => PerUserFixedWindow(httpContext, followsPerMinute));
         });
 
         return services;

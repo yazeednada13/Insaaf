@@ -22,6 +22,7 @@ export interface ReviewListItemDto {
 }
 
 export interface ReviewDetailDto extends ReviewListItemDto {
+  isReviewerFollowedByMe: boolean;
   foodRating: number;
   serviceRating: number;
   valueRating: number;

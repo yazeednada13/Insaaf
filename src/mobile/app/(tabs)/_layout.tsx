@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { BottomNav } from '@/features/navigation/BottomNav';
 
 // The main app behind the session: every tab calls JWT-protected APIs. The group does not change
-// URLs (/restaurants, /restaurants/[id], /scan).
+// URLs (/restaurants, /restaurants/[id], /scan, /activity).
 export default function TabsLayout() {
   const { isAuthenticated, isBootstrapping } = useAuth();
 
@@ -27,6 +27,7 @@ export default function TabsLayout() {
     <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <BottomNav {...props} />}>
       <Tabs.Screen name="restaurants" />
       <Tabs.Screen name="scan" />
+      <Tabs.Screen name="activity" />
     </Tabs>
   );
 }

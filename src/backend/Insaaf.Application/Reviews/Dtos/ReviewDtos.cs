@@ -37,7 +37,8 @@ public sealed record ReviewDetailDto(
     ReviewRestaurantDto Restaurant,
     int LikeCount,
     int CommentCount,
-    bool IsLikedByMe);
+    bool IsLikedByMe,
+    bool IsReviewerFollowedByMe);
 
 public sealed record ReviewListResultDto(
     IReadOnlyList<ReviewListItemDto> Items,

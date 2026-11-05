@@ -6,12 +6,25 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 6 — Social core (**Backend and Mobile complete**) |
+| **CURRENT PHASE** | 7 — Feed and following (**Backend and Mobile complete**) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phase 5 (merged into `develop`). Phase 6 — tasks 6.1–6.5; see [phase6-report.md](phase6-report.md) |
-| **NEXT** | Founder: commit/push `feature/phase6-social-core`, PR into `develop`; then Phase 7 planning on request |
-| **BLOCKERS** | None. Open: itemized device results ([phase5-report.md](phase5-report.md) §12) |
+| **COMPLETED** | Phases 5 and 6 (merged). Phase 7 — tasks 7.1–7.6; see [phase7-report.md](phase7-report.md) |
+| **NEXT** | Founder: commit/push `feature/phase7-feed-following`, PR into `develop`; then Phase 8 planning on request |
+| **BLOCKERS** | None. iOS is untested on a device; planned for Phase 10 |
+
+## Phase 7 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 7.1 | Backend | `UserFollow`, `AddUserFollows` migration | Verified (migration applied by founder) |
+| 7.2 | Backend | Follow API; follow state on review detail | Verified |
+| 7.3 | Backend | Cursor-paginated feed; query plan check | Verified (1 SQL command per feed page; no index needed yet) |
+| 7.4 | Mobile | Follow/Unfollow on Review Detail | Done — checks + founder device results |
+| 7.5 | Mobile | Feed in the النشاط tab | Done — checks + founder device results |
+| 7.6 | Both | Tests and report | Done — 193/193, smoke 16/16, mobile checks, device checklist |
+
+---
 
 ## Phase 6 checklist
 
@@ -37,7 +50,7 @@
 | 5.6 | Mobile | Camera + scan screen | Done — checks + founder reported test done |
 | 5.7 | Mobile | Verified review form | Done — checks + founder reported test done |
 | 5.8 | Mobile | Scan entry point (BottomNav) | Done — checks + founder reported test done |
-| 5.9 | Both | Tests + verification + report | Backend done (130/130, smoke 16/16); Mobile checks done, itemized device results not recorded |
+| 5.9 | Both | Tests + verification + report | Backend done (130/130, smoke 16/16); Mobile done (founder confirmed device checks) |
 
 ---
 
@@ -187,9 +200,9 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
 | 3 | Restaurants | **Complete** (merged to `develop` via PR #3, `daa4489`) |
 | 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
-| 5 | QR verified review write | **Complete** (merged to `develop`; itemized device results not recorded) |
-| 6 | Social core | **In progress** (Backend and Mobile complete 2026-11-05; closing via Git delivery) |
-| 7 | Feed and following | Not started |
+| 5 | QR verified review write | **Complete** (merged to `develop`) |
+| 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
+| 7 | Feed and following | **In progress** (Backend and Mobile complete 2026-11-05; closing via Git delivery) |
 | 8 | Profiles | Not started |
 | 9 | Admin and moderation | Not started |
 | 9A | Review photos | Not started |

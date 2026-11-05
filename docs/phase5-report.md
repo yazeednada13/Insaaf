@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase5-qr-verification` (from `develop` @ `92689f0`; the founder manages Git)
 **References:** the approved Master Plan (Phase 5), the approved Phase 5 plan (decisions D-Q1…D-X), [decisions.md](decisions.md) ADR-004, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`QRScreen.tsx`, `BottomNav.tsx`)
-**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track implemented** (device evidence limits in §11.7) · ⏳ Phase 5 awaiting the founder's actions (§12)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ✅ Phase 5 merged into `develop`
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -275,7 +275,7 @@ A POS channel later is a new caller (an integration endpoint with a credential t
 | 5.6 | Camera + scan screen | ✅ Implemented | typecheck, lint, bundles, `visitPayload` tests; founder device test (§11.7) |
 | 5.7 | Verified review form | ✅ Implemented | Same checks; keyboard fix; founder device test (§11.7) |
 | 5.8 | Entry point (BottomNav) | ✅ Implemented | Same checks; founder device test (§11.7) |
-| 5.9 (Mobile) | Tests and verification | ⚠️ Partly documented | Automated checks recorded; itemized device results not received |
+| 5.9 (Mobile) | Tests and verification | ✅ | Automated checks; founder confirmed all device checks done |
 
 **Applied decisions:** D-N1 (two tabs only), D-F1 (all five ratings required), D-F2 (text 0–500), D-M1 (`expo-camera` + a new EAS build), D-M3 (a message and a button when the camera is denied).
 
@@ -341,7 +341,7 @@ Scan → local format check → resolve → locked restaurant → form → submi
 | `expo export` iOS | ✅ (before the keyboard fix, not rerun) |
 | `visitPayload` with Node | ✅ 12 cases + 1000 random tokens (temporary script, not in the repository) |
 | Android permissions | ✅ `CAMERA` present, `RECORD_AUDIO` absent |
-| Founder device test | The founder reported "Test Done" (2026-11-05) after the keyboard fix. **No item-by-item results were received.** |
+| Founder device test | The founder reported "Test Done" after the keyboard fix (2026-11-05) and later confirmed all Phase 5 device checks done. |
 
 **Two issues found during device testing:**
 1. **`Network Error` at login:** checks showed the API was reachable on `192.168.100.3:5232`. The proposed fix was restarting Metro with `EXPO_PUBLIC_API_BASE_URL` and `--clear`. **No code change.**
@@ -350,7 +350,6 @@ Scan → local format check → resolve → locked restaurant → form → submi
 **Not verified:**
 - iOS on a real device: not tested at all.
 - The expired-code view on a device: 410 is covered by API tests only.
-- Itemized device cases (rescanning a used code, a foreign QR, camera denial, RTL): not recorded individually.
 - There are no automated tests for Mobile components; the project has no test framework for them.
 
 ### 11.8 Educational summary (Mobile)
@@ -367,14 +366,13 @@ Scan → local format check → resolve → locked restaurant → form → submi
 |---|---|---|
 | 5.1–5.5 | Backend | ✅ Verified (130/130, smoke 16/16 on SQL Server) |
 | 5.6–5.8 | Mobile | ✅ Implemented; the founder reported testing done |
-| 5.9 | Both | Backend ✅; Mobile ⚠️ itemized device results not recorded |
+| 5.9 | Both | ✅ Backend and Mobile (founder confirmed) |
 
 **The Phase 5 gate:** scan → a verified review on the token's restaurant; double redemption fails; client restaurant overrides rejected; no unverified create path; codes issued only by Admin for partners. All are proven at API level; on the device, only as far as the founder reported.
 
 ### Limitations and founder actions
 1. **Review photos:** decided by the founder (ADR-011): a separate feature with its own plan before beta, with no phase assigned yet.
-2. **Confirm device results** item by item to close 5.9 fully.
-3. **Test data in the development database:** Burger Makers as a partner, test reviews, `smoke-…` accounts.
+2. **Test data in the development database:** Burger Makers as a partner, test reviews, `smoke-…` accounts.
 
 ### Files changed in Phase 5 (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase5-report.md` and `docs/project-progress.md`. One migration: `AddVisitTokens`. New dependency: `expo-camera`.
