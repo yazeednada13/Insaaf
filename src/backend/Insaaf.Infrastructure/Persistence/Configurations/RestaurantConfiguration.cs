@@ -47,6 +47,10 @@ public sealed class RestaurantConfiguration : IEntityTypeConfiguration<Restauran
         builder.Property(restaurant => restaurant.TimeZoneId)
             .HasMaxLength(64);
 
+        builder.Property(restaurant => restaurant.IsPartner)
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.HasIndex(restaurant => restaurant.IsActive);
         builder.HasIndex(restaurant => restaurant.City);
     }

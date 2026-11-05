@@ -49,6 +49,18 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
             .HasForeignKey(review => review.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Phase 5: a review references the visit token it was created from.
+        // Restrict: a redeemed token cannot be deleted while its review exists.
+        builder.HasOne<VisitToken>()
+            .WithMany()
+            .HasForeignKey(review => review.VisitTokenId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // At most one review per visit token, enforced by the database (last guard against races).
+        builder.HasIndex(review => review.VisitTokenId)
+            .IsUnique()
+            .HasFilter("[VisitTokenId] IS NOT NULL");
+
         builder.HasIndex(review => new { review.RestaurantId, review.IsVerified, review.CreatedAt });
         builder.HasIndex(review => review.UserId);
     }

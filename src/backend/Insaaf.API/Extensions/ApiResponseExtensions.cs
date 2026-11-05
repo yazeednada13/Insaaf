@@ -11,6 +11,9 @@ public static class ApiResponseExtensions
     public static ActionResult<ApiResponse<T>> OkEnvelope<T>(this ControllerBase controller, T data) =>
         controller.Ok(ApiResponse<T>.Ok(data, controller.CreateMeta()));
 
+    public static ActionResult<ApiResponse<T>> CreatedEnvelope<T>(this ControllerBase controller, T data) =>
+        controller.StatusCode(StatusCodes.Status201Created, ApiResponse<T>.Ok(data, controller.CreateMeta()));
+
     public static ActionResult<ApiResponse<T>> FailEnvelope<T>(
         this ControllerBase controller,
         string code,

@@ -71,9 +71,10 @@ function BackButton() {
 
 export function RestaurantDetailScreen() {
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `tab=reviews` opens the reviews tab (the QR success view's "عرض التقييم").
+  const { id, tab: initialTab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const detailQuery = useRestaurantDetailQuery(id);
-  const [tab, setTab] = useState<DetailTab>('details');
+  const [tab, setTab] = useState<DetailTab>(initialTab === 'reviews' ? 'reviews' : 'details');
   // Fetched when the reviews tab is first opened; cached afterwards.
   const reviewsQuery = useRestaurantReviewsQuery(id, tab === 'reviews');
 

@@ -1,11 +1,14 @@
-import { Redirect, Stack } from 'expo-router';
+import { Redirect } from 'expo-router';
+import { Tabs } from 'expo-router/tabs';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { BottomNav } from '@/features/navigation/BottomNav';
 
-// Restaurant APIs require a JWT, so every discovery route is behind the session.
-export default function RestaurantsLayout() {
+// The main app behind the session: every tab calls JWT-protected APIs. The group does not change
+// URLs (/restaurants, /restaurants/[id], /scan).
+export default function TabsLayout() {
   const { isAuthenticated, isBootstrapping } = useAuth();
 
   if (isBootstrapping) {
@@ -21,11 +24,10 @@ export default function RestaurantsLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="search" />
-      <Stack.Screen name="[id]" />
-    </Stack>
+    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <BottomNav {...props} />}>
+      <Tabs.Screen name="restaurants" />
+      <Tabs.Screen name="scan" />
+    </Tabs>
   );
 }
 

@@ -124,6 +124,50 @@ public sealed class RestaurantRepository : IRestaurantRepository
             .ToListAsync(cancellationToken);
     }
 
+    public Task<RestaurantPartnershipProjection?> GetPartnershipAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        _dbContext.Restaurants
+            .AsNoTracking()
+            .Where(restaurant => restaurant.Id == id)
+            .Select(restaurant => new RestaurantPartnershipProjection(
+                restaurant.Id,
+                restaurant.IsActive,
+                restaurant.IsPartner,
+                restaurant.PartnerSince))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<RestaurantPartnershipProjection?> SetPartnershipAsync(
+        Guid id,
+        bool isPartner,
+        DateTime utcNow,
+        CancellationToken cancellationToken = default)
+    {
+        var restaurant = await _dbContext.Restaurants.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (restaurant is null)
+        {
+            return null;
+        }
+
+        if (isPartner && !restaurant.IsPartner)
+        {
+            restaurant.PartnerSince = utcNow;
+        }
+        else if (!isPartner)
+        {
+            restaurant.PartnerSince = null;
+        }
+
+        restaurant.IsPartner = isPartner;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return new RestaurantPartnershipProjection(
+            restaurant.Id,
+            restaurant.IsActive,
+            restaurant.IsPartner,
+            restaurant.PartnerSince);
+    }
+
     private IQueryable<Restaurant> ActiveRestaurants() =>
         _dbContext.Restaurants
             .AsNoTracking()

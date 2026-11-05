@@ -1,5 +1,7 @@
 using System.Text;
 using Insaaf.Application.Auth.Abstractions;
+using Insaaf.Application.Verification.Abstractions;
+using Insaaf.Infrastructure.Verification;
 using Insaaf.Domain.Repositories;
 using Insaaf.Infrastructure.Auth;
 using Insaaf.Infrastructure.Identity;
@@ -80,6 +82,8 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IRestaurantRepository, RestaurantRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IVisitTokenRepository, VisitTokenRepository>();
+        services.AddSingleton<IVisitTokenCodec, VisitTokenCodec>();
 
         return services;
     }
