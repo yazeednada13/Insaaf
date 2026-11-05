@@ -1,0 +1,10 @@
+namespace Insaaf.Domain.Repositories.Projections;
+
+public sealed record ReviewCommentProjection(
+    Guid Id,
+    Guid ReviewId,
+    string Text,
+    DateTime CreatedAt,
+    Guid AuthorId,
+    string? AuthorFullName,
+    string? AuthorUserName);

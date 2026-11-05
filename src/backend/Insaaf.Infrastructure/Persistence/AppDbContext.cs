@@ -28,6 +28,10 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
 
     public DbSet<VisitToken> VisitTokens => Set<VisitToken>();
 
+    public DbSet<ReviewLike> ReviewLikes => Set<ReviewLike>();
+
+    public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -39,5 +43,7 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
         builder.ApplyConfiguration(new RestaurantOpeningHoursConfiguration());
         builder.ApplyConfiguration(new ReviewConfiguration());
         builder.ApplyConfiguration(new VisitTokenConfiguration());
+        builder.ApplyConfiguration(new ReviewLikeConfiguration());
+        builder.ApplyConfiguration(new ReviewCommentConfiguration());
     }
 }

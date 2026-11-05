@@ -372,10 +372,9 @@ Scan → local format check → resolve → locked restaurant → form → submi
 **The Phase 5 gate:** scan → a verified review on the token's restaurant; double redemption fails; client restaurant overrides rejected; no unverified create path; codes issued only by Admin for partners. All are proven at API level; on the device, only as far as the founder reported.
 
 ### Limitations and founder actions
-1. **Review photos decision:** "إضافة صور" is in Figma, while `decisions.md` and `product-spec.md` make the deferral conditional on Figma not requiring it. It is currently deferred per the approved plan, with no phase assigned. Recommendation: a separate feature with its own plan before beta.
+1. **Review photos:** decided by the founder (ADR-011): a separate feature with its own plan before beta, with no phase assigned yet.
 2. **Confirm device results** item by item to close 5.9 fully.
-3. **Git:** commit, push, then a PR into `develop`.
-4. **Test data in the development database:** Burger Makers as a partner, test reviews, `smoke-…` accounts.
+3. **Test data in the development database:** Burger Makers as a partner, test reviews, `smoke-…` accounts.
 
 ### Files changed in Phase 5 (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase5-report.md` and `docs/project-progress.md`. One migration: `AddVisitTokens`. New dependency: `expo-camera`.

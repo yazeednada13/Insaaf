@@ -16,6 +16,22 @@ export interface ReviewListItemDto {
   /** Always true in public results (MVP: verified reviews only). */
   isVerified: boolean;
   reviewer: ReviewerDto;
+  likeCount: number;
+  commentCount: number;
+  isLikedByMe: boolean;
+}
+
+export interface ReviewDetailDto extends ReviewListItemDto {
+  foodRating: number;
+  serviceRating: number;
+  valueRating: number;
+  atmosphereRating: number;
+  restaurant: {
+    id: string;
+    name: string;
+    city: string;
+    address: string | null;
+  };
 }
 
 export interface ReviewListResultDto {

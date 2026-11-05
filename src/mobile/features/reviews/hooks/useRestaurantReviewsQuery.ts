@@ -6,8 +6,12 @@ import type { ReviewSort } from '@/types/review';
 const REVIEWS_PAGE_SIZE = 20;
 
 export const reviewQueryKeys = {
+  /** Every restaurant's review lists, whatever the sort. */
+  restaurantLists: ['reviews', 'restaurant'] as const,
   restaurant: (restaurantId: string, sort: ReviewSort) =>
     ['reviews', 'restaurant', restaurantId, sort] as const,
+  detail: (reviewId: string) => ['reviews', 'detail', reviewId] as const,
+  comments: (reviewId: string) => ['reviews', 'comments', reviewId] as const,
 };
 
 /** Paged, read-only list of a restaurant's public reviews (newest first by default). */

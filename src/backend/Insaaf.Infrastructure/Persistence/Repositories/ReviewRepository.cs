@@ -48,7 +48,10 @@ public sealed class ReviewRepository : IReviewRepository
                     review.IsVerified,
                     user.Id,
                     user.FullName,
-                    user.UserName))
+                    user.UserName,
+                    _dbContext.ReviewLikes.Count(like => like.ReviewId == review.Id),
+                    _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id),
+                    _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == criteria.ViewerUserId)))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ReviewListItemProjection>
@@ -59,6 +62,44 @@ public sealed class ReviewRepository : IReviewRepository
             TotalCount = totalCount,
         };
     }
+
+    public Task<ReviewDetailProjection?> GetPublicDetailAsync(
+        Guid reviewId,
+        Guid viewerUserId,
+        CancellationToken cancellationToken = default) =>
+        PublicReviewsOfActiveRestaurants()
+            .Where(review => review.Id == reviewId)
+            .Join(
+                _dbContext.Users,
+                review => review.UserId,
+                user => user.Id,
+                (review, user) => new ReviewDetailProjection(
+                    review.Id,
+                    review.Rating,
+                    review.FoodRating,
+                    review.ServiceRating,
+                    review.ValueRating,
+                    review.AtmosphereRating,
+                    review.Text,
+                    review.CreatedAt,
+                    review.IsVerified,
+                    user.Id,
+                    user.FullName,
+                    user.UserName,
+                    review.RestaurantId,
+                    review.Restaurant.Name,
+                    review.Restaurant.City,
+                    review.Restaurant.Address,
+                    _dbContext.ReviewLikes.Count(like => like.ReviewId == review.Id),
+                    _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id),
+                    _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == viewerUserId)))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
+        PublicReviewsOfActiveRestaurants().AnyAsync(review => review.Id == reviewId, cancellationToken);
+
+    private IQueryable<Review> PublicReviewsOfActiveRestaurants() =>
+        PublicReviews().Where(review => review.Restaurant.IsActive);
 
     private IQueryable<Review> PublicReviews() =>
         _dbContext.Reviews

@@ -6,12 +6,24 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 5 — QR verified review write (**Backend complete; Mobile implemented**) |
+| **CURRENT PHASE** | 6 — Social core (**Backend and Mobile complete**) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phase 4 (merged, PR #4). Phase 5 — tasks 5.1–5.8; see [phase5-report.md](phase5-report.md) |
-| **NEXT** | Founder: review the report, decide on review photos, commit/push `feature/phase5-qr-verification`, PR into `develop` |
-| **BLOCKERS** | None. Open: review photos decision; itemized device results ([phase5-report.md](phase5-report.md) §12) |
+| **COMPLETED** | Phase 5 (merged into `develop`). Phase 6 — tasks 6.1–6.5; see [phase6-report.md](phase6-report.md) |
+| **NEXT** | Founder: commit/push `feature/phase6-social-core`, PR into `develop`; then Phase 7 planning on request |
+| **BLOCKERS** | None. Open: itemized device results ([phase5-report.md](phase5-report.md) §12) |
+
+## Phase 6 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 6.1 | Backend | `ReviewLike`, `ReviewComment`, `AddSocialInteractions` migration | Verified (migration applied by founder) |
+| 6.2 | Backend | Like API; counts and status on reads | Verified (SQL Server: 5 parallel likes → one counted) |
+| 6.3 | Backend | Review detail; comment create, list, delete | Verified |
+| 6.4 | Mobile | Like button; Review Detail; comments | Done — checks + founder device results |
+| 6.5 | Both | Tests and report | Done — 166/166, smoke 18/18, mobile checks, device checklist |
+
+---
 
 ## Phase 5 checklist
 
@@ -175,11 +187,12 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
 | 3 | Restaurants | **Complete** (merged to `develop` via PR #3, `daa4489`) |
 | 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
-| 5 | QR verified review write | **In progress** (Backend 2026-11-02; Mobile 2026-11-05; closing via Git delivery) |
-| 6 | Social core | Not started |
+| 5 | QR verified review write | **Complete** (merged to `develop`; itemized device results not recorded) |
+| 6 | Social core | **In progress** (Backend and Mobile complete 2026-11-05; closing via Git delivery) |
 | 7 | Feed and following | Not started |
 | 8 | Profiles | Not started |
 | 9 | Admin and moderation | Not started |
+| 9A | Review photos | Not started |
 | 10 | Hardening and beta | Not started |
 | 11 | Production readiness | Not started |
 

@@ -17,7 +17,8 @@ Phases 0–11. Each phase has a **gate** and requires **founder approval** befor
 Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7
                               Phase 2 → Phase 8
                               Phase 3,5 → Phase 9
-                              Phase 7,8,9 → Phase 10 → Phase 11
+                              Phase 6,7,8,9 → Phase 9A
+                              Phase 7,8,9,9A → Phase 10 → Phase 11
 ```
 
 ---
@@ -93,6 +94,16 @@ Identity + JWT + refresh; mobile auth service + login/register screens.
 
 **Gate:** Like and comment on verified reviews
 
+| Task | Track | Scope |
+|------|-------|-------|
+| 6.1 | Backend | `ReviewLike`, `ReviewComment` entities, `AddSocialInteractions` migration |
+| 6.2 | Backend | Like and unlike API; like counts and status on review reads |
+| 6.3 | Backend | Review detail read; comment create, list and delete (own comments only) |
+| 6.4 | Mobile | Like button; Review Detail screen; comments (Figma) |
+| 6.5 | Both | Tests: likes and comments don't affect ratings; comment ownership |
+
+Likes and comments never change ratings. Admin moderation of comments is Phase 9.
+
 ---
 
 ## Phase 7 — Feed and following
@@ -109,7 +120,35 @@ Identity + JWT + refresh; mobile auth service + login/register screens.
 
 ## Phase 9 — Admin and moderation
 
-**Gate:** Ops can seed restaurants, issue tokens, moderate (no owner app)
+**Gate:** Ops can seed restaurants, issue tokens, moderate (no owner app), including removing any user's comment
+
+Admin deletion of other users' comments was moved here from Phase 6 by founder decision.
+
+---
+
+## Phase 9A — Review photos
+
+**Gate:** A verified review can include photos, shown on review cards and Review Detail, and Admin can remove any photo
+
+**Why here:** photos need moderation from day one (Phase 9), must appear on the feed and profile cards (Phases 7–8), and must exist before beta because a QR code is single-use and reviews can't be edited (ADR-011). Numbered 9A so existing phases and Task IDs stay unchanged.
+
+| Task | Track | Scope |
+|------|-------|-------|
+| 9A.1 | Backend | `ReviewPhoto` entity, migration, storage interface |
+| 9A.2 | Backend | Photo upload for a valid, unredeemed visit token; upload does not redeem the token |
+| 9A.3 | Backend | Optional photo IDs on `POST /verification/reviews`, attached in the redeem transaction; photos on review reads; cleanup of unattached uploads |
+| 9A.4 | Backend | Admin removal of a photo |
+| 9A.5 | Mobile | "إضافة صور" in the review form: pick, preview, remove, upload (new EAS build) |
+| 9A.6 | Mobile | Photos on `ReviewCard` (up to 3 with "+N") and Review Detail |
+| 9A.7 | Both | Tests and report |
+
+**Requirements:** photos are optional and added only during review creation; only the holder of a valid visit token can upload; each photo belongs to one review; photos never affect ratings; the server validates real file content; location metadata is removed; failed uploads don't consume the token.
+
+**Proposed limits, confirmed at its planning gate:** up to 5 photos per review, JPEG/PNG/WebP, up to 5 MB each after client compression.
+
+**Excluded:** restaurant photos, community photos, avatars, video, adding photos to existing reviews, full-screen gallery.
+
+**Decided at its planning gate:** storage provider (production hosting is Phase 11, ADR-007) and the image-processing library.
 
 ---
 

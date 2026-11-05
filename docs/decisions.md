@@ -127,9 +127,32 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-011: Review photos — separate feature before beta
+
+**Decision:** Review photos are not part of Phase 5. The "إضافة صور" button stays hidden, and photos are delivered as a separate feature with its own approved plan before beta. The founder approved photos for the MVP, in new **Phase 9A** (see [implementation-plan.md](implementation-plan.md)).
+
+**Rationale:** Figma includes the button, but photos need storage, a data model and migration, an upload endpoint with validation, moderation of public content, a native image picker (a new EAS build) and display in reviews. That is its own slice of work.
+
+**Consequence:** A QR code is single-use and reviews can't be edited, so reviews created before this feature ships will stay without photos.
+
+---
+
+## ADR-012: Social core — likes and comments (Phase 6)
+
+**Decision:**
+- Likes and comments are separate tables; counts are computed on read, with no stored counters.
+- `ReviewLikes` has a composite primary key `(ReviewId, UserId)`, so a duplicate like is impossible. `PUT` and `DELETE` on the like are safe to repeat.
+- Users may like and comment on their own reviews.
+- Users delete only their own comments, permanently. Admin moderation of comments is Phase 9.
+- Comments are 1–500 characters, flat (no replies), oldest first.
+- A Review Detail screen hosts comments, per Figma, which adds `GET /api/v1/reviews/{id}`.
+
+**Rationale:** social engagement must never touch ratings (`product-spec.md`), so nothing is written near rating data, and no new role or permission is needed.
+
+---
+
 ## Pending decisions
 
 | Item | Default |
 |------|---------|
-| Media uploads in reviews | Defer post-MVP unless Figma MVP screens require |
 | Figma file URL | Recorded in `docs/figma/README.md` (2026-08-24) |
