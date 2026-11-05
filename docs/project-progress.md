@@ -6,11 +6,11 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 7 — Feed and following (**Backend and Mobile complete**) |
+| **CURRENT PHASE** | None active: Phase 7 complete, Phase 8 waits for the founder |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phases 5 and 6 (merged). Phase 7 — tasks 7.1–7.6; see [phase7-report.md](phase7-report.md) |
-| **NEXT** | Founder: commit/push `feature/phase7-feed-following`, PR into `develop`; then Phase 8 planning on request |
+| **COMPLETED** | Phases 5, 6 and 7 (merged into `develop`, PR #7); see [phase7-report.md](phase7-report.md) |
+| **NEXT** | Phase 8 planning, on the founder's request |
 | **BLOCKERS** | None. iOS is untested on a device; planned for Phase 10 |
 
 ## Phase 7 checklist
@@ -202,8 +202,9 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
 | 5 | QR verified review write | **Complete** (merged to `develop`) |
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
-| 7 | Feed and following | **In progress** (Backend and Mobile complete 2026-11-05; closing via Git delivery) |
+| 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
 | 8 | Profiles | Not started |
+| 8A | Home, notifications and Taste Match | Not started |
 | 9 | Admin and moderation | Not started |
 | 9A | Review photos | Not started |
 | 10 | Hardening and beta | Not started |

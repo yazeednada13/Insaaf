@@ -52,7 +52,8 @@
 | Likes, comments, follows, feed | Push notifications (post-MVP default) |
 | Public profiles | Cloud production hosting (Phase 11) |
 | Admin-seeded Amman pilot data | Social login (email/password first) |
-| Review photos (Phase 9A, ADR-011) | |
+| Review photos (Phase 9A, ADR-011) | Restaurant official replies (ADR-014) |
+| Home tab, in-app notifications and Taste Match (Phase 8A, ADR-014) | |
 
 ## Pilot geography
 

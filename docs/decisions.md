@@ -165,6 +165,14 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-014: Home tab, in-app notifications and Taste Match in the MVP
+
+**Decision:** The الرئيسية tab, with "مقترح لك" and "رائج بالقرب منك", in-app notifications, and Taste Match are part of the MVP, in new **Phase 8A**. Push notifications stay post-MVP. Restaurant official replies and their notification are not in the MVP (founder decision), so ADR-003 stays unchanged.
+
+**Rationale:** both are in Figma but had no phase. They depend on the feed and on profiles, so they follow Phase 8. The 8A number keeps existing phases and Task IDs unchanged.
+
+---
+
 ## Pending decisions
 
 | Item | Default |
