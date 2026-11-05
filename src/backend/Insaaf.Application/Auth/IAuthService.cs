@@ -11,4 +11,7 @@ public interface IAuthService
     Task<AuthResponseDto> RefreshAsync(RefreshRequest request, CancellationToken cancellationToken = default);
 
     Task<UserDto> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Revokes all the user's refresh tokens, which signs out every device. Repeat-safe.</summary>
+    Task LogoutAsync(Guid userId, CancellationToken cancellationToken = default);
 }

@@ -15,4 +15,5 @@ public sealed record FeedItemProjection(
     string? RestaurantAddress,
     int LikeCount,
     int CommentCount,
-    bool IsLikedByViewer);
+    bool IsLikedByViewer,
+    bool ReviewerHasPublicProfile = true);

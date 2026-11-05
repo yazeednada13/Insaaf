@@ -6,12 +6,23 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | None active: Phase 7 complete, Phase 8 waits for the founder |
+| **CURRENT PHASE** | 8 — Profiles (**Backend complete**; Mobile not started) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phases 5, 6 and 7 (merged into `develop`, PR #7); see [phase7-report.md](phase7-report.md) |
-| **NEXT** | Phase 8 planning, on the founder's request |
+| **COMPLETED** | Phases 5–7 (merged). Phase 8 Backend — tasks 8.1, 8.2 + backend part of 8.4; see [phase8-report.md](phase8-report.md). Earlier: [phase7-report.md](phase7-report.md) |
+| **NEXT** | Founder: review the Backend report; Git checkpoint on `feature/phase8-profiles`; then `Phase 8 — Mobile` |
 | **BLOCKERS** | None. iOS is untested on a device; planned for Phase 10 |
+
+## Phase 8 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 8.1 | Backend | `Bio`, `AddUserBio`; profile read and edit; logout | Verified (migration applied by founder) |
+| 8.2 | Backend | User reviews, lists, search, `hasPublicProfile` | Verified |
+| 8.3 | Mobile | Profile screens, Settings, people in Search | Not started |
+| 8.4 | Both | Tests and report | Backend done (232/232, smoke 24/24); Mobile not started |
+
+---
 
 ## Phase 7 checklist
 
@@ -203,7 +214,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 5 | QR verified review write | **Complete** (merged to `develop`) |
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
-| 8 | Profiles | Not started |
+| 8 | Profiles | **In progress** (Backend complete 2026-11-05; Mobile pending) |
 | 8A | Home, notifications and Taste Match | Not started |
 | 9 | Admin and moderation | Not started |
 | 9A | Review photos | Not started |

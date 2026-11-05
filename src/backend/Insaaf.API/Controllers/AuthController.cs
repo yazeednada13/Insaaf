@@ -1,8 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Insaaf.Application.Auth;
 using Insaaf.Application.Auth.Dtos;
 using Insaaf.Application.Common.Models;
 using Insaaf.API.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Insaaf.API.Controllers;
@@ -33,6 +35,26 @@ public sealed class AuthController : ControllerBase
         {
             return this.FailEnvelope<AuthResponseDto>(ex.Code, ex.Message, ex.StatusCode);
         }
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<LogoutResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LogoutResultDto>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<LogoutResultDto>>> Logout(CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(
+                User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? User.FindFirstValue(ClaimTypes.NameIdentifier),
+                out var userId))
+        {
+            return this.FailEnvelope<LogoutResultDto>(
+                "unauthorized",
+                "User is not authorized.",
+                StatusCodes.Status401Unauthorized);
+        }
+
+        await _authService.LogoutAsync(userId, cancellationToken);
+        return this.OkEnvelope(new LogoutResultDto(true));
     }
 
     [HttpPost("login")]

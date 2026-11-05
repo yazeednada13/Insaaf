@@ -91,5 +91,6 @@ public sealed class ReviewCommentRepository : IReviewCommentRepository
                 comment.CreatedAt,
                 user.Id,
                 user.FullName,
-                user.UserName));
+                user.UserName,
+                !_dbContext.AdminUserIds().Contains(user.Id)));
 }

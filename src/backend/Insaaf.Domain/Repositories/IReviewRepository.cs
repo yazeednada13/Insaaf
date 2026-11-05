@@ -26,6 +26,14 @@ public interface IReviewRepository
         int take,
         CancellationToken cancellationToken = default);
 
+    /// <summary>One user's public reviews of active restaurants, newest first.</summary>
+    Task<IReadOnlyList<FeedItemProjection>> ListByUserAsync(
+        Guid userId,
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default);
+
     /// <summary>True when the review is public and its restaurant is active.</summary>
     Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default);
 }

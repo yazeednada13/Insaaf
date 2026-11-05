@@ -4,8 +4,6 @@ namespace Insaaf.Domain.Repositories;
 
 public interface IUserFollowRepository
 {
-    Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default);
-
     /// <summary>Adds the follow if it isn't there; a repeat or a concurrent duplicate is a no-op.</summary>
     Task AddIfMissingAsync(UserFollow follow, CancellationToken cancellationToken = default);
 

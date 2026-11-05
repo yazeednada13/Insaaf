@@ -2,6 +2,8 @@ using Insaaf.Application.Auth.Abstractions;
 using Insaaf.Domain.Constants;
 using Insaaf.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace Insaaf.Infrastructure.Auth;
 
@@ -114,5 +116,45 @@ public sealed class IdentityUserAccountService : IUserAccountService
 
         var roles = await _userManager.GetRolesAsync(user);
         return roles.ToArray();
+    }
+
+    public async Task<ProfileUpdateResult> UpdateProfileAsync(
+        Guid userId,
+        string fullName,
+        string userName,
+        string? bio,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return ProfileUpdateResult.NotFound;
+        }
+
+        user.FullName = fullName;
+        user.Bio = bio;
+
+        try
+        {
+            // UserManager validates, normalizes and checks uniqueness case-insensitively.
+            var result = string.Equals(user.UserName, userName, StringComparison.Ordinal)
+                ? await _userManager.UpdateAsync(user)
+                : await _userManager.SetUserNameAsync(user, userName);
+
+            if (result.Succeeded)
+            {
+                return ProfileUpdateResult.Updated;
+            }
+
+            var describer = _userManager.ErrorDescriber;
+            return result.Errors.Any(error => error.Code == describer.DuplicateUserName(userName).Code)
+                ? ProfileUpdateResult.UsernameTaken
+                : ProfileUpdateResult.InvalidUsername;
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            // Two users took the name at once: the unique normalized index decided.
+            return ProfileUpdateResult.UsernameTaken;
+        }
     }
 }

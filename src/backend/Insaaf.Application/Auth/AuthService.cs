@@ -150,6 +150,9 @@ public sealed class AuthService : IAuthService
         return new UserDto(user.Id, user.Email, roles);
     }
 
+    public Task LogoutAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        _refreshTokenService.RevokeAllForUserAsync(userId, cancellationToken);
+
     private async Task<AuthResponseDto> IssueTokensAsync(
         Guid userId,
         string email,

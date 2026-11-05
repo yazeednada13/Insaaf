@@ -126,7 +126,16 @@ The feed contains verified public reviews of active restaurants, by followed use
 
 ## Phase 8 — Profiles
 
-**Gate:** Public profile matches Figma
+**Gate:** Public profile matches Figma; stats from verified reviews
+
+| Task | Track | Scope |
+|------|-------|-------|
+| 8.1 | Backend | `Bio`, `AddUserBio` migration; profile read and edit; username through Identity; `POST /auth/logout` |
+| 8.2 | Backend | User reviews, followers and following lists, people search, `hasPublicProfile` |
+| 8.3 | Mobile | ملفي tab, other profiles, lists, Edit Profile, Settings with sign-out, people in Search |
+| 8.4 | Both | Tests and report |
+
+Admin accounts aren't public. Avatars, Save and Saved Reviews aren't in this phase.
 
 ---
 
