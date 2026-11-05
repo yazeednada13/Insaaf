@@ -1,6 +1,7 @@
 using Insaaf.Application.Restaurants;
 using Insaaf.Application.Reviews.Dtos;
 using Insaaf.Application.Reviews.Validation;
+using Insaaf.Application.Social;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Repositories.Projections;
 
@@ -20,6 +21,7 @@ public sealed class ReviewService : IReviewService
     public async Task<ReviewListResultDto> ListForRestaurantAsync(
         Guid restaurantId,
         RestaurantReviewsQuery query,
+        Guid viewerUserId,
         CancellationToken cancellationToken = default)
     {
         var validationErrors = ReviewQueryValidator.Validate(query);
@@ -41,6 +43,7 @@ public sealed class ReviewService : IReviewService
             new ReviewSearchCriteria
             {
                 RestaurantId = restaurantId,
+                ViewerUserId = viewerUserId,
                 Sort = ReviewQueryValidator.ParseSort(query.Sort),
                 Page = query.Page,
                 PageSize = query.PageSize,
@@ -54,6 +57,35 @@ public sealed class ReviewService : IReviewService
             result.TotalCount);
     }
 
+    public async Task<ReviewDetailDto> GetByIdAsync(
+        Guid reviewId,
+        Guid viewerUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var review = await _reviewRepository.GetPublicDetailAsync(reviewId, viewerUserId, cancellationToken)
+            ?? throw SocialException.ReviewNotFound();
+
+        return new ReviewDetailDto(
+            review.Id,
+            review.Rating,
+            review.FoodRating,
+            review.ServiceRating,
+            review.ValueRating,
+            review.AtmosphereRating,
+            review.Text,
+            DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc),
+            review.IsVerified,
+            new ReviewerDto(review.ReviewerId, review.ReviewerFullName, review.ReviewerUserName),
+            new ReviewRestaurantDto(
+                review.RestaurantId,
+                review.RestaurantName,
+                review.RestaurantCity,
+                review.RestaurantAddress),
+            review.LikeCount,
+            review.CommentCount,
+            review.IsLikedByViewer);
+    }
+
     private static ReviewListItemDto ToDto(ReviewListItemProjection review) =>
         new(
             review.Id,
@@ -62,5 +94,8 @@ public sealed class ReviewService : IReviewService
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc),
             review.IsVerified,
-            new ReviewerDto(review.ReviewerId, review.ReviewerFullName, review.ReviewerUserName));
+            new ReviewerDto(review.ReviewerId, review.ReviewerFullName, review.ReviewerUserName),
+            review.LikeCount,
+            review.CommentCount,
+            review.IsLikedByViewer);
 }

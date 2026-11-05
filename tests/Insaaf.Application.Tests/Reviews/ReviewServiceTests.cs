@@ -62,7 +62,7 @@ public sealed class ReviewServiceTests
             .ReturnsAsync(false);
 
         var exception = await Assert.ThrowsAsync<RestaurantException>(() =>
-            CreateService().ListForRestaurantAsync(restaurantId, new RestaurantReviewsQuery()));
+            CreateService().ListForRestaurantAsync(restaurantId, new RestaurantReviewsQuery(), Guid.NewGuid()));
 
         Assert.Equal("not_found", exception.Code);
         Assert.Equal(RestaurantStatusCodes.NotFound, exception.StatusCode);
@@ -75,7 +75,7 @@ public sealed class ReviewServiceTests
     public async Task ListForRestaurantAsync_ThrowsValidationError_BeforeQuerying()
     {
         var exception = await Assert.ThrowsAsync<RestaurantException>(() =>
-            CreateService().ListForRestaurantAsync(Guid.NewGuid(), new RestaurantReviewsQuery(Sort: "random")));
+            CreateService().ListForRestaurantAsync(Guid.NewGuid(), new RestaurantReviewsQuery(Sort: "random"), Guid.NewGuid()));
 
         Assert.Equal("validation_error", exception.Code);
         _restaurants.Verify(repo => repo.IsActiveAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -114,7 +114,8 @@ public sealed class ReviewServiceTests
 
         var result = await CreateService().ListForRestaurantAsync(
             restaurantId,
-            new RestaurantReviewsQuery(Sort: "highest", Page: 2, PageSize: 10));
+            new RestaurantReviewsQuery(Sort: "highest", Page: 2, PageSize: 10),
+            Guid.NewGuid());
 
         Assert.NotNull(captured);
         Assert.Equal(restaurantId, captured.RestaurantId);

@@ -15,7 +15,29 @@ public sealed record ReviewListItemDto(
     string Text,
     DateTime CreatedAt,
     bool IsVerified,
-    ReviewerDto Reviewer);
+    ReviewerDto Reviewer,
+    int LikeCount,
+    int CommentCount,
+    bool IsLikedByMe);
+
+public sealed record ReviewRestaurantDto(Guid Id, string Name, string City, string? Address);
+
+/// <remarks><c>CreatedAt</c> is UTC.</remarks>
+public sealed record ReviewDetailDto(
+    Guid Id,
+    int Rating,
+    int FoodRating,
+    int ServiceRating,
+    int ValueRating,
+    int AtmosphereRating,
+    string Text,
+    DateTime CreatedAt,
+    bool IsVerified,
+    ReviewerDto Reviewer,
+    ReviewRestaurantDto Restaurant,
+    int LikeCount,
+    int CommentCount,
+    bool IsLikedByMe);
 
 public sealed record ReviewListResultDto(
     IReadOnlyList<ReviewListItemDto> Items,

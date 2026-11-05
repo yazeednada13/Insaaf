@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Insaaf.API.Extensions;
 using Insaaf.Application.Common.Models;
 using Insaaf.Application.Restaurants;
@@ -88,9 +90,14 @@ public sealed class RestaurantsController : ControllerBase
                 StatusCodes.Status404NotFound);
         }
 
+        // [Authorize] guarantees the claim; the viewer only decides isLikedByMe.
+        Guid.TryParse(
+            User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? User.FindFirstValue(ClaimTypes.NameIdentifier),
+            out var viewerUserId);
+
         try
         {
-            var result = await _reviewService.ListForRestaurantAsync(restaurantId, query, cancellationToken);
+            var result = await _reviewService.ListForRestaurantAsync(restaurantId, query, viewerUserId, cancellationToken);
             return this.OkEnvelope(result);
         }
         catch (RestaurantException ex)

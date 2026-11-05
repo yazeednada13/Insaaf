@@ -8,4 +8,7 @@ public sealed record ReviewListItemProjection(
     bool IsVerified,
     Guid ReviewerId,
     string? ReviewerFullName,
-    string? ReviewerUserName);
+    string? ReviewerUserName,
+    int LikeCount = 0,
+    int CommentCount = 0,
+    bool IsLikedByViewer = false);

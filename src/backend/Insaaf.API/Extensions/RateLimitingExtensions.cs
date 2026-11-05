@@ -7,18 +7,22 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Insaaf.API.Extensions;
 
 /// <summary>
-/// Built-in ASP.NET Core rate limiting for the verification endpoints (token guessing and spam).
+/// Built-in ASP.NET Core rate limiting for the verification and social endpoints (guessing and spam).
 /// Limits are per authenticated user, configurable under "RateLimiting".
 /// </summary>
 public static class RateLimitingExtensions
 {
     public const string VerificationResolvePolicy = "verification-resolve";
     public const string VerificationCreatePolicy = "verification-create";
+    public const string SocialLikePolicy = "social-like";
+    public const string SocialCommentPolicy = "social-comment";
 
     public static IServiceCollection AddInsaafRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
         var resolvePerMinute = configuration.GetValue("RateLimiting:VerificationResolvePerMinute", 20);
         var createPerMinute = configuration.GetValue("RateLimiting:VerificationCreatePerMinute", 5);
+        var likesPerMinute = configuration.GetValue("RateLimiting:SocialLikePerMinute", 60);
+        var commentsPerMinute = configuration.GetValue("RateLimiting:SocialCommentPerMinute", 10);
 
         services.AddRateLimiter(options =>
         {
@@ -33,6 +37,8 @@ public static class RateLimitingExtensions
 
             options.AddPolicy(VerificationResolvePolicy, httpContext => PerUserFixedWindow(httpContext, resolvePerMinute));
             options.AddPolicy(VerificationCreatePolicy, httpContext => PerUserFixedWindow(httpContext, createPerMinute));
+            options.AddPolicy(SocialLikePolicy, httpContext => PerUserFixedWindow(httpContext, likesPerMinute));
+            options.AddPolicy(SocialCommentPolicy, httpContext => PerUserFixedWindow(httpContext, commentsPerMinute));
         });
 
         return services;

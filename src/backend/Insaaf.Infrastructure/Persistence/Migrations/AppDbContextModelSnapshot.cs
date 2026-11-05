@@ -262,6 +262,56 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReviewId", "CreatedAt");
+
+                    b.ToTable("ReviewComments", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ReviewComments_TextNotBlank", "LEN([Text]) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewLike", b =>
+                {
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ReviewId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReviewLikes", (string)null);
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.VisitToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -578,6 +628,36 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Restaurant");
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewComment", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Review", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewLike", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Review", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Insaaf.Domain.Entities.VisitToken", b =>

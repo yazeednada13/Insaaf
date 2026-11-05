@@ -47,11 +47,12 @@
 | In MVP | Not in MVP |
 |--------|------------|
 | Verified review via QR | Unverified review create path/UX |
-| Read review lists + aggregates | Photo upload (separate feature before beta, ADR-011) |
-| Restaurant discovery + filters | Restaurant owner app |
+| Read review lists + aggregates | Restaurant owner app |
+| Restaurant discovery + filters | Video and full-screen photo gallery |
 | Likes, comments, follows, feed | Push notifications (post-MVP default) |
 | Public profiles | Cloud production hosting (Phase 11) |
 | Admin-seeded Amman pilot data | Social login (email/password first) |
+| Review photos (Phase 9A, ADR-011) | |
 
 ## Pilot geography
 

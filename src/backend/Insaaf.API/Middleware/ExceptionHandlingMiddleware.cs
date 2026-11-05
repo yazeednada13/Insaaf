@@ -3,6 +3,7 @@ using System.Text.Json;
 using Insaaf.Application.Auth;
 using Insaaf.Application.Common.Models;
 using Insaaf.Application.Restaurants;
+using Insaaf.Application.Social;
 using Insaaf.Application.Verification;
 
 namespace Insaaf.API.Middleware;
@@ -37,6 +38,10 @@ public sealed class ExceptionHandlingMiddleware
             await WriteDomainErrorAsync(context, ex.Code, ex.Message, ex.StatusCode);
         }
         catch (VerificationException ex)
+        {
+            await WriteDomainErrorAsync(context, ex.Code, ex.Message, ex.StatusCode);
+        }
+        catch (SocialException ex)
         {
             await WriteDomainErrorAsync(context, ex.Code, ex.Message, ex.StatusCode);
         }
