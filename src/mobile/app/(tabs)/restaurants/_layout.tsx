@@ -7,6 +7,7 @@ export default function RestaurantsLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="search" />
       <Stack.Screen name="[id]" />
+      <Stack.Screen name="review/[reviewId]" />
     </Stack>
   );
 }

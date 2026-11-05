@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase6-social-core` (from `develop` after the Phase 5 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 6), the approved Phase 6 plan (decisions D-1…D-14), [decisions.md](decisions.md) ADR-004/ADR-011/ADR-012, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ReviewCard.tsx`, `ReviewDetailScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⏳ Mobile Track not started (waiting for `Phase 6 — Mobile`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ⏳ Phase 6 awaiting the founder's actions (§12)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -226,4 +226,124 @@ Each item in `GET /api/v1/restaurants/{id}/reviews` gains `likeCount`, `commentC
 ---
 
 ## 11. Mobile Track
-⏳ **Not started.** Waiting for the founder's instruction: `Phase 6 — Mobile`.
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 6.4a | Like button on `ReviewCard` | ✅ Verified on device | Founder results 1–4, 11; heart icon approved by the founder |
+| 6.4b | Review Detail screen | ✅ Verified on device | Founder result 5, restaurant link and card tap checks |
+| 6.4c | Comments list and input | ✅ Verified on device | Founder results 6, 7 |
+| 6.4d | Delete own comment | ✅ Verified on device | Founder results 8, 9 |
+| 6.5 (Mobile) | Tests and verification | ✅ | typecheck, lint, Android/iOS bundles; founder device checklist |
+
+**Applied decisions:** D-2 (Review Detail hosts comments), D-7 ("حذف" with a confirmation dialog), D-8 (empty text "لا توجد تعليقات بعد", existing skeleton and error patterns), D-12 (save, `⋮`, comment likes and replies hidden).
+
+**Changes made from the founder's device feedback:**
+1. **Card tap:** Figma opens Review Detail only from the comment icon. The whole card now opens it, and the buttons inside keep their own action.
+2. **Heart icon:** Figma's `♡`/`♥` text glyphs were replaced with an SVG heart: a thin grey outline when empty, matching the comment icon's size and stroke, and solid copper when liked, with the subtle like animation from spec §47.
+
+**Deviations from the plan's wording:**
+1. `ReviewActionIcons.tsx` holds the heart, comment and send icons; it wasn't in the plan's file list.
+2. `StarRating` gained a `lg` size, per Figma's Review Detail.
+3. The comment input grows to about four lines instead of Figma's single line, because comments can reach 500 characters.
+4. `reviewQueryKeys` holds the new `detail`, `comments` and `restaurantLists` keys, so all review keys stay in one place.
+
+### 11.2 Application structure (new/modified)
+| File | Responsibility |
+|---|---|
+| `app/(tabs)/restaurants/review/[reviewId].tsx` | The `/restaurants/review/[reviewId]` route |
+| `features/social/screens/ReviewDetailScreen.tsx` | Review content, comment list, input bar |
+| `features/social/components/CommentItem.tsx` | One comment; "حذف" on own comments |
+| `features/social/components/CommentInputBar.tsx` | The input and send button |
+| `features/social/components/ReviewActionIcons.tsx` | Heart, comment and send icons |
+| `features/social/hooks/useReviewLike.ts` | Like and unlike with instant update and rollback |
+| `features/social/hooks/useReviewComments.ts` | Comment list, create and delete |
+| `features/social/hooks/useReviewDetailQuery.ts` | One review |
+| `services/social/socialApi.ts` | Axios calls, errors and Arabic messages |
+| `types/social.ts` | Social contracts |
+
+Modified: `ReviewCard.tsx`, `useRestaurantReviewsQuery.ts`, `StarRating.tsx`, `types/review.ts`, `types/expo-router.d.ts`, `app/(tabs)/restaurants/_layout.tsx`.
+
+### 11.3 User journeys and states
+```text
+Review card ──tap──► Review Detail ──► read comments, write, delete own
+    │                     │
+    ♥ like                └── restaurant line ──► restaurant page
+```
+- **Loading:** skeleton for the review; a spinner for comments and for the next page.
+- **Empty:** "لا توجد تعليقات بعد".
+- **Errors:** an error state with retry; no retry when the review is `not_found`. A failed comment shows a message above the input and keeps the text. A failed delete shows a dialog.
+- **Failed like:** the heart returns to its previous state.
+- **Delete:** a confirmation dialog, because the delete is permanent.
+
+### 11.4 State management
+- **TanStack Query only:** `useQuery` for detail, `useInfiniteQuery` for comments, `useMutation` for like, create and delete. No global state.
+- **Like:** `onMutate` snapshots and updates every cached copy, `onError` restores the snapshot, and `onSuccess` writes the server's values. The button is disabled while a request runs.
+- **Comments:** on success, the comment list, the review detail and the restaurant review lists are invalidated, so counts refresh on the cards too.
+- **Local state:** comment text and comment error only. The session comes from the existing `AuthProvider`.
+
+### 11.5 API data flow
+`ReviewCard` / `ReviewDetailScreen` → `features/social/hooks` → `services/social/socialApi.ts` → `apiClient` (Axios + Bearer + refresh) → `/api/v1/reviews/...`. The response updates the Query cache, and the screens re-render from it. Server error codes become `SocialApiError` with an Arabic message.
+
+### 11.6 RTL and Figma
+- **RTL:** `textAlignStart`, row layouts, and stars always `direction: 'ltr'`. The founder confirmed RTL on the device (result 10).
+- **Not built from Figma:** save, `⋮`/report, comment likes, replies, reviewer profile links (Phase 8), restaurant reply, photos (Phase 9A).
+- **Our copy (no Figma equivalent):** the delete dialog, the empty comments text, and error messages.
+- **Differences by founder decision:** the card tap and the heart icon (§11.1).
+- **Known gap:** the input bar's avatar uses the first letter of the user's email, because the auth `UserDto` has no name.
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ (after the last change, the heart size) |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` (before the final heart size change, not rerun) |
+| `expo export` Android and iOS | ✅ (before the final heart size change, not rerun) |
+| Real API | ✅ The device ran against the real API and SQL Server |
+
+**Founder device results (Android, 2026-11-05):**
+| # | Check | Result |
+|---|---|---|
+| 1–2 | Like and unlike, count and colour | ✅ |
+| 3 | Rapid taps | ✅ |
+| 4 | Like persists after reopening | ✅ |
+| 5 | Review Detail shows all details | ✅ Led to the card tap change |
+| 6 | Add a comment | ✅ |
+| 7 | Input stays above the keyboard | ✅ |
+| 8 | Delete own comment | ✅ |
+| 9 | Second account: no delete on others' comments, per-user like status | ✅ |
+| 10 | RTL | ✅ |
+| 11 | Offline like returns to its previous state | ✅ Expected behaviour |
+| — | Card tap opens details; heart tap only likes; restaurant line opens the restaurant | ✅ |
+| — | Redesigned heart icon | ✅ Approved by the founder |
+
+**Not verified:**
+- **iOS on a real device:** not tested.
+- **Comment paging beyond 20 comments on a device.**
+- **Automated Mobile tests:** the project has no test framework for components.
+
+### 11.8 Educational summary (Mobile)
+- **Instant likes:** the UI updates before the server answers, so the app feels fast. That needs a saved snapshot, which is why a failed offline like jumps back.
+- **One cache, many screens:** the card and the detail screen read the same review from the Query cache, so a like on one shows on the other without any global state.
+- **Invalidation:** after a comment changes, marking queries as stale makes the screens fetch fresh counts by themselves.
+- **Nested pressables:** the card is pressable, and an inner button takes the tap first, which is why the heart likes without opening the screen.
+- **Trusting the server:** `isMine` decides whether "حذف" shows, but the backend enforces ownership regardless of what the app displays.
+
+---
+
+## 12. Consolidated Phase 6 status
+| ID | Track | Status |
+|---|---|---|
+| 6.1–6.3 | Backend | ✅ Verified (166/166, smoke 18/18 on SQL Server) |
+| 6.4 | Mobile | ✅ Verified on an Android device |
+| 6.5 | Both | ✅ Backend and Mobile checks done |
+
+**The Phase 6 gate:** like and comment on verified reviews from the app ✅; duplicate likes impossible ✅; only the author can delete ✅; ratings unchanged ✅.
+
+### Limitations and founder actions
+1. **Git:** commit, push, then a PR into `develop`.
+2. **Sign-out:** the app has no logout button; it arrives with settings and profile (Phase 8). Clearing app data was used to switch accounts during testing.
+3. **Open from Phase 5:** task 5.9 itemized device results (D-13).
+4. **Test data:** `smoke6-…` accounts and any comments or likes from device testing remain in the development database.
+
+### Files changed in Phase 6 (summary)
+Backend files in §2, Mobile files in §11.2, plus `docs/phase6-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`, `product-spec.md`. One migration: `AddSocialInteractions`. No new dependencies.

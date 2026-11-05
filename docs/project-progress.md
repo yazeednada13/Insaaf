@@ -6,11 +6,11 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 6 — Social core (**Backend complete**; Mobile not started) |
+| **CURRENT PHASE** | 6 — Social core (**Backend and Mobile complete**) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phase 5 (merged into `develop`). Phase 6 Backend — tasks 6.1–6.3 + backend part of 6.5; see [phase6-report.md](phase6-report.md) |
-| **NEXT** | Founder: review the Backend report; Git checkpoint on `feature/phase6-social-core`; then `Phase 6 — Mobile` |
+| **COMPLETED** | Phase 5 (merged into `develop`). Phase 6 — tasks 6.1–6.5; see [phase6-report.md](phase6-report.md) |
+| **NEXT** | Founder: commit/push `feature/phase6-social-core`, PR into `develop`; then Phase 7 planning on request |
 | **BLOCKERS** | None. Open: itemized device results ([phase5-report.md](phase5-report.md) §12) |
 
 ## Phase 6 checklist
@@ -20,8 +20,8 @@
 | 6.1 | Backend | `ReviewLike`, `ReviewComment`, `AddSocialInteractions` migration | Verified (migration applied by founder) |
 | 6.2 | Backend | Like API; counts and status on reads | Verified (SQL Server: 5 parallel likes → one counted) |
 | 6.3 | Backend | Review detail; comment create, list, delete | Verified |
-| 6.4 | Mobile | Like button; Review Detail; comments | Not started |
-| 6.5 | Both | Tests and report | Backend done (166/166, smoke 18/18); Mobile not started |
+| 6.4 | Mobile | Like button; Review Detail; comments | Done — checks + founder device results |
+| 6.5 | Both | Tests and report | Done — 166/166, smoke 18/18, mobile checks, device checklist |
 
 ---
 
@@ -188,7 +188,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 3 | Restaurants | **Complete** (merged to `develop` via PR #3, `daa4489`) |
 | 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
 | 5 | QR verified review write | **Complete** (merged to `develop`; itemized device results not recorded) |
-| 6 | Social core | **In progress** (Backend complete 2026-11-05; Mobile pending) |
+| 6 | Social core | **In progress** (Backend and Mobile complete 2026-11-05; closing via Git delivery) |
 | 7 | Feed and following | Not started |
 | 8 | Profiles | Not started |
 | 9 | Admin and moderation | Not started |

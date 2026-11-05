@@ -14,6 +14,7 @@ declare module 'expo-router' {
         | { pathname: `/restaurants`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/restaurants/search`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownInputParams & { id: string | number } }
+        | { pathname: `/restaurants/review/[reviewId]`; params: import('expo-router').UnknownInputParams & { reviewId: string | number } }
         | { pathname: `/scan`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownInputParams };
       hrefOutputParams:
@@ -26,6 +27,7 @@ declare module 'expo-router' {
         | { pathname: `/restaurants`; params?: import('expo-router').UnknownOutputParams }
         | { pathname: `/restaurants/search`; params?: import('expo-router').UnknownOutputParams }
         | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownOutputParams & { id: string } }
+        | { pathname: `/restaurants/review/[reviewId]`; params: import('expo-router').UnknownOutputParams & { reviewId: string } }
         | { pathname: `/scan`; params?: import('expo-router').UnknownOutputParams }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownOutputParams };
       href:
@@ -49,6 +51,7 @@ declare module 'expo-router' {
         | { pathname: `/restaurants`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/restaurants/search`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/restaurants/[id]`; params: import('expo-router').UnknownInputParams & { id: string | number } }
+        | { pathname: `/restaurants/review/[reviewId]`; params: import('expo-router').UnknownInputParams & { reviewId: string | number } }
         | { pathname: `/scan`; params?: import('expo-router').UnknownInputParams }
         | { pathname: `/_sitemap`; params?: import('expo-router').UnknownInputParams };
     }

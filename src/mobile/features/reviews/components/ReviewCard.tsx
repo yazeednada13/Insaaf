@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -5,6 +6,8 @@ import { FadeInView } from '@/features/restaurants/components/FadeInView';
 import { StarRating } from '@/features/restaurants/components/StarRating';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import { VerifiedBadge } from '@/features/reviews/components/VerifiedBadge';
+import { CommentIcon, HeartIcon } from '@/features/social/components/ReviewActionIcons';
+import { useReviewLike } from '@/features/social/hooks/useReviewLike';
 import { colors, fonts, lineHeights, restaurantLayout, textAlignStart } from '@/constants/theme';
 import type { ReviewListItemDto } from '@/types/review';
 import { formatRelativeTime } from '@/utils/relativeTime';
@@ -13,18 +16,21 @@ import { formatRelativeTime } from '@/utils/relativeTime';
 const PREVIEW_LENGTH = 120;
 
 /**
- * Figma ReviewCard.tsx, Phase 4 read-only subset (decision D5): reviewer, verified badge, rating,
- * time and text. The restaurant line (redundant on its own page), photos, official reply and the
- * like/comment/save row belong to later phases and are not rendered.
+ * Figma ReviewCard.tsx: reviewer, verified badge, rating, time, text, like and comment actions. The
+ * restaurant line (redundant on its own page), photos, official reply and save are not rendered.
  */
 export function ReviewCard({ review }: { review: ReviewListItemDto }) {
   const [expanded, setExpanded] = useState(false);
+  const likeMutation = useReviewLike();
   const reviewerName = review.reviewer.fullName ?? review.reviewer.userName ?? '';
   const isLong = review.text.length > PREVIEW_LENGTH;
+  const openDetail = () =>
+    router.push({ pathname: '/restaurants/review/[reviewId]', params: { reviewId: review.id } });
 
   return (
     <FadeInView>
-      <View style={styles.card}>
+      {/* Founder decision: the whole card opens Review Detail; the inner buttons keep their own action. */}
+      <Pressable accessible={false} onPress={openDetail} style={styles.card}>
         <View style={styles.header}>
           <UserAvatar name={reviewerName} size={44} />
           <View style={styles.identity}>
@@ -47,12 +53,51 @@ export function ReviewCard({ review }: { review: ReviewListItemDto }) {
             <Text style={styles.toggle}>{expanded ? 'عرض أقل' : 'اقرأ المزيد'}</Text>
           </Pressable>
         ) : null}
-      </View>
+
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityLabel={review.isLikedByMe ? 'إلغاء الإعجاب' : 'إعجاب'}
+            accessibilityRole="button"
+            accessibilityState={{ selected: review.isLikedByMe }}
+            disabled={likeMutation.isPending}
+            hitSlop={8}
+            onPress={() => likeMutation.mutate({ reviewId: review.id, like: !review.isLikedByMe })}
+            style={styles.action}
+          >
+            <HeartIcon filled={review.isLikedByMe} size={16} />
+            <Text style={[styles.count, review.isLikedByMe && styles.countLiked]}>{review.likeCount}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="التعليقات"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={openDetail}
+            style={styles.action}
+          >
+            <CommentIcon size={16} />
+            <Text style={styles.count}>{review.commentCount}</Text>
+          </Pressable>
+        </View>
+      </Pressable>
     </FadeInView>
   );
 }
 
 const styles = StyleSheet.create({
+  action: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  actions: {
+    alignItems: 'center',
+    borderTopColor: colors.divider,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 12,
+    paddingTop: 8,
+  },
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.divider,
@@ -60,6 +105,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     boxShadow: '0px 1px 8px rgba(0, 0, 0, 0.04)',
     padding: 16,
+  },
+  count: {
+    color: colors.textMuted,
+    fontFamily: fonts.numericRegular,
+    fontSize: 12,
+    lineHeight: lineHeights.xs,
+  },
+  countLiked: {
+    color: colors.accent,
   },
   header: {
     alignItems: 'flex-start',
