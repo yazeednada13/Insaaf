@@ -47,7 +47,7 @@
 | In MVP | Not in MVP |
 |--------|------------|
 | Verified review via QR | Unverified review create path/UX |
-| Read review lists + aggregates | Photo upload (unless Figma requires — pending) |
+| Read review lists + aggregates | Photo upload (separate feature before beta, ADR-011) |
 | Restaurant discovery + filters | Restaurant owner app |
 | Likes, comments, follows, feed | Push notifications (post-MVP default) |
 | Public profiles | Cloud production hosting (Phase 11) |

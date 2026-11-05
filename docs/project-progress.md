@@ -10,8 +10,8 @@
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phase 4 (merged, PR #4). Phase 5 — tasks 5.1–5.8; see [phase5-report.md](phase5-report.md) |
-| **NEXT** | Founder: review the report, decide on review photos, commit/push `feature/phase5-qr-verification`, PR into `develop` |
-| **BLOCKERS** | None. Open: review photos decision; itemized device results ([phase5-report.md](phase5-report.md) §12) |
+| **NEXT** | Founder: merge the Phase 5 PR into `develop`, create the Phase 6 branch; Phase 6 planning waits for approval |
+| **BLOCKERS** | None. Open: itemized device results ([phase5-report.md](phase5-report.md) §12) |
 
 ## Phase 5 checklist
 

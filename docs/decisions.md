@@ -127,9 +127,18 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-011: Review photos — separate feature before beta
+
+**Decision:** Review photos are not part of Phase 5. The "إضافة صور" button stays hidden, and photos are delivered later as a separate feature with its own approved plan before beta. It has no assigned phase yet.
+
+**Rationale:** Figma includes the button, but photos need storage, a data model and migration, an upload endpoint with validation, moderation of public content, a native image picker (a new EAS build) and display in reviews. That is its own slice of work.
+
+**Consequence:** A QR code is single-use and reviews can't be edited, so reviews created before this feature ships will stay without photos.
+
+---
+
 ## Pending decisions
 
 | Item | Default |
 |------|---------|
-| Media uploads in reviews | Defer post-MVP unless Figma MVP screens require |
 | Figma file URL | Recorded in `docs/figma/README.md` (2026-08-24) |
