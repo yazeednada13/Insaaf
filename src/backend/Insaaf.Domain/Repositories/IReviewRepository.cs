@@ -16,6 +16,16 @@ public interface IReviewRepository
         Guid viewerUserId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Public reviews of active restaurants by users the viewer follows, excluding the viewer's own,
+    /// newest first. Returns up to <paramref name="take"/> rows after <paramref name="after"/>.
+    /// </summary>
+    Task<IReadOnlyList<FeedItemProjection>> ListFollowingFeedAsync(
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default);
+
     /// <summary>True when the review is public and its restaurant is active.</summary>
     Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default);
 }

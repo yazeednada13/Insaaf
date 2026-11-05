@@ -312,6 +312,27 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.ToTable("ReviewLikes", (string)null);
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.UserFollow", b =>
+                {
+                    b.Property<Guid>("FollowerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FolloweeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("FollowerId", "FolloweeId");
+
+                    b.HasIndex("FolloweeId");
+
+                    b.ToTable("UserFollows", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserFollows_NotSelf", "[FollowerId] <> [FolloweeId]");
+                        });
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.VisitToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -656,6 +677,21 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.UserFollow", b =>
+                {
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("FolloweeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

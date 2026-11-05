@@ -32,6 +32,8 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
 
     public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
 
+    public DbSet<UserFollow> UserFollows => Set<UserFollow>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -45,5 +47,6 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
         builder.ApplyConfiguration(new VisitTokenConfiguration());
         builder.ApplyConfiguration(new ReviewLikeConfiguration());
         builder.ApplyConfiguration(new ReviewCommentConfiguration());
+        builder.ApplyConfiguration(new UserFollowConfiguration());
     }
 }

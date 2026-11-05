@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<IVisitTokenRepository, VisitTokenRepository>();
         services.AddScoped<IReviewLikeRepository, ReviewLikeRepository>();
         services.AddScoped<IReviewCommentRepository, ReviewCommentRepository>();
+        services.AddScoped<IUserFollowRepository, UserFollowRepository>();
         services.AddSingleton<IVisitTokenCodec, VisitTokenCodec>();
 
         return services;

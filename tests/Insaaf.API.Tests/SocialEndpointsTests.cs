@@ -332,6 +332,7 @@ public sealed class LowSocialRateLimitWebApplicationFactory : CustomWebApplicati
     {
         builder.UseSetting("RateLimiting:SocialLikePerMinute", "2");
         builder.UseSetting("RateLimiting:SocialCommentPerMinute", "1");
+        builder.UseSetting("RateLimiting:SocialFollowPerMinute", "2");
     }
 }
 

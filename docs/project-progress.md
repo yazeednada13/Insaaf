@@ -6,12 +6,25 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | None active: Phase 6 complete, Phase 7 waits for the founder |
+| **CURRENT PHASE** | 7 — Feed and following (**Backend complete**; Mobile not started) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phase 5 and Phase 6 (merged into `develop`, PR #6); see [phase6-report.md](phase6-report.md) |
-| **NEXT** | Phase 7 planning, on the founder's request |
+| **COMPLETED** | Phases 5 and 6 (merged). Phase 7 Backend — tasks 7.1–7.3 + backend part of 7.6; see [phase7-report.md](phase7-report.md) |
+| **NEXT** | Founder: review the Backend report; Git checkpoint on `feature/phase7-feed-following`; then `Phase 7 — Mobile` |
 | **BLOCKERS** | None. iOS is untested on a device; planned for Phase 10 |
+
+## Phase 7 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 7.1 | Backend | `UserFollow`, `AddUserFollows` migration | Verified (migration applied by founder) |
+| 7.2 | Backend | Follow API; follow state on review detail | Verified |
+| 7.3 | Backend | Cursor-paginated feed; query plan check | Verified (1 SQL command per feed page; no index needed yet) |
+| 7.4 | Mobile | Follow/Unfollow on Review Detail | Not started |
+| 7.5 | Mobile | Feed in the النشاط tab | Not started |
+| 7.6 | Both | Tests and report | Backend done (193/193, smoke 16/16); Mobile not started |
+
+---
 
 ## Phase 6 checklist
 
@@ -189,7 +202,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
 | 5 | QR verified review write | **Complete** (merged to `develop`) |
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
-| 7 | Feed and following | Not started |
+| 7 | Feed and following | **In progress** (Backend complete 2026-11-05; Mobile pending) |
 | 8 | Profiles | Not started |
 | 9 | Admin and moderation | Not started |
 | 9A | Review photos | Not started |

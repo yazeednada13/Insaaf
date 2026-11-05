@@ -151,6 +151,20 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-013: Following and feed (Phase 7)
+
+**Decision:**
+- `UserFollows` has a composite primary key `(FollowerId, FolloweeId)` and a CHECK against self-follow. `PUT` and `DELETE` on a follow are safe to repeat.
+- Follow and unfollow live on Review Detail's reviewer row until profiles arrive in Phase 8.
+- The feed lives in the النشاط tab's "المتابعة" chip. Notifications and the Home sections are out of scope.
+- The feed returns verified public reviews of active restaurants by followed users, excluding the viewer's own, newest first, with cursor pagination.
+- It reuses the existing review visibility query, with no second visibility rule.
+- A `Reviews` index is added only with query plan evidence and founder approval.
+
+**Rationale:** one visibility rule can't drift, and a cursor stays stable when new reviews arrive.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

@@ -92,8 +92,60 @@ public sealed class ReviewRepository : IReviewRepository
                     review.Restaurant.Address,
                     _dbContext.ReviewLikes.Count(like => like.ReviewId == review.Id),
                     _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id),
-                    _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == viewerUserId)))
+                    _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == viewerUserId),
+                    _dbContext.UserFollows.Any(follow =>
+                        follow.FollowerId == viewerUserId && follow.FolloweeId == review.UserId)))
             .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<FeedItemProjection>> ListFollowingFeedAsync(
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        var followedUserIds = _dbContext.UserFollows
+            .Where(follow => follow.FollowerId == viewerUserId)
+            .Select(follow => follow.FolloweeId);
+
+        // Starts from the shared visibility query: the feed has no visibility rule of its own.
+        var reviews = PublicReviewsOfActiveRestaurants()
+            .Where(review => review.UserId != viewerUserId && followedUserIds.Contains(review.UserId));
+
+        if (after is not null)
+        {
+            reviews = reviews.Where(review =>
+                review.CreatedAt < after.CreatedAt
+                || (review.CreatedAt == after.CreatedAt && review.Id < after.Id));
+        }
+
+        // Reviewer, restaurant and counts all come from this one statement (no per-row lookups).
+        return await reviews
+            .Join(
+                _dbContext.Users,
+                review => review.UserId,
+                user => user.Id,
+                (review, user) => new { Review = review, User = user })
+            .OrderByDescending(row => row.Review.CreatedAt)
+            .ThenByDescending(row => row.Review.Id)
+            .Take(take)
+            .Select(row => new FeedItemProjection(
+                row.Review.Id,
+                row.Review.Rating,
+                row.Review.Text,
+                row.Review.CreatedAt,
+                row.Review.IsVerified,
+                row.User.Id,
+                row.User.FullName,
+                row.User.UserName,
+                row.Review.RestaurantId,
+                row.Review.Restaurant.Name,
+                row.Review.Restaurant.City,
+                row.Review.Restaurant.Address,
+                _dbContext.ReviewLikes.Count(like => like.ReviewId == row.Review.Id),
+                _dbContext.ReviewComments.Count(comment => comment.ReviewId == row.Review.Id),
+                _dbContext.ReviewLikes.Any(like => like.ReviewId == row.Review.Id && like.UserId == viewerUserId)))
+            .ToListAsync(cancellationToken);
+    }
 
     public Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
         PublicReviewsOfActiveRestaurants().AnyAsync(review => review.Id == reviewId, cancellationToken);

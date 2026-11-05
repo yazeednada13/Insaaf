@@ -19,4 +19,5 @@ public sealed record ReviewDetailProjection(
     string? RestaurantAddress,
     int LikeCount,
     int CommentCount,
-    bool IsLikedByViewer);
+    bool IsLikedByViewer,
+    bool IsReviewerFollowedByViewer);

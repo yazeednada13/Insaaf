@@ -108,7 +108,18 @@ Likes and comments never change ratings. Admin moderation of comments is Phase 9
 
 ## Phase 7 — Feed and following
 
-**Gate:** Following feed shows followed reviewers' content
+**Gate:** Following feed shows followed reviewers' verified content
+
+| Task | Track | Scope |
+|------|-------|-------|
+| 7.1 | Backend | `UserFollow` entity, `AddUserFollows` migration |
+| 7.2 | Backend | Follow and unfollow API; follow state on review detail |
+| 7.3 | Backend | Cursor-paginated feed; query plan check |
+| 7.4 | Mobile | Follow/Unfollow on Review Detail |
+| 7.5 | Mobile | Feed in the النشاط tab (Figma) |
+| 7.6 | Both | Tests: pagination, no N+1 |
+
+The feed contains verified public reviews of active restaurants, by followed users, excluding the viewer's own. Profiles and people search are Phase 8.
 
 ---
 

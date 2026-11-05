@@ -17,6 +17,8 @@ public static class DependencyInjection
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IReviewLikeService, ReviewLikeService>();
         services.AddScoped<IReviewCommentService, ReviewCommentService>();
+        services.AddScoped<IUserFollowService, UserFollowService>();
+        services.AddScoped<IFeedService, FeedService>();
         services.AddScoped<IVerificationService, VerificationService>();
         services.AddScoped<IVisitTokenIssuer, VisitTokenIssuer>();
         services.AddScoped<IVisitTokenLifecycleService, VisitTokenLifecycleService>();

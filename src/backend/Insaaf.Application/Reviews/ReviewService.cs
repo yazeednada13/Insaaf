@@ -83,7 +83,8 @@ public sealed class ReviewService : IReviewService
                 review.RestaurantAddress),
             review.LikeCount,
             review.CommentCount,
-            review.IsLikedByViewer);
+            review.IsLikedByViewer,
+            review.IsReviewerFollowedByViewer);
     }
 
     private static ReviewListItemDto ToDto(ReviewListItemProjection review) =>
