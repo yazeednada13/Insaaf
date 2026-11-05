@@ -2,11 +2,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, lineHeights } from '@/constants/theme';
 
-// Figma VerifiedBadge.tsx (size sm). Not pressable in Phase 4: the explanatory sheet (spec §16)
-// has no design in the Make file (decision D9).
-export function VerifiedBadge() {
+interface VerifiedBadgeProps {
+  size?: 'sm' | 'md';
+}
+
+// Figma VerifiedBadge.tsx. Not pressable: the explanatory sheet (spec §16) has no design in the
+// Make file (decision D9). Review cards use sm; the QR result and success views use md.
+export function VerifiedBadge({ size = 'sm' }: VerifiedBadgeProps) {
   return (
-    <View style={styles.badge}>
+    <View style={[styles.badge, size === 'md' && styles.badgeMd]}>
       <Text style={styles.check}>✓</Text>
       <Text style={styles.label}>زيارة موثقة</Text>
     </View>
@@ -24,6 +28,10 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 2,
+  },
+  badgeMd: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   check: {
     color: colors.primary,

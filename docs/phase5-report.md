@@ -1,263 +1,381 @@
-# Phase 5 — QR Verification + Verified Review Creation: التقرير الموحّد
+# Phase 5 — QR Verification + Verified Review Creation: consolidated report
 
-**التاريخ:** 2026-11-02
-**الفرع:** `feature/phase5-qr-verification` (من `develop` @ `92689f0`؛ المؤسس بيدير Git)
-**المراجع:** الخطة الرئيسية المعتمدة (Phase 5)، خطة Phase 5 المعتمدة (القرارات D-Q1…D-X)، [decisions.md](decisions.md) ADR-004، Figma Make `QRScreen.tsx`
-**حالة التقرير:** ✅ **Backend Track مكتمل** · ⏳ Mobile Track لم يبدأ (بانتظار `Phase 5 — Mobile`)
+**Date:** 2026-11-05
+**Branch:** `feature/phase5-qr-verification` (from `develop` @ `92689f0`; the founder manages Git)
+**References:** the approved Master Plan (Phase 5), the approved Phase 5 plan (decisions D-Q1…D-X), [decisions.md](decisions.md) ADR-004, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`QRScreen.tsx`, `BottomNav.tsx`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track implemented** (device evidence limits in §11.7) · ⏳ Phase 5 awaiting the founder's actions (§12)
 
-> التقرير بيفصل بين ثلاث أشياء: شو **تحقّقنا منه بالتشغيل**، شو **فحصناه بقراءة الكود**، وشو **مش متحقَّق منه**.
+> This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
 ---
 
-## 1. نظرة عامة
+## 1. Overview
 
-### الهدف التجاري
-Phase 5 بيبني **المسار الوحيد لإنشاء تقييم في الـ MVP**: QR على الفاتورة → VisitToken → المطعم بيتحدّد على السيرفر → تقييم موثّق. الهدف إنه ما حدا يقدر يكتب تقييم "موثّق" بدون ما يكون معه رمز حقيقي من فاتورة مطعم شريك، وإنه الرمز يشتغل **مرة وحدة بس** وقبل ما تنتهي صلاحيته، وإنه **الـ client ما بيختار المطعم أبداً**.
+### Business purpose
+Phase 5 builds **the only review-creation path in the MVP**: QR invoice → VisitToken → server-resolved restaurant → verified review. Nobody can publish a "verified" review without a real code from a partner restaurant's invoice. A code works **only once** and only before it expires, and **the client never chooses the restaurant**.
 
-### حالة المهام (Backend)
-| ID | المهمة | الحالة | الدليل |
+### Task status (Backend)
+| ID | Task | Status | Evidence |
 |---|---|---|---|
-| 5.1 | `VisitToken` + القواعد + الشراكة + migration `AddVisitTokens` | ✅ Verified | Build؛ مراجعة الـ migration (إضافات فقط)؛ المؤسس طبّقها (`migrations list` بدون Pending)؛ smoke على SQL Server؛ 8 حالات اختبار للقواعد والأهلية |
-| 5.2 | `IVisitTokenRepository` + خدمة الإصدار + الإلغاء | ✅ Verified | اختبارات codec/payload + اختبارات `VisitTokenIssuer` مباشرة (Count 1 و 25، principal مقيّد، رفض غير الشريك) + smoke |
-| 5.3 | Redeem + create بـ transaction واحد | ✅ Verified | اختبار تزامن بـ `DbContext` اثنين (InMemory) + **smoke على SQL Server: 5 طلبات متزامنة → 201 واحد و 409 أربعة** |
-| 5.4 | API الإنشاء الموثّق | ✅ Verified | 7 اختبارات API + اختبار 429 + smoke |
-| 5.5 | Admin API: إصدار، إلغاء، ملخّص، شراكة | ✅ Verified | اختبارات API (401/403/409/201) + smoke |
-| 5.9 (Backend) | الاختبارات والتحقق | ✅ | Release: 0 أخطاء، 0 تحذيرات؛ 130/130 اختبار؛ smoke 16/16 PASS |
+| 5.1 | `VisitToken` + rules + partnership + `AddVisitTokens` migration | ✅ Verified | Build; migration review (additive only); the founder applied it (`migrations list` shows no Pending); SQL Server smoke; 8 rule and eligibility test cases |
+| 5.2 | `IVisitTokenRepository` + issuing service + revocation | ✅ Verified | Codec/payload tests + direct `VisitTokenIssuer` tests (Count 1 and 25, restricted principal, non-partner rejection) + smoke |
+| 5.3 | Redeem + create in one transaction | ✅ Verified | Concurrency test with two `DbContext`s (InMemory) + **SQL Server smoke: 5 simultaneous requests → one 201 and four 409s** |
+| 5.4 | Verified create API | ✅ Verified | API tests + 429 test + smoke |
+| 5.5 | Admin API: issue, revoke, summary, partnership | ✅ Verified | API tests (401/403/409/201) + smoke |
+| 5.9 (Backend) | Tests and verification | ✅ | Release: 0 errors, 0 warnings; 130/130 tests; smoke 16/16 PASS |
 
-### القرارات المطبّقة
-| # | القرار | التطبيق |
+### Applied decisions (approved with the plan)
+| # | Decision | Implementation |
 |---|---|---|
-| D-Q1 | رمز لكل فاتورة، استخدام واحد، مربوط بالمطعم على السيرفر | ✅ |
-| D-I1 | إصدار مستقل عن القناة | ✅ `IVisitTokenIssuer` واحد + `IssuanceChannel` (`Manual = 1` فقط مستخدم؛ `Pos = 2` محجوز بدون تطبيق) + `IssuedByUserId` nullable |
-| D-I2 | صلاحية الإصدار لكل مطعم | ✅ `IssuancePrincipal` + فحص النطاق `issuance_forbidden` (403) داخل الخدمة؛ factory وحيد `ForAdmin` |
-| D-PL | صيغة الـ payload | ✅ `insaaf://visit/<43 حرف base64url>` مبنيّة ومقروءة من `VisitPayload` فقط |
-| D-P1 | الشراكة | ✅ `IsPartner` + `PartnerSince` + `PUT …/partnership` |
-| D-E1 | الصلاحية والحجم | ✅ `expiresInDays` افتراضي 90 (1–365)، `count` 1–500 |
-| D-T1 | الـ client بيبعت الرمز نفسه | ✅ `token` بالـ resolve والإنشاء |
-| D-F2 | النص 0–500 | ✅ `VerifiedReviewValidator.MaxTextLength = 500` |
-| D-R | Rate limiting | ✅ مدمج بـ ASP.NET Core: resolve 20/دقيقة، create 5/دقيقة لكل مستخدم، من الإعدادات |
-| D-A1 | حساب Admin | ✅ المؤسس فعّل `SeedAdmin` بـ User Secrets؛ السجل: `Development admin user seeded for admin@insaaf.local` |
-| D-X | حد تقييمات لكل مستخدم/مطعم | ❌ غير مطبّق (مش بالـ roadmap) |
+| D-Q1 | One single-use code per invoice, tied to the restaurant on the server | ✅ |
+| D-I1 | Channel-independent issuing | ✅ One `IVisitTokenIssuer` + `IssuanceChannel` (only `Manual = 1` used; `Pos = 2` reserved with no implementation) + nullable `IssuedByUserId` |
+| D-I2 | Per-restaurant issuing authorization | ✅ `IssuancePrincipal` + scope check `issuance_forbidden` (403) inside the service; one factory, `ForAdmin` |
+| D-PL | Payload format | ✅ `insaaf://visit/<43 base64url chars>`, built and parsed only by `VisitPayload` |
+| D-P1 | Partnership | ✅ `IsPartner` + `PartnerSince` + `PUT …/partnership` |
+| D-E1 | Validity and batch size | ✅ `expiresInDays` default 90 (1–365), `count` 1–500 |
+| D-T1 | The client sends the code itself | ✅ `token` at resolve and create |
+| D-F2 | Text 0–500 | ✅ `VerifiedReviewValidator.MaxTextLength = 500` |
+| D-R | Rate limiting | ✅ Built-in ASP.NET Core: resolve 20/minute, create 5/minute per user, from configuration |
+| D-A1 | Admin account | ✅ The founder enabled `SeedAdmin` through User Secrets; log line: `Development admin user seeded for admin@insaaf.local` |
+| D-X | Reviews-per-user limit | ❌ Not implemented (not in the roadmap) |
 
-### انحرافات عن صياغة الخطة (نفس العقد، مسجّلة بأمانة)
-1. **اسم خدمة الإلغاء:** الخطة سمّتها `VisitTokenRevoker`؛ المطبّق `VisitTokenLifecycleService` (`IVisitTokenLifecycleService`) لأنها بتجمع الإلغاء **والملخّص**، وكلاهما بنفس فحص النطاق. السلوك نفسه.
-2. **ترتيب الحفظ داخل الـ transaction:** الخطة وصفت `SaveChanges` واحد (UPDATE + INSERT). المطبّق **حفظين داخل transaction واحد**: أولاً "حجز" الرمز (UPDATE مع فحص `ConcurrencyStamp`)، بعدين INSERT التقييم، بعدين Commit. **السبب:** هيك الطلب اللي خسر السباق بيفشل قبل ما يحاول يضيف تقييم، وهاد بيشتغل صح حتى على InMemory (اللي ما فيه transactions) — اكتشفناه لما فشل اختبار التزامن بالنسخة الأولى. على SQL Server الاثنين بيـcommit أو بيرجعوا مع بعض.
-3. **`IVisitTokenCodec`** فيه `GenerateToken` و `Hash` بس؛ قراءة الـ payload موجودة بـ `VisitPayload.TryExtractToken` (static بالـ Application) بدل `TryParsePayload` على الـ codec، عشان صيغة الـ payload تكون بمكان واحد مستقل عن التشفير.
-4. **ملف اختبار:** `CustomWebApplicationFactory` صار مش `sealed` وفيه `ConfigureTestSettings` افتراضي، عشان نعمل host بحدود rate limit منخفضة.
+### Deviations from the plan's wording (same contract, recorded honestly)
+1. **The revocation service name:** the plan said `VisitTokenRevoker`; the code uses `VisitTokenLifecycleService` (`IVisitTokenLifecycleService`) because it holds both revocation **and** the summary, with the same scope check. Same behaviour.
+2. **Save order inside the transaction:** the plan described one `SaveChanges` (UPDATE + INSERT). The code uses **two saves inside one transaction**: first claim the token (UPDATE with the `ConcurrencyStamp` check), then INSERT the review, then commit. **Why:** the request that lost the race fails before attempting to add a review, and this also behaves correctly on InMemory, which has no transactions. A failing concurrency test exposed this in the first version. On SQL Server both commit or roll back together.
+3. **`IVisitTokenCodec`** has only `GenerateToken` and `Hash`. Payload parsing lives in `VisitPayload.TryExtractToken` (static, in Application) instead of `TryParsePayload` on the codec, so the payload format stays in one place, independent of the cryptography.
+4. **A test file:** `CustomWebApplicationFactory` is no longer `sealed` and has a virtual `ConfigureTestSettings`, so a host can run with low rate limits.
 
 ---
 
-## 2. المعمارية
+## 2. Architecture
 
 ```text
 Insaaf.API ──► Insaaf.Application ──► Insaaf.Domain
     │                  ▲                   ▲
     └──► Insaaf.Infrastructure ────────────┘
 ```
-**متحقَّق (grep):** صفر مراجع لـ `Roles.Admin` أو EF Core أو ASP.NET Core داخل Domain و Application. قيد الـ Admin موجود **بالـ controller فقط**.
+**Verified (grep):** 0 references to `Roles.Admin`, EF Core or ASP.NET Core in Domain and Application. The Admin restriction lives **in the controller only**.
 
-### ملفات Phase 5 (Backend)
-| الطبقة | الملف | المسؤولية |
+### Phase 5 Backend files
+| Layer | File | Responsibility |
 |---|---|---|
-| Domain | `Enums/VisitTokenIssuanceChannel.cs` | `Manual = 1`، `Pos = 2` (محجوز) |
-| Domain | `Entities/VisitToken.cs` | الرمز: المطعم، الإصدار، القناة، الـ hash، التواريخ، `ConcurrencyStamp` |
-| Domain | `Entities/Restaurant.cs` (معدّل) | `IsPartner`، `PartnerSince`، `VisitTokens` |
-| Domain | `Rules/VisitTokenRules.cs` | **المصدر الوحيد** لحالة الرمز (`Valid/Expired/Used/Revoked`) والأهلية (`IsActive && IsPartner`) |
-| Domain | `Repositories/IVisitTokenRepository.cs` | العقد: بحث بالـ hash، إضافة، إلغاء، ملخّص، **`RedeemWithReviewAsync`** |
-| Domain | `Repositories/IRestaurantRepository.cs` (معدّل) + `Projections/RestaurantPartnershipProjection.cs` | قراءة/تعديل الشراكة |
-| Application | `Verification/Abstractions/IVisitTokenCodec.cs` | توليد الرمز وحساب الـ hash (التطبيق بالـ Infrastructure) |
-| Application | `Verification/VisitPayload.cs` | بناء وقراءة `insaaf://visit/<token>` |
-| Application | `Verification/IssuancePrincipal.cs` | مين بيصدر، كما حدّده السيرفر |
-| Application | `Verification/VisitTokenIssuer.cs` | **خدمة الإصدار الوحيدة**، مستقلة عن القناة |
-| Application | `Verification/VisitTokenLifecycleService.cs` | الإلغاء والملخّص |
-| Application | `Verification/VerificationService.cs` | Resolve و Create |
-| Application | `Verification/Validation/VerifiedReviewValidator.cs` | التقييمات 1–5، النص ≤ 500 |
-| Application | `Verification/VerificationException.cs` + `Dtos/*` | الأخطاء والعقود |
-| Application | `Admin/RestaurantPartnershipService.cs` | الشراكة |
-| Infrastructure | `Verification/VisitTokenCodec.cs` | `RandomNumberGenerator` (32 بايت) + SHA-256 |
-| Infrastructure | `Persistence/Configurations/VisitTokenConfiguration.cs` | الجدول، CHECKs، الـ indexes، الـ FKs |
-| Infrastructure | `ReviewConfiguration.cs`، `RestaurantConfiguration.cs`، `AppDbContext.cs` (معدّلة) | FK + filtered unique، `IsPartner` |
-| Infrastructure | `Persistence/Repositories/VisitTokenRepository.cs` | **حدود الـ transaction** |
-| Infrastructure | `Persistence/Migrations/20261102022855_AddVisitTokens*.cs` | الـ migration (ولّدها وطبّقها المؤسس) |
-| API | `Controllers/VerificationController.cs` | `visits/resolve`، `reviews` |
-| API | `Controllers/AdminRestaurantsController.cs` | شراكة، إصدار، إلغاء، ملخّص |
-| API | `Extensions/RateLimitingExtensions.cs` | سياسات الـ rate limit + 429 envelope |
-| API | `Program.cs`، `ExceptionHandlingMiddleware.cs`، `ApiResponseExtensions.cs`، `appsettings.json` (معدّلة) | التسجيل، معالجة `VerificationException`، `CreatedEnvelope`، الإعدادات |
+| Domain | `Enums/VisitTokenIssuanceChannel.cs` | `Manual = 1`, `Pos = 2` (reserved) |
+| Domain | `Entities/VisitToken.cs` | The token: restaurant, issuance, channel, hash, dates, `ConcurrencyStamp` |
+| Domain | `Entities/Restaurant.cs` (modified) | `IsPartner`, `PartnerSince`, `VisitTokens` |
+| Domain | `Rules/VisitTokenRules.cs` | **The single source** for token state (`Valid/Expired/Used/Revoked`) and eligibility (`IsActive && IsPartner`) |
+| Domain | `Repositories/IVisitTokenRepository.cs` | The contract: find by hash, add, revoke, summary, **`RedeemWithReviewAsync`** |
+| Domain | `Repositories/IRestaurantRepository.cs` (modified) + `Projections/RestaurantPartnershipProjection.cs` | Read and change partnership |
+| Application | `Verification/Abstractions/IVisitTokenCodec.cs` | Token generation and hashing (implemented in Infrastructure) |
+| Application | `Verification/VisitPayload.cs` | Builds and parses `insaaf://visit/<token>` |
+| Application | `Verification/IssuancePrincipal.cs` | Who is issuing, as established by the server |
+| Application | `Verification/VisitTokenIssuer.cs` | **The single, channel-independent issuing service** |
+| Application | `Verification/VisitTokenLifecycleService.cs` | Revocation and summary |
+| Application | `Verification/VerificationService.cs` | Resolve and create |
+| Application | `Verification/Validation/VerifiedReviewValidator.cs` | Ratings 1–5, text ≤ 500 |
+| Application | `Verification/VerificationException.cs` + `Dtos/*` | Errors and contracts |
+| Application | `Admin/RestaurantPartnershipService.cs` | Partnership |
+| Infrastructure | `Verification/VisitTokenCodec.cs` | `RandomNumberGenerator` (32 bytes) + SHA-256 |
+| Infrastructure | `Persistence/Configurations/VisitTokenConfiguration.cs` | Table, CHECKs, indexes, FKs |
+| Infrastructure | `ReviewConfiguration.cs`, `RestaurantConfiguration.cs`, `AppDbContext.cs` (modified) | FK + filtered unique index, `IsPartner` |
+| Infrastructure | `Persistence/Repositories/VisitTokenRepository.cs` | **The transaction boundary** |
+| Infrastructure | `Persistence/Migrations/20261102022855_AddVisitTokens*.cs` | The migration (generated and applied by the founder) |
+| API | `Controllers/VerificationController.cs` | `visits/resolve`, `reviews` |
+| API | `Controllers/AdminRestaurantsController.cs` | Partnership, issue, revoke, summary |
+| API | `Extensions/RateLimitingExtensions.cs` | Rate-limit policies + 429 envelope |
+| API | `Program.cs`, `ExceptionHandlingMiddleware.cs`, `ApiResponseExtensions.cs`, `appsettings.json` (modified) | Registration, `VerificationException` handling, `CreatedEnvelope`, settings |
 
 ---
 
-## 3. مسار البيانات من البداية للنهاية
+## 3. End-to-end data flow
 
-### إصدار رموز: `POST /api/v1/admin/restaurants/{id}/visit-tokens` `{count, expiresInDays}`
-1. JwtBearer بيتحقق من التوكن؛ `[Authorize(Roles = "Admin")]` بيرفض غير الـ Admin (401/403).
-2. الـ controller بيحسب `ExpiresAt = now + expiresInDays` وبيبني `IssuancePrincipal.ForAdmin(sub)` — **من الـ JWT، مش من الـ body**.
-3. `VisitTokenIssuer.IssueAsync`: فحص النطاق → `count` 1–500 → الصلاحية بالمستقبل → المطعم موجود → `IsActive && IsPartner` (وإلا 409 `restaurant_not_partner`).
-4. لكل رمز: `codec.GenerateToken()` (256 بت عشوائية) → `codec.Hash()` → `VisitToken` بالـ hash فقط، و `IssuanceChannel`/`IssuedByUserId` من الـ principal، و `IssuanceId` واحد للدفعة.
+### Issuing: `POST /api/v1/admin/restaurants/{id}/visit-tokens` `{count, expiresInDays}`
+1. JwtBearer validates the token; `[Authorize(Roles = "Admin")]` rejects non-Admins (401/403).
+2. The controller computes `ExpiresAt = now + expiresInDays` and builds `IssuancePrincipal.ForAdmin(sub)`, **from the JWT, not the body**.
+3. `VisitTokenIssuer.IssueAsync`: scope check → `count` 1–500 → expiry in the future → restaurant exists → `IsActive && IsPartner` (otherwise 409 `restaurant_not_partner`).
+4. For each token: `codec.GenerateToken()` (256 random bits) → `codec.Hash()` → a `VisitToken` holding only the hash, with `IssuanceChannel`/`IssuedByUserId` from the principal and one `IssuanceId` for the batch.
 5. `AddRangeAsync` → EF → `INSERT VisitTokens`.
-6. الرد 201: `payloads` = `VisitPayload.Build(token)`. **هاي المرة الوحيدة اللي الرموز الخام بتطلع فيها؛** ما في أي endpoint بيرجّعها بعدين.
+6. 201 response: `payloads` = `VisitPayload.Build(token)`. **This is the only time raw codes leave the server;** no endpoint returns them again.
 
-### المعاينة: `POST /api/v1/verification/visits/resolve` `{token}`
+### Preview: `POST /api/v1/verification/visits/resolve` `{token}`
 1. `[Authorize]` + rate limit `verification-resolve`.
-2. `VerificationService.ResolveAsync` → `GetRedeemableTokenAsync`: `TryExtractToken` → hash → `FindByHashAsync` (مع المطعم) → `VisitTokenRules.Evaluate` → الأهلية.
-3. تفاصيل المطعم من `IRestaurantRepository.GetByIdAsync` (المعدّل والعدد). **ما في استهلاك للرمز.**
+2. `VerificationService.ResolveAsync` → `GetRedeemableTokenAsync`: `TryExtractToken` → hash → `FindByHashAsync` (with the restaurant) → `VisitTokenRules.Evaluate` → eligibility.
+3. Restaurant details come from `IRestaurantRepository.GetByIdAsync` (average and count). **The token is not redeemed.**
 
-### الإنشاء: `POST /api/v1/verification/reviews` `{token, rating, …, text}`
-1. `[Authorize]` + rate limit `verification-create`. أي حقل زيادة (مثل `restaurantId`) → 400 من الـ JSON deserializer (`JsonUnmappedMemberHandling.Disallow`).
-2. `VerifiedReviewValidator` **قبل** لمس الرمز.
-3. نفس `GetRedeemableTokenAsync` (الرمز tracked).
-4. بناء `Review`: `RestaurantId = token.RestaurantId`، `IsVerified = true`، `VisitTokenId = token.Id`، `UserId` من الـ JWT.
+### Create: `POST /api/v1/verification/reviews` `{token, rating, …, text}`
+1. `[Authorize]` + rate limit `verification-create`. Any extra field (such as `restaurantId`) → 400 from the JSON deserializer (`JsonUnmappedMemberHandling.Disallow`).
+2. `VerifiedReviewValidator` runs **before** the token is touched.
+3. The same `GetRedeemableTokenAsync` (the token is tracked).
+4. The `Review` is built: `RestaurantId = token.RestaurantId`, `IsVerified = true`, `VisitTokenId = token.Id`, `UserId` from the JWT.
 5. `RedeemWithReviewAsync`:
    ```text
    BEGIN TRAN
      UPDATE VisitTokens SET RedeemedAt, RedeemedByUserId, ConcurrencyStamp=@new
-       WHERE Id=@id AND ConcurrencyStamp=@old      ← 0 صفوف = حدا سبقنا → DbUpdateConcurrencyException
-     INSERT Reviews (…, VisitTokenId)              ← filtered UNIQUE index = خط حماية أخير (2601/2627)
+       WHERE Id=@id AND ConcurrencyStamp=@old      ← 0 rows = lost the race → DbUpdateConcurrencyException
+     INSERT Reviews (…, VisitTokenId)              ← filtered UNIQUE index = last guard (2601/2627)
    COMMIT
    ```
-   أي فشل من الاثنين → rollback → `AlreadyRedeemed` → 409 `token_used`.
-6. 201 `{reviewId, restaurantId}`. القراءة العلنية لسا بتمرّ من `ReviewVisibility.IsPublic`، فالتقييم بيطلع فوراً بالقائمة وبالمعدّلات.
+   Either failure → rollback → `AlreadyRedeemed` → 409 `token_used`.
+6. 201 `{reviewId, restaurantId}`. Public reads still go through `ReviewVisibility.IsPublic`, so the review appears immediately in the list and the aggregates.
 
 ---
 
-## 4. الكود المهم وليش موجود
-- **`VisitTokenRules`** — قاعدة وحدة للحالة بترتيب أولوية ثابت: مستخدَم → ملغى → منتهي → صالح. كل الخدمات بتستعملها، فما في مكان ثاني بيقرّر "هل الرمز صالح".
-- **`IssuancePrincipal` + `VisitTokenIssuer`** — الإصدار ما بيعرف شي اسمه "Admin". بيعرف بس principal فيه قناة ومستخدم اختياري ونطاق مطعم اختياري. اليوم الـ Admin غير مقيّد؛ بالمستقبل قناة POS بتبني principal مقيّد بمطعمها من الـ credential، والخدمة نفسها بترفض أي مطعم ثاني. مختبَر بـ principal مقيّد مبني بالاختبار فقط.
-- **`VisitTokenCodec`** — نفس نمط `RefreshTokenService`: عشوائية تشفيرية، وتخزين hash فقط. لو تسرّبت الداتابيس، ما في رموز قابلة للاستعمال.
-- **`VisitPayload`** — مكان واحد للصيغة؛ تغييرها لاحقاً لرابط `https` ما بيلمس الـ API.
-- **`VisitTokenRepository.RedeemWithReviewAsync`** — قلب الضمان "تقييم واحد لكل رمز".
-- **`RevokeUnusedAsync`** — بيغيّر `ConcurrencyStamp` كمان، فالإلغاء ما بيقدر يكتب فوق استهلاك صار بنفس اللحظة؛ عند التعارض بيعيد المحاولة (حتى 3 مرات).
-- **`RateLimitingExtensions`** — fixed window مقسوم حسب `sub` (أو IP بدون مستخدم)، ورد 429 بنفس الـ envelope.
+## 4. Important code
+| Code | Why it exists |
+|---|---|
+| `VisitTokenRules` | One rule for token state with a fixed precedence: used → revoked → expired → valid. Nothing else decides whether a token is valid |
+| `IssuancePrincipal` + `VisitTokenIssuer` | Issuing knows nothing about "Admin"; it sees a channel, an optional user and an optional restaurant scope. A future POS channel builds a principal restricted to its restaurant and the service refuses any other. Tested with a restricted principal built in the test only |
+| `VisitTokenCodec` | The `RefreshTokenService` pattern: cryptographic randomness, hash-only storage. A database leak exposes no usable codes |
+| `VisitPayload` | One place for the format; moving to an `https` link later doesn't touch the API |
+| `VisitTokenRepository.RedeemWithReviewAsync` | The core of the "one review per token" guarantee |
+| `RevokeUnusedAsync` | Also changes `ConcurrencyStamp`, so revocation can't overwrite a simultaneous redemption; retries up to 3 times on conflict |
+| `RateLimitingExtensions` | Fixed window partitioned by `sub` (IP when anonymous), with a 429 in the standard envelope |
 
 ---
 
-## 5. عقود الـ API
+## 5. API contract
 
-كل الردود بالـ envelope `{ success, data, errors: [{code, message}], meta: { requestId } }`.
+All responses use the envelope `{ success, data, errors: [{code, message}], meta: { requestId } }`.
 
-### العميل (`[Authorize]` — User أو Admin)
-| Method | Route | Body | النجاح |
+### Customer (`[Authorize]`, User or Admin)
+| Method | Route | Body | Success |
 |---|---|---|---|
-| POST | `/api/v1/verification/visits/resolve` | `{ "token": "<الرمز أو الـ payload كامل>" }` | 200 `{ restaurant: { id, name, city, address, imageUrl, averageRating, reviewCount } }` |
+| POST | `/api/v1/verification/visits/resolve` | `{ "token": "<raw code or full payload>" }` | 200 `{ restaurant: { id, name, city, address, imageUrl, averageRating, reviewCount } }` |
 | POST | `/api/v1/verification/reviews` | `{ token, rating, foodRating, serviceRating, valueRating, atmosphereRating, text }` | 201 `{ reviewId, restaurantId }` |
 
-| Status | code | متى |
+| Status | code | When |
 |---|---|---|
-| 400 | `token_invalid` | مش معروف، صيغة غلط، ملغى، أو المطعم مش فعّال/مش شريك (ما بنكشف الفرق) |
+| 400 | `token_invalid` | Unknown, malformed, revoked, or restaurant not active / not a partner (the difference isn't revealed) |
 | 410 | `token_expired` | `ExpiresAt <= now` |
-| 409 | `token_used` | مستخدَم قبل، أو خسر السباق |
-| 400 | `validation_error` | تقييم برّا 1–5، نص > 500، حقل زيادة (مثل `restaurantId`) |
-| 401 | `unauthorized` | بدون توكن |
-| 429 | `rate_limited` | تجاوز الحد |
+| 409 | `token_used` | Redeemed before, or lost the race |
+| 400 | `validation_error` | Rating outside 1–5, text > 500, an extra field (such as `restaurantId`) |
+| 401 | `unauthorized` | No token |
+| 429 | `rate_limited` | Limit exceeded |
 
-**ما في** `POST /api/v1/reviews` (404) ولا `POST /api/v1/restaurants/{id}/reviews` (405).
+**There is no** `POST /api/v1/reviews` (404) or `POST /api/v1/restaurants/{id}/reviews` (405).
 
 ### Admin (`[Authorize(Roles = "Admin")]`)
-| Method | Route | Body | النجاح |
+| Method | Route | Body | Success |
 |---|---|---|---|
 | PUT | `/api/v1/admin/restaurants/{id}/partnership` | `{ "isPartner": true }` | 200 `{ restaurantId, isActive, isPartner, partnerSince }` |
-| POST | `/api/v1/admin/restaurants/{id}/visit-tokens` | `{ "count": 1–500, "expiresInDays": 1–365 (افتراضي 90) }` | 201 `{ issuanceId, restaurantId, expiresAt, payloads[] }` |
-| POST | `/api/v1/admin/restaurants/{id}/visit-tokens/revoke` | `{ "issuanceId": "…" }` أو `{}` | 200 `{ revokedCount }` |
+| POST | `/api/v1/admin/restaurants/{id}/visit-tokens` | `{ "count": 1–500, "expiresInDays": 1–365 (default 90) }` | 201 `{ issuanceId, restaurantId, expiresAt, payloads[] }` |
+| POST | `/api/v1/admin/restaurants/{id}/visit-tokens/revoke` | `{ "issuanceId": "…" }` or `{}` | 200 `{ revokedCount }` |
 | GET | `/api/v1/admin/restaurants/{id}/visit-tokens/summary` | — | 200 `{ active, redeemed, expired, revoked }` |
 
-الأخطاء: 401، 403، 404 `not_found`، 409 `restaurant_not_partner`، 400 `validation_error`، (403 `issuance_forbidden` موجود بالخدمة لكن ما بيصير عملياً للـ Admin لأنه غير مقيّد).
-
-**القيود:** ما في طريقة لاسترجاع payload بعد الإصدار؛ ما في endpoint لعرض الرموز فردياً؛ إلغاء رمز واحد بعينه غير ممكن (بالإصدار أو بالمطعم كامل).
+Errors: 401, 403, 404 `not_found`, 409 `restaurant_not_partner`, 400 `validation_error`. 403 `issuance_forbidden` exists in the service, but can't occur for Admin, which is unrestricted.
 
 ---
 
-## 6. الداتابيس وقواعد العمل
+## 6. Database
 
-### Migration `20261102022855_AddVisitTokens` (إضافات فقط)
-- **`Restaurants`:** `IsPartner bit NOT NULL DEFAULT 0`، `PartnerSince datetime2 NULL`. كل المطاعم الحالية بتبلّش مش شريكة.
-- **`VisitTokens`:** الأعمدة حسب الخطة. CHECKs:
-  - `CK_VisitTokens_ExpiresAfterIssued`: `[ExpiresAt] > [IssuedAt]`
-  - `CK_VisitTokens_RedeemerRequiresRedemption`: `[RedeemedByUserId] IS NULL OR [RedeemedAt] IS NOT NULL`
-  - `CK_VisitTokens_ManualRequiresIssuer`: `[IssuanceChannel] <> 1 OR [IssuedByUserId] IS NOT NULL`
-  - FKs: `Restaurants` (Cascade)؛ `AspNetUsers` ×2 (Restrict).
-  - Indexes: `TokenHash` UNIQUE، `IssuanceId`، `(RestaurantId, RedeemedAt, RevokedAt)`، + indexes الـ FKs.
-- **`Reviews`:** FK `VisitTokenId → VisitTokens` (Restrict) + `IX_Reviews_VisitTokenId` UNIQUE `WHERE [VisitTokenId] IS NOT NULL`. قيد Phase 4 `IsVerified = 0 OR VisitTokenId IS NOT NULL` ما تغيّر.
+### Migration `20261102022855_AddVisitTokens` (additive only)
+- **`Restaurants`:** `IsPartner bit NOT NULL DEFAULT 0`, `PartnerSince datetime2 NULL`. All existing restaurants start as non-partners.
+- **`VisitTokens`:** columns as in the plan.
+  - CHECK `CK_VisitTokens_ExpiresAfterIssued`: `[ExpiresAt] > [IssuedAt]`
+  - CHECK `CK_VisitTokens_RedeemerRequiresRedemption`: `[RedeemedByUserId] IS NULL OR [RedeemedAt] IS NOT NULL`
+  - CHECK `CK_VisitTokens_ManualRequiresIssuer`: `[IssuanceChannel] <> 1 OR [IssuedByUserId] IS NOT NULL`
+  - FKs: `Restaurants` (Cascade); `AspNetUsers` ×2 (Restrict).
+  - Indexes: `TokenHash` UNIQUE, `IssuanceId`, `(RestaurantId, RedeemedAt, RevokedAt)`, + the FK indexes.
+- **`Reviews`:** FK `VisitTokenId → VisitTokens` (Restrict) + `IX_Reviews_VisitTokenId` UNIQUE `WHERE [VisitTokenId] IS NOT NULL`. The Phase 4 CHECK `IsVerified = 0 OR VisitTokenId IS NOT NULL` is unchanged.
 
-### قواعد العمل
-- الأهلية `IsActive && IsPartner` بتنفحص عند **الإصدار والمعاينة والإنشاء**؛ إنهاء الشراكة بيبطل كل الرموز الموجودة فوراً.
-- الحالة: مستخدَم ← ملغى ← منتهي ← صالح؛ عند `ExpiresAt == now` الرمز منتهي.
-- الرمز ما بيتغيّر مطعمه أبداً؛ التقييم بياخد المطعم من الرمز فقط.
-- ما في seed لرموز أو شراكات.
+### Business rules
+- Eligibility `IsActive && IsPartner` is checked at **issue, resolve and create**; ending a partnership invalidates all its existing tokens immediately.
+- State precedence: used → revoked → expired → valid. At `ExpiresAt == now` the token is expired.
+- A token's restaurant never changes; a review takes its restaurant from the token only.
+- No tokens or partnerships are seeded.
 
 ---
 
-## 7. التحقق
+## 7. Verification
 
-### تم تشغيله (2026-11-02)
-| الفحص | النتيجة |
+### Run (2026-11-02)
+| Check | Result |
 |---|---|
-| `dotnet build -c Release` | ✅ 0 أخطاء، 0 تحذيرات |
-| `Insaaf.Application.Tests` | ✅ 83/83 (منها 27 حالة Phase 5: 17 primitives + 10 flow، شاملة حالات الـ theories) |
-| `Insaaf.API.Tests` | ✅ 47/47 (منها 8 Phase 5) |
-| فحص الطبقات (grep) | ✅ صفر نتائج |
-| مراجعة الـ migration | ✅ إضافات فقط، `Down` صحيح |
-| تطبيق الـ migration | ✅ نفّذه المؤسس؛ `migrations list` بدون Pending |
-| Seed الـ Admin | ✅ سجل الـ API |
-| **Smoke على SQL Server** (سكربت شغّله المؤسس، الـ API على 5232) | ✅ **16/16 PASS** |
+| `dotnet build -c Release` | ✅ 0 errors, 0 warnings |
+| `Insaaf.Application.Tests` | ✅ 83/83 |
+| `Insaaf.API.Tests` | ✅ 47/47 |
+| Layer check (grep) | ✅ 0 matches |
+| Migration review | ✅ Additive only, `Down` correct |
+| Migration applied | ✅ By the founder; `migrations list` shows no Pending |
+| Admin seed | ✅ API log |
+| **SQL Server smoke** (script run by the founder, API on 5232) | ✅ **16/16 PASS** |
 
-**نتائج الـ smoke:**
-- تسجيل دخول Admin 200؛ إصدار كـ User 403؛ بدون توكن 401.
-- إصدار لمطعم مش شريك 409 `restaurant_not_partner`؛ تفعيل الشراكة 200 مع `partnerSince`؛ إصدار رمزين 201.
-- Resolve 200 بمطعم الرمز (Burger Makers).
-- `restaurantId` بالـ body → 400 `validation_error`؛ `POST /reviews` → 404.
-- **5 طلبات إنشاء متزامنة بنفس الرمز → `409,409,409,409,201`** — هاد الإثبات الحقيقي إنه الـ transaction + `ConcurrencyStamp` شغّالين على SQL Server.
-- تقييم واحد علني وموثّق بالقائمة؛ resolve بعدها 409 `token_used`.
-- الإلغاء 200 (`revoked=1`)؛ resolve لرمز ملغى 400 `token_invalid`.
-- الملخّص: `active=0 redeemed=1 expired=0 revoked=1`.
+### The new tests (35)
+27 Application cases (17 primitives + 10 flow, including theory cases) and 8 API tests.
 
-### مش متحقَّق منه
-- **410 على SQL Server:** مختبَر بالـ API tests (InMemory) فقط؛ ما قدرنا نعمل رمز منتهي بالـ smoke بدون تعديل مباشر بالداتابيس.
-- **429 على SQL Server:** مختبَر بالـ API tests فقط.
-- **وجود الـ CHECK constraints فعلياً بالداتابيس:** متحقَّق من ملف الـ migration، مش باستعلام على `sys.check_constraints`. استعلام اختياري للمؤسس:
+### SQL Server smoke results
+- Admin login 200; issue as User 403; anonymous 401.
+- Issue for a non-partner 409 `restaurant_not_partner`; set partnership 200 with `partnerSince`; issue 2 tokens 201.
+- Resolve 200 with the token's restaurant (Burger Makers).
+- `restaurantId` in the body → 400 `validation_error`; `POST /reviews` → 404.
+- **5 simultaneous creates with one token → `409,409,409,409,201`.** This is the real proof that the transaction + `ConcurrencyStamp` work on SQL Server.
+- Exactly one public verified review; resolve afterwards 409 `token_used`.
+- Revoke 200 (`revoked=1`); resolve of a revoked token 400 `token_invalid`.
+- Summary: `active=0 redeemed=1 expired=0 revoked=1`.
+
+### Not verified
+- **410 on SQL Server:** API tests (InMemory) only; the smoke can't create an expired token without editing the database.
+- **429 on SQL Server:** API tests only.
+- **CHECK constraints present in the database:** confirmed from the migration file, not by querying `sys.check_constraints`. Optional founder query:
   ```sql
   SELECT name FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID('VisitTokens');
   SELECT name, has_filter, filter_definition FROM sys.indexes WHERE name = 'IX_Reviews_VisitTokenId';
   ```
-- **مسار الـ unique violation (2601/2627):** ما انضرب بالـ smoke لأن `ConcurrencyStamp` منع التكرار قبله؛ موجود كخط حماية أخير بالكود.
-- **الحالة `issuance_forbidden`** مختبَرة على مستوى الخدمة فقط (ما في قناة مقيّدة حالياً).
-
-### آثار الـ smoke على داتابيس التطوير
-- مطعم `Burger Makers` (`e7146302-9d94-45dc-aa19-7bed4b44c48e`) صار شريك.
-- تقييم موثّق واحد بنص "Phase 5 smoke test".
-- حسابين `smoke-…@example.com`، ورمزين (واحد مستخدم وواحد ملغى).
+- **The unique-violation path (2601/2627):** not hit in the smoke because `ConcurrencyStamp` stopped the duplicates first; it remains as the last guard.
+- **`issuance_forbidden`:** service-level tests only, because no restricted channel exists.
 
 ---
 
-## 8. تسليم للـ Mobile
-- **Base URL:** نفس Phase 3/4 (`EXPO_PUBLIC_API_BASE_URL` + `/api/v1`). كل الطلبات بـ Bearer عبر الـ Axios interceptor الموجود (refresh تلقائي على 401).
-- **قراءة الـ QR:** اقبل بس `insaaf://visit/` + 43 حرف `[A-Za-z0-9_-]`؛ أي شي ثاني → شاشة "رمز QR غير صالح لإنصاف" بدون ما تتصل بالسيرفر. القاعدة لازم تطابق `VisitPayload` (ابعت الـ payload كامل أو الرمز؛ السيرفر بيقبل الاثنين).
-- **الربط بشاشات Figma:** `token_invalid` → "غير صالح"؛ `token_expired` (410) → "انتهت صلاحية رمز الفاتورة"؛ `token_used` (409) → "تم استخدام هذا الرمز مسبقًا"؛ `rate_limited` و شبكة → خطأ مع "إعادة المحاولة".
-- **الإنشاء:** **ممنوع** إرسال `restaurantId` أو أي حقل زيادة (400). الحقول: `token` + 5 تقييمات (1–5، D-F1 كلها مطلوبة بالـ UI) + `text` (0–500).
-- **بعد النجاح:** invalidate لـ `['restaurants','detail',id]`، `['restaurants','list']`، `['reviews','restaurant',id]` (`id` = `restaurantId` من الرد).
-- **مخاطر:** `expo-camera` بيحتاج EAS build جديد للـ development app؛ لازم زر إرسال واحد (disabled أثناء الإرسال) عشان ما نستهلك الرمز وما نعرض 409 مربك؛ حد 5 إنشاءات/دقيقة.
-- **للاختبار على الجهاز:** المؤسس بيصدر رموز من Admin API (Postman/السكربت) ويحوّلها لـ QR بأي مولّد.
+## 8. Mobile handoff
+- **Base URL:** as in Phases 3/4 (`EXPO_PUBLIC_API_BASE_URL`, paths under `/api/v1`), with Bearer through the existing Axios interceptor.
+- **QR reading:** accept only `insaaf://visit/` + 43 `[A-Za-z0-9_-]` characters; anything else → "رمز QR غير صالح لإنصاف" without calling the server.
+- **Figma screens:** `token_invalid` → invalid; `token_expired` (410) → "انتهت صلاحية رمز الفاتورة"; `token_used` (409) → "تم استخدام هذا الرمز مسبقًا"; `rate_limited` and network → error with retry.
+- **Create:** never send `restaurantId` or any extra field (400).
+- **Risks:** `expo-camera` needs a new EAS development build; a single submit protects the code; the 5 creates/minute limit.
 
-### عملية التوزيع المؤقتة للـ pilot (برّا الكود، مش جزء من المعمارية)
-1. Admin بيفعّل شراكة المطعم بعد الاتفاق.
-2. Admin بيصدر دفعة (`count`، `expiresInDays`).
-3. العمليات بيحوّلوا كل payload لـ QR منفصل (ستيكر).
-4. بيتسلّموا للمطعم بشكل آمن.
-5. الموظفين بيلزقوا رمز **مختلف** على كل فاتورة.
-6. لو ضاعت دفعة → إلغاء بالـ `IssuanceId` وإصدار جديد.
+### Temporary pilot distribution process (outside the code, not part of the architecture)
+1. Admin enables the restaurant's partnership after the agreement.
+2. Admin issues a batch (`count`, `expiresInDays`).
+3. Operations turn each payload into a separate QR sticker.
+4. They are delivered to the restaurant securely.
+5. Staff attach a **different** code to each invoice.
+6. A lost batch is revoked by `IssuanceId` and reissued.
 
-### اتجاه POS المستقبلي (غير مطبّق)
-قناة POS لاحقاً = caller جديد (endpoint تكامل بـ credential مربوط بمطعم واحد، و adapters لكل مزوّد) بينادي نفس `IVisitTokenIssuer` بـ `Count = 1` و principal مقيّد. **ما بيتغيّر** الـ resolve ولا الإنشاء ولا الاستهلاك ولا جدول الرموز. ما في دور restaurant-owner ولا modules خاصة بـ POS بـ Phase 5.
+### Future POS direction (not implemented)
+A POS channel later is a new caller (an integration endpoint with a credential tied to one restaurant, plus per-provider adapters) that calls the same `IVisitTokenIssuer` with `Count = 1` and a restricted principal. Resolve, create, redemption and the token table **don't change**. Phase 5 has no restaurant-owner role and no POS-specific modules.
 
 ---
 
-## 9. ملخّص تعليمي (Backend)
-- **ليش رمز لكل فاتورة مش QR ثابت للمطعم؟** الـ QR الثابت لو انصوّر مرة بيصير "تصريح دائم" لتقييمات وهمية. رمز لمرة وحدة بصلاحية محدودة بيربط التقييم بزيارة حقيقية.
-- **ليش hash بس؟** نفس منطق كلمات السر: الداتابيس بتعرف تتحقق من الرمز بدون ما تقدر ترجّعه. الرمز الخام بيعيش على الفاتورة وبجيب العميل بس.
-- **ليش السيرفر بيحدد المطعم؟** الرمز هو الدليل؛ المطعم خاصية للرمز مش اختيار للمستخدم. لهيك الـ DTO بيرفض `restaurantId` نهائياً بدل ما يتجاهله، عشان أي محاولة تلاعب تبين بوضوح.
-- **optimistic concurrency:** بدل ما نقفل الصف، كل رمز معه `ConcurrencyStamp`. الـ UPDATE بيشترط إنه الختم ما تغيّر من لحظة القراءة؛ أول طلب بينجح وبيغيّر الختم، والباقي بيلاقوا 0 صفوف ← 409. الـ transaction بيضمن إنه الرمز والتقييم مع بعض أو ولا واحد، والـ filtered unique index ضمانة أخيرة على مستوى الداتابيس حتى لو الكود تغيّر.
-- **الفصل بين "مين بيصدر" و "كيف بنصدر":** الـ controller بيقرّر الهوية (Admin من الـ JWT)، والخدمة بتطبّق القواعد على أي هوية. هاد اللي بيخلّي إضافة POS لاحقاً إضافة مش إعادة كتابة.
-- **Clean Architecture بالممارسة:** القواعد (Domain) ما بتعرف EF؛ الخدمات (Application) ما بتعرف HTTP ولا الأدوار؛ التشفير والـ transaction (Infrastructure) وراء interfaces؛ الـ API رفيعة: مصادقة، rate limit، وتحويل الأخطاء.
+## 9. Known limitations (Backend)
+- A payload can't be retrieved after issuing.
+- There is no endpoint listing individual tokens.
+- A single token can't be revoked on its own: only by issuance or for the whole restaurant.
+- Reviews per user per restaurant aren't limited (D-X).
+- Issuing and distribution are manual for the pilot.
+- **Smoke side effects in the development database:** Burger Makers (`e7146302-9d94-45dc-aa19-7bed4b44c48e`) is a partner; one verified review "Phase 5 smoke test"; two `smoke-…@example.com` accounts; test tokens.
 
 ---
 
-## 10. Mobile Track
-⏳ **لم يبدأ.** بانتظار تعليمات المؤسس `Phase 5 — Mobile` (المهام 5.6–5.9 Mobile حسب الخطة المعتمدة).
+## 10. Educational summary (Backend)
+- **Why a code per invoice, not a fixed restaurant QR?** A fixed QR photographed once becomes a permanent licence for fake reviews. A single-use, expiring code ties the review to a real visit.
+- **Why hashes only?** The same logic as passwords: the database can check a code but can't give it back. The raw code lives on the invoice and in the customer's hand.
+- **Why does the server pick the restaurant?** The code is the proof; the restaurant is a property of the code, not a user choice. So the DTO rejects `restaurantId` outright instead of ignoring it, which makes tampering visible.
+- **Optimistic concurrency:** instead of locking the row, each token has a `ConcurrencyStamp`. The UPDATE requires the stamp to be unchanged since it was read; the first request succeeds and changes it, and the rest find 0 rows → 409. The transaction keeps token and review together, and the filtered unique index is a final database guarantee even if the code changes.
+- **Separating who issues from how issuing works:** the controller establishes the identity, and the service applies the rules to any identity. That makes POS later an addition rather than a rewrite.
+- **Clean Architecture in practice:** rules (Domain) don't know EF; services (Application) don't know HTTP or roles; cryptography and the transaction (Infrastructure) sit behind interfaces; the API stays thin: authentication, rate limiting and error mapping.
+
+---
+
+## 11. Mobile Track
+
+**Completed:** 2026-11-05.
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 5.6 | Camera + scan screen | ✅ Implemented | typecheck, lint, bundles, `visitPayload` tests; founder device test (§11.7) |
+| 5.7 | Verified review form | ✅ Implemented | Same checks; keyboard fix; founder device test (§11.7) |
+| 5.8 | Entry point (BottomNav) | ✅ Implemented | Same checks; founder device test (§11.7) |
+| 5.9 (Mobile) | Tests and verification | ⚠️ Partly documented | Automated checks recorded; itemized device results not received |
+
+**Applied decisions:** D-N1 (two tabs only), D-F1 (all five ratings required), D-F2 (text 0–500), D-M1 (`expo-camera` + a new EAS build), D-M3 (a message and a button when the camera is denied).
+
+**Deviations from the plan's wording:**
+1. **The route:** `app/(tabs)/scan.tsx` instead of `app/scan/index.tsx`, because the screen is now a tab. The URL is still `/scan`.
+2. **Component names:** `VerifiedReviewForm` instead of `ReviewForm`; `ScanStatusViews` holds `ScanErrorState` and `ScanSuccessState`; `VerifiedRestaurantResult` instead of `VerifiedRestaurantCard`; `useVerificationMutations` instead of `useVerifiedReviewMutation`.
+3. **The guard:** the session check moved from `restaurants/_layout.tsx` to `app/(tabs)/_layout.tsx` so it protects both tabs.
+
+### 11.2 Application structure (new/modified)
+| File | Responsibility |
+|---|---|
+| `app/(tabs)/_layout.tsx` | Session guard + `Tabs` with `BottomNav` |
+| `app/(tabs)/scan.tsx` | The `/scan` route |
+| `app/(tabs)/restaurants/*` | Discovery screens, moved with URLs unchanged |
+| `features/navigation/BottomNav.tsx` | Tab bar per Figma; hidden while the keyboard is open |
+| `features/verification/screens/ScanScreen.tsx` | State machine: `scanner / result / write / success / error` |
+| `features/verification/components/ScannerView.tsx` | Camera, viewfinder, scan line, permission states |
+| `features/verification/components/VerifiedRestaurantResult.tsx` | The locked restaurant before reviewing |
+| `features/verification/components/VerifiedReviewForm.tsx` + `RatingStarsInput.tsx` | The form and the stars |
+| `features/verification/components/ScanStatusViews.tsx` | Error and success views |
+| `features/verification/hooks/useVerificationMutations.ts` | `useMutation` for resolve and create |
+| `services/verification/verificationApi.ts` | Axios calls and error-code mapping |
+| `utils/visitPayload.ts` | QR format parsing, mirroring the server's `VisitPayload` |
+| `types/verification.ts` | Contracts |
+
+Small changes: `VerifiedBadge` gained `size`; `RestaurantDetailScreen` accepts `tab=reviews`; `app.json` has the camera plugin; `types/expo-router.d.ts` has `/scan`.
+
+### 11.3 User journeys and states
+```text
+Scan → local format check → resolve → locked restaurant → form → submit → success
+            │                  │                                    │
+            ▼                  ▼                                    ▼
+        "invalid"      error view by code                 error view, or message in the form
+```
+- **Loading:** a spinner over the camera during resolve, and inside the submit button.
+- **Errors:** `token_invalid`, `token_expired` and `token_used` open the Figma views. A network failure at resolve opens "تعذّر التحقق من الرمز".
+- **Submit failure from the network or a rate limit:** the form keeps its content and shows a message, because the code wasn't redeemed.
+- **Success:** "عرض التقييم" opens the reviews tab on the restaurant page; "العودة للرئيسية" returns to `/restaurants` (there is no Home before Phase 7).
+- **There is no** write-review button on the restaurant page; scanning is the only path.
+
+### 11.4 State management
+- **TanStack Query:** `useMutation` for resolve and create. On success, invalidate `['restaurants','detail',id]`, `['restaurants','list']` and `['reviews','restaurant',id]`.
+- **Local state:** everything is inside `ScanScreen`. The raw code stays in memory only, never in the URL or storage.
+- **`scanLocked` (ref):** the camera reports the same read repeatedly; only the first is handled.
+- **Session:** the existing Axios interceptor refreshes the token; if refresh fails, the guard returns to login.
+
+### 11.5 API data flow
+`CameraView` → `ScanScreen.handleScanned` → `extractVisitToken` → `useResolveVisitMutation` → `verificationApi.resolveVisit` → `apiClient` (Axios + Bearer) → `POST /api/v1/verification/visits/resolve`. The response returns the server's restaurant to the screen. Submit follows the same path to `POST /api/v1/verification/reviews`, **without `restaurantId`**. Errors become `VerificationApiError` with a kind of `expired / used / invalid / failed`.
+
+### 11.6 RTL and Figma
+- **RTL:** `textAlignStart` and `start/end` for corners; stars are always `direction: 'ltr'`.
+- **Not built from Figma:** the simulate-scan buttons (prototype only), "إضافة صور" (hidden), and 3 tabs (الرئيسية, النشاط, ملفي).
+- **Our copy (no Figma equivalent):** camera permission messages, the `failed` view, and submit failure messages.
+- **Intentional differences:** the result and form footers use 16 bottom padding instead of 40 because the tab bar doesn't overlay the content; `BottomNav` hides with the keyboard (Figma doesn't define this).
+- **Figma note:** Figma allows submitting with only the overall rating; the app requires all five (D-F1).
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ (rerun after the keyboard fix) |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` (last full run before the keyboard fix; afterwards `features/verification` only) |
+| `expo export` Android | ✅ (rerun after the fix) |
+| `expo export` iOS | ✅ (before the keyboard fix, not rerun) |
+| `visitPayload` with Node | ✅ 12 cases + 1000 random tokens (temporary script, not in the repository) |
+| Android permissions | ✅ `CAMERA` present, `RECORD_AUDIO` absent |
+| Founder device test | The founder reported "Test Done" (2026-11-05) after the keyboard fix. **No item-by-item results were received.** |
+
+**Two issues found during device testing:**
+1. **`Network Error` at login:** checks showed the API was reachable on `192.168.100.3:5232`. The proposed fix was restarting Metro with `EXPO_PUBLIC_API_BASE_URL` and `--clear`. **No code change.**
+2. **Review text hidden under the keyboard:** Android runs edge-to-edge, so the window doesn't shrink for the keyboard, and the form had no keyboard handling. Fix: `KeyboardAvoidingView` with `padding` + `scrollToEnd` on focus and on viewport or content size changes. No new library or build. This machine has no `adb` or emulator, so **device testing was the founder's**.
+
+**Not verified:**
+- iOS on a real device: not tested at all.
+- The expired-code view on a device: 410 is covered by API tests only.
+- Itemized device cases (rescanning a used code, a foreign QR, camera denial, RTL): not recorded individually.
+- There are no automated tests for Mobile components; the project has no test framework for them.
+
+### 11.8 Educational summary (Mobile)
+- **Expo Router** builds navigation from files. The `(tabs)` group adds the tab bar without changing URLs.
+- **One screen with internal states** instead of several routes keeps the raw code in memory and out of URLs.
+- **`useMutation`** fits because resolve and submit are actions triggered by a scan or a press, not recurring reads. `invalidateQueries` makes the restaurant page fetch fresh data on its own.
+- **The server is the source of truth:** the app checks only the format to save a request; validity, the restaurant and redemption are all server decisions.
+- **Edge-to-edge:** when the app draws under the system bars, the system doesn't shrink the window for the keyboard, so the screen must handle it.
+
+---
+
+## 12. Consolidated Phase 5 status
+| ID | Track | Status |
+|---|---|---|
+| 5.1–5.5 | Backend | ✅ Verified (130/130, smoke 16/16 on SQL Server) |
+| 5.6–5.8 | Mobile | ✅ Implemented; the founder reported testing done |
+| 5.9 | Both | Backend ✅; Mobile ⚠️ itemized device results not recorded |
+
+**The Phase 5 gate:** scan → a verified review on the token's restaurant; double redemption fails; client restaurant overrides rejected; no unverified create path; codes issued only by Admin for partners. All are proven at API level; on the device, only as far as the founder reported.
+
+### Limitations and founder actions
+1. **Review photos decision:** "إضافة صور" is in Figma, while `decisions.md` and `product-spec.md` make the deferral conditional on Figma not requiring it. It is currently deferred per the approved plan, with no phase assigned. Recommendation: a separate feature with its own plan before beta.
+2. **Confirm device results** item by item to close 5.9 fully.
+3. **Git:** commit, push, then a PR into `develop`.
+4. **Test data in the development database:** Burger Makers as a partner, test reviews, `smoke-…` accounts.
+
+### Files changed in Phase 5 (summary)
+Backend files in §2, Mobile files in §11.2, plus `docs/phase5-report.md` and `docs/project-progress.md`. One migration: `AddVisitTokens`. New dependency: `expo-camera`.

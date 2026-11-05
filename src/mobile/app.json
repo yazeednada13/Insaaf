@@ -39,6 +39,14 @@
           "locationWhenInUsePermission": "يستخدم إنصاف موقعك لعرض المسافة إلى المطاعم."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "يستخدم إنصاف الكاميرا لمسح رمز QR الموجود على فاتورتك.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-splash-screen",
       "expo-status-bar",
       [
