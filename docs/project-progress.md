@@ -6,12 +6,12 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 6 — Social core (**Backend and Mobile complete**) |
+| **CURRENT PHASE** | None active: Phase 6 complete, Phase 7 waits for the founder |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phase 5 (merged into `develop`). Phase 6 — tasks 6.1–6.5; see [phase6-report.md](phase6-report.md) |
-| **NEXT** | Founder: commit/push `feature/phase6-social-core`, PR into `develop`; then Phase 7 planning on request |
-| **BLOCKERS** | None. Open: itemized device results ([phase5-report.md](phase5-report.md) §12) |
+| **COMPLETED** | Phase 5 and Phase 6 (merged into `develop`, PR #6); see [phase6-report.md](phase6-report.md) |
+| **NEXT** | Phase 7 planning, on the founder's request |
+| **BLOCKERS** | None. iOS is untested on a device; planned for Phase 10 |
 
 ## Phase 6 checklist
 
@@ -37,7 +37,7 @@
 | 5.6 | Mobile | Camera + scan screen | Done — checks + founder reported test done |
 | 5.7 | Mobile | Verified review form | Done — checks + founder reported test done |
 | 5.8 | Mobile | Scan entry point (BottomNav) | Done — checks + founder reported test done |
-| 5.9 | Both | Tests + verification + report | Backend done (130/130, smoke 16/16); Mobile checks done, itemized device results not recorded |
+| 5.9 | Both | Tests + verification + report | Backend done (130/130, smoke 16/16); Mobile done (founder confirmed device checks) |
 
 ---
 
@@ -187,8 +187,8 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 2 | Authentication | **Complete** (API E2E against SQL Server verified 2026-10-29; device Figma review pending) |
 | 3 | Restaurants | **Complete** (merged to `develop` via PR #3, `daa4489`) |
 | 4 | Reviews read foundation | **Complete** (merged to `develop` via PR #4, `92689f0`) |
-| 5 | QR verified review write | **Complete** (merged to `develop`; itemized device results not recorded) |
-| 6 | Social core | **In progress** (Backend and Mobile complete 2026-11-05; closing via Git delivery) |
+| 5 | QR verified review write | **Complete** (merged to `develop`) |
+| 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
 | 7 | Feed and following | Not started |
 | 8 | Profiles | Not started |
 | 9 | Admin and moderation | Not started |

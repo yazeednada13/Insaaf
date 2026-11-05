@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase6-social-core` (from `develop` after the Phase 5 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 6), the approved Phase 6 plan (decisions D-1…D-14), [decisions.md](decisions.md) ADR-004/ADR-011/ADR-012, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ReviewCard.tsx`, `ReviewDetailScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ⏳ Phase 6 awaiting the founder's actions (§12)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ✅ Phase 6 merged into `develop` (PR #6, `34ceb80`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -340,10 +340,8 @@ Review card ──tap──► Review Detail ──► read comments, write, del
 **The Phase 6 gate:** like and comment on verified reviews from the app ✅; duplicate likes impossible ✅; only the author can delete ✅; ratings unchanged ✅.
 
 ### Limitations and founder actions
-1. **Git:** commit, push, then a PR into `develop`.
-2. **Sign-out:** the app has no logout button; it arrives with settings and profile (Phase 8). Clearing app data was used to switch accounts during testing.
-3. **Open from Phase 5:** task 5.9 itemized device results (D-13).
-4. **Test data:** `smoke6-…` accounts and any comments or likes from device testing remain in the development database.
+1. **Sign-out:** the app has no logout button; it arrives with settings and profile (Phase 8). Clearing app data was used to switch accounts during testing.
+2. **Test data:** `smoke6-…` accounts and any comments or likes from device testing remain in the development database.
 
 ### Files changed in Phase 6 (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase6-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`, `product-spec.md`. One migration: `AddSocialInteractions`. No new dependencies.
