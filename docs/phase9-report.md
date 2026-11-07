@@ -3,7 +3,7 @@
 **Date:** 2026-11-07
 **Branch:** `feature/phase9-admin-moderation` (from `develop` after the Phase 8A merge; the founder manages Git)
 **References:** the roadmap (Phase 9), the approved Phase 9 plan (revision 2, decisions D-1…D-10), [decisions.md](decisions.md) ADR-003/ADR-012/ADR-017
-**Report status:** ✅ **Backend Track complete** · No Mobile Track planned (D-7: Admin is API-only)
+**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track (9.7–9.8) implemented; not device-tested** (§11)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -238,7 +238,7 @@ All routes need `[Authorize(Roles = Admin)]`: 401 anonymous, 403 for a User. The
 - **Audit log lines on the running API:** checked in tests through `RecordingAuditLog`, not read from the API console.
 - **That a suspended user's existing access token stops after 15 minutes:** follows from `AccessTokenMinutes: 15`, not waited for.
 - **Large data:** the pilot has 2 reviews and 12 restaurants; command counts don't grow with rows.
-- **The mobile app's message for `account_suspended`:** not changed and not tested (see §8).
+- **The mobile app's message for `account_suspended`:** added later in the Mobile Track (§11); not tested on a device.
 
 ---
 
@@ -265,7 +265,7 @@ All routes need `[Authorize(Roles = Admin)]`: 401 anonymous, 403 for a User. The
 ### Limitations and founder actions (open release items)
 1. **The Phase 8 and Phase 8A device checklists are still not run** (account isolation first). Phases 8 and 8A stay "Complete with an open item".
 2. **iOS is untested** (Phase 10).
-3. **Decide** whether to add the `account_suspended` message in the app (§8).
+3. ~~Decide whether to add the `account_suspended` message in the app (§8).~~ Done in the Mobile Track (§11).
 
 ---
 
@@ -276,3 +276,105 @@ All routes need `[Authorize(Roles = Admin)]`: 401 anonymous, 403 for a User. The
 - **Why `SuspendedAt` and not Identity's lockout?** The lockout also protects against password guessing. Sharing it would let an unsuspend wipe a real security lock.
 - **Why `actorId` from the controller?** Application code stays testable and free of HTTP. The id can only come from the signed JWT, never from the body.
 - **Why a logging port?** Application decides what an audit entry contains, without personal data, and Infrastructure decides where it goes. Each can change alone.
+
+
+---
+
+## 11. Mobile Track
+
+**Date:** 2026-11-07. Added by the founder's instruction `Phase 9 — Mobile` and a separate approved plan. The original Phase 9 plan had no Mobile Track (D-7).
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 9.7 | Map `account_suspended` to an Arabic message | ⚠️ Implemented, not device-tested | typecheck, lint, bundles; the server's 403 `account_suspended` is verified by the smoke test (§7) |
+| 9.8 | Checks and device checklist | ⚠️ Partial | Automated checks only; **device checklist not run** |
+
+**Decision M-1:** the message is "تم إيقاف هذا الحساب. تواصل مع فريق إنصاف.".
+
+### 11.2 Application structure (modified)
+| File | Change |
+|---|---|
+| `services/auth/authErrors.ts` | One new entry in `AUTH_ERROR_MESSAGES`: `account_suspended` |
+
+This is the **only** application source file changed. There are no new screens, routes, components, hooks or dependencies, and no EAS build is needed.
+
+### 11.3 User journeys and states (by reading the code)
+**Login with a suspended account:**
+1. The server returns 403 `account_suspended`.
+2. The Axios interceptor acts only on 401, so there's no refresh and no logout.
+3. `toAuthApiError` maps the code, and `LoginScreen` shows the new message in its existing error area.
+4. The user stays on Login, and no session is created.
+
+**Signed-in account that gets suspended:**
+1. The current access token keeps working until it expires (up to 15 minutes).
+2. The next authenticated request gets a 401, and one shared refresh starts (`refreshPromise`). Each request retries at most once (`_retry`).
+3. The refresh uses plain `axios`, so it can't loop through the interceptor. The server refuses it: 401 for the revoked token, or 403.
+4. `logoutSession()` runs, and `onSessionCleared` → `syncUser(null)` clears the Query cache.
+5. The `(tabs)` guard redirects to Login. Later failures find no refresh token, make no network call, and don't clear the cache again.
+6. A screen may show its error state for a moment before the redirect.
+
+**Hidden review:**
+- Opened from an old list or a notification, it shows "هذا المحتوى غير متاح." (`not_found`).
+- A like from a cached card rolls back silently, as any failed like already did.
+- Lists drop it on their next refresh.
+
+### 11.4 State management
+No change. TanStack Query only; the Phase 8 account isolation covers the forced logout.
+
+### 11.5 API data flow
+`LoginScreen` → `authApi.login` → `apiClient` → `POST /api/v1/auth/login` → envelope error `account_suspended` → `toAuthApiError` → message.
+
+### 11.6 RTL and Figma
+- **Figma:** there's no design for this message. It reuses the login screen's existing error area, so there's no layout change.
+- **RTL:** the text uses the same component as other login errors. **Not checked on a device.**
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` |
+| `expo export` Android (1569 modules) and iOS (1445 modules) | ✅ |
+| Server side of `account_suspended` on SQL Server | ✅ Smoke: login 403 `account_suspended`, refresh 401 |
+| **Device checklist** | ❌ **Not run** |
+| iOS | ❌ Not tested (Phase 10) |
+
+**Device checklist (to run; nothing here has been verified):**
+1. Sign in with an account suspended by Admin: the new message appears, and you stay on Login.
+2. Unsuspend it, then sign in: OK.
+3. Hide a review, then open it from a notification or an old list: "هذا المحتوى غير متاح.".
+4. Suspend a signed-in account:
+   - The app may keep working while its current access token is valid.
+   - After the token expires, the next screen that loads data triggers a refresh, which fails.
+   - The app should then return to Login cleanly, with no repeated errors and no loop.
+   - The timing depends on the token's remaining lifetime and on when the next request happens. It isn't guaranteed to be any fixed time after suspension.
+5. After item 4, sign in with a different account: nothing from the suspended account is shown.
+
+### 11.8 Educational summary (Mobile)
+- **Codes, not texts:** the server sends a stable code (`account_suspended`), and the app owns the Arabic wording. So the fix was one dictionary entry.
+- **Why the 403 doesn't trigger a refresh:** refresh is only for an expired token (401). A suspension is a decision, not an expiry, so retrying wouldn't help.
+- **One refresh, no loop:** a shared promise, a retry flag and a refresh call outside the interceptor together guarantee a single attempt and a clean logout.
+
+---
+
+## 12. Consolidated Phase 9 status
+| ID | Track | Status |
+|---|---|---|
+| 9.1, 9.2a, 9.2b, 9.3, 9.4, 9.5 | Backend | ✅ Verified (307/307 tests, smoke 19/19 on SQL Server) |
+| 9.6 | Backend | ✅ Tests and report |
+| 9.7 | Mobile | ⚠️ Implemented; automated checks pass; **not tested on a device** |
+| 9.8 | Mobile | ⚠️ Device checklist not run |
+
+**The Phase 9 gate** ("Ops can seed restaurants, issue tokens, moderate (no owner app), including removing any user's comment") is **proven at API level on SQL Server**. The app side, the suspended-login message, is **not proven on a device**.
+
+### Open release items and founder actions
+1. **Run the 5-item checklist in §11.7**, together with the Phase 8 and Phase 8A checklists, which are still not run (account isolation first). Phases 8 and 8A stay "Complete with an open item".
+2. iOS is untested (Phase 10).
+3. A suspended account keeps API access until its access token expires (ADR-017); revisit in Phase 10.
+4. **Test data:** `smoke9-…` accounts and the inactive "Smoke9 …" restaurant remain in the development database.
+
+### Files changed in Phase 9 (summary)
+- **Backend:** the files in §2.
+- **Mobile:** `services/auth/authErrors.ts`.
+- **Docs:** `docs/phase9-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`, `README.md`.
+- **One migration:** `AddModeration`. No new dependencies.
