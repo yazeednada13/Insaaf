@@ -28,6 +28,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="restaurants" />
       <Tabs.Screen name="scan" />
       <Tabs.Screen name="activity" />
+      <Tabs.Screen name="profile" />
     </Tabs>
   );
 }

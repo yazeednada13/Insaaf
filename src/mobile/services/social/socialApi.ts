@@ -9,14 +9,19 @@ import type {
   ReviewCommentDto,
   ReviewCommentListResultDto,
   ReviewLikeStateDto,
+  UpdateProfileRequest,
   UserFollowStateDto,
+  UserListResultDto,
+  UserProfileDto,
+  UserSearchResultDto,
 } from '@/types/social';
 
 const SOCIAL_ERROR_MESSAGES: Record<string, string> = {
-  validation_error: 'تحقق من نص التعليق وحاول مرة أخرى.',
+  validation_error: 'تحقق من البيانات المدخلة وحاول مرة أخرى.',
   not_found: 'هذا المحتوى غير متاح.',
   comment_forbidden: 'يمكنك حذف تعليقاتك فقط.',
   cannot_follow_self: 'لا يمكنك متابعة نفسك.',
+  username_taken: 'اسم المستخدم مستخدم بالفعل.',
   rate_limited: 'محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.',
   unauthorized: 'يرجى تسجيل الدخول للمتابعة.',
   network_error: 'تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.',
@@ -93,6 +98,51 @@ export function unfollowUser(userId: string): Promise<UserFollowStateDto> {
 export function getFeed(cursor: string | undefined, limit: number): Promise<FeedResultDto> {
   return request(() =>
     apiClient.get<ApiResponse<FeedResultDto>>('/api/v1/feed', { params: { cursor, limit } }),
+  );
+}
+
+export function getMyProfile(): Promise<UserProfileDto> {
+  return request(() => apiClient.get<ApiResponse<UserProfileDto>>('/api/v1/users/me'));
+}
+
+export function getUserProfile(userId: string): Promise<UserProfileDto> {
+  return request(() => apiClient.get<ApiResponse<UserProfileDto>>(`/api/v1/users/${userId}`));
+}
+
+export function updateMyProfile(profile: UpdateProfileRequest): Promise<UserProfileDto> {
+  return request(() => apiClient.put<ApiResponse<UserProfileDto>>('/api/v1/users/me', profile));
+}
+
+export function listUserReviews(
+  userId: string,
+  cursor: string | undefined,
+  limit: number,
+): Promise<FeedResultDto> {
+  return request(() =>
+    apiClient.get<ApiResponse<FeedResultDto>>(`/api/v1/users/${userId}/reviews`, {
+      params: { cursor, limit },
+    }),
+  );
+}
+
+export function listUsers(
+  userId: string,
+  kind: 'followers' | 'following',
+  page: number,
+  pageSize: number,
+): Promise<UserListResultDto> {
+  return request(() =>
+    apiClient.get<ApiResponse<UserListResultDto>>(`/api/v1/users/${userId}/${kind}`, {
+      params: { page, pageSize },
+    }),
+  );
+}
+
+export function searchUsers(term: string, pageSize: number): Promise<UserSearchResultDto> {
+  return request(() =>
+    apiClient.get<ApiResponse<UserSearchResultDto>>('/api/v1/users/search', {
+      params: { q: term, pageSize },
+    }),
   );
 }
 

@@ -35,6 +35,55 @@ export interface UserFollowStateDto {
   isFollowedByMe: boolean;
 }
 
+export interface UserProfileDto {
+  id: string;
+  fullName: string | null;
+  userName: string | null;
+  bio: string | null;
+  reviewCount: number;
+  followerCount: number;
+  followingCount: number;
+  isFollowedByMe: boolean;
+  isMe: boolean;
+}
+
+export interface UpdateProfileRequest {
+  fullName: string;
+  userName: string;
+  bio: string | null;
+}
+
+export interface UserListItemDto {
+  id: string;
+  fullName: string | null;
+  userName: string | null;
+  isFollowedByMe: boolean;
+  isMe: boolean;
+}
+
+export interface UserListResultDto {
+  items: UserListItemDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export interface UserSearchItemDto {
+  id: string;
+  fullName: string | null;
+  userName: string | null;
+  reviewCount: number;
+  followerCount: number;
+  isMe: boolean;
+}
+
+export interface UserSearchResultDto {
+  items: UserSearchItemDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
 export interface FeedItemDto extends ReviewListItemDto {
   restaurant: {
     id: string;

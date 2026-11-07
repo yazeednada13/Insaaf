@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase8-profiles` (from `develop` after the Phase 7 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 8), the approved Phase 8 plan (decisions D-1…D-14), [decisions.md](decisions.md) ADR-003/ADR-015, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ProfileScreen.tsx`, `EditProfileScreen.tsx`, `SettingsScreen.tsx`, `SearchScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⏳ Mobile Track not started (waiting for `Phase 8 — Mobile`)
+**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented, not tested on a device** (§11.7) · ⏳ Phase 8 awaiting the founder's actions (§12)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -220,4 +220,106 @@ Others get 404 `not_found` on an Admin's profile, reviews, lists and follow, the
 ---
 
 ## 11. Mobile Track
-⏳ **Not started.** Waiting for the founder's instruction: `Phase 8 — Mobile`.
+
+**Date:** 2026-11-07.
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 8.3a | ملفي tab; My Profile | ⚠️ Implemented, not device-tested | typecheck, lint, bundles |
+| 8.3b | Other user's profile; open from names | ⚠️ Implemented, not device-tested | Same |
+| 8.3c | Followers and following lists | ⚠️ Implemented, not device-tested | Same |
+| 8.3d | Edit Profile | ⚠️ Implemented, not device-tested | Same |
+| 8.3e | Sign-out and account isolation | ⚠️ Implemented, not device-tested | Same; the backend side is verified on SQL Server |
+| 8.3f | Settings; people in Search | ⚠️ Implemented, not device-tested | Same |
+| 8.4 (Mobile) | Tests and verification | ⚠️ Partial | Automated checks only; **the founder couldn't run the device checklist and chose to continue on trust** |
+
+**Applied decisions:** D-5 (no avatars), D-6 (Settings shows sign-out and the version only), D-7 (no Save), D-8 (no "مشاركة الملف"), D-9 (people row reused for lists), D-12 (Settings says sign-out ends every device), D-14 (Admin names not pressable).
+
+**Defect found and fixed during this track:** when the Axios interceptor ended a session after a failed refresh, `AuthProvider` wasn't told, so the app could keep showing a signed-in state. `session.ts` now notifies listeners when the session is cleared, and `AuthProvider` reacts.
+
+**Deviations from the plan's wording:**
+1. Route helpers live in `features/navigation/stackRoutes.ts`; `ReviewCard` no longer takes a `stack` prop, it reads the current tab.
+2. `FollowButton` moved into its own component, shared by Review Detail, profiles and lists.
+3. `UserAvatar` gained a larger initial for sizes of 80 and up.
+
+### 11.2 Application structure (new/modified)
+| File | Responsibility |
+|---|---|
+| `app/(tabs)/profile/*` | ملفي, Edit, Settings, Review Detail |
+| `app/(tabs)/{restaurants,activity,profile}/users/[userId]/{index,followers,following}.tsx` | Profile and lists in each tab's stack |
+| `features/profile/screens/ProfileScreens.tsx` | My Profile and other profiles |
+| `features/profile/screens/UserListScreen.tsx` | Followers and following |
+| `features/profile/screens/EditProfileScreen.tsx`, `SettingsScreen.tsx` | Editing and sign-out |
+| `features/profile/components/UserRow.tsx` | Figma people row |
+| `features/profile/hooks/useUserQueries.ts` | Profile, lists, search, edit |
+| `features/social/components/FollowButton.tsx`, `hooks/useFollowUser.ts` | Follow everywhere, synced |
+| `features/navigation/stackRoutes.ts` | `useCurrentStack`, `openUser`, `openReview`, `openUserList` |
+
+Modified: `AuthProvider.tsx`, `session.ts`, `authApi.ts`, `SearchScreen.tsx`, `ReviewCard.tsx`, `ReviewDetailScreen.tsx`, `CommentItem.tsx`, `BottomNav.tsx`, `useReviewLike.ts`, `useReviewComments.ts`, `socialApi.ts`, types.
+
+### 11.3 User journeys and states
+- **ملفي →** edit, settings, followers, following, own reviews.
+- **A name in a card, Review Detail or a comment →** that person's profile, when `hasPublicProfile` is true; Back returns to the origin.
+- **Search →** الكل / المطاعم / الأشخاص.
+- **Settings → تسجيل الخروج →** confirmation that names all devices → login screen.
+- **States:** skeletons, empty text, error with retry on profiles and lists; "هذا الحساب غير متاح." for a profile that returns 404; `username_taken` under the field.
+
+### 11.4 State management
+- **TanStack Query only.** New keys under `['users']`; user review lists under `['reviews','user']`.
+- **Follow** updates review details, profiles, list rows and my following count instantly; rollback on failure; lists refresh the next time they open.
+- **Account isolation:** `syncUser` clears and cancels the whole Query cache whenever the account id changes: sign-out, forced sign-out, or a different account signing in. No cache is persisted to storage.
+- **Sign-out:** `POST /auth/logout` with a 5-second timeout, then local clear even if the call fails.
+
+### 11.5 API data flow
+Screens → `features/profile/hooks` or `features/social/hooks` → `socialApi` / `authApi` → `apiClient` (Axios + Bearer + refresh) → `/api/v1/users/...`, `/api/v1/auth/logout`.
+
+### 11.6 RTL and Figma
+- **RTL:** the same patterns as earlier screens (`textAlignStart`, row layouts). **Not checked on a device.**
+- **Not built from Figma:** Taste profile and Taste Match (Phase 8A), المحفوظات, "مشاركة الملف", "تغيير الصورة", and eight Settings rows without a feature.
+- **No Figma design:** followers and following screens, the empty and error texts, the Settings hint.
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` |
+| `expo export` Android and iOS | ✅ |
+| Backend APIs on SQL Server | ✅ Smoke 24/24 (§7) |
+| **Device checklist (14 items)** | ❌ **Not run.** The founder couldn't test on a device and chose to continue |
+| iOS | ❌ Not tested |
+
+**Not verified, all of it on a device:**
+- **Sign-out and account isolation:** that the next account sees nothing from the previous one. This is the most important item to test.
+- Navigation and Back between tabs, profiles and lists.
+- Follow sync between profiles, lists, Review Detail and the feed.
+- Edit Profile, the keyboard and `username_taken`.
+- People search tabs, list paging, empty and error states, offline rollback.
+- RTL on every new screen.
+
+### 11.8 Educational summary (Mobile)
+- **Account isolation:** cached data belongs to an account, so the cache is cleared whenever the account changes, by any path. That's safer than clearing only on the sign-out button.
+- **Listening to the session:** the interceptor can end a session on its own; a listener lets the UI hear about it.
+- **One follow, many screens:** the same user appears in profiles, lists, reviews and the feed, so a follow updates every cached copy at once.
+- **Server-provided permissions:** `hasPublicProfile` and `isMe` decide what's pressable; the app doesn't guess roles.
+
+---
+
+## 12. Consolidated Phase 8 status
+| ID | Track | Status |
+|---|---|---|
+| 8.1–8.2 | Backend | ✅ Verified (232/232, smoke 24/24 on SQL Server) |
+| 8.3 | Mobile | ⚠️ Implemented; automated checks pass; **not tested on a device** |
+| 8.4 | Both | Backend ✅; Mobile ⚠️ device checklist not run |
+
+**The Phase 8 gate:** proven at API level (profiles, stats from verified reviews, search, edit, logout, Admin privacy). The mobile side, including account isolation, is **not proven on a device**.
+
+### Limitations and founder actions
+1. **Run the 14-item device checklist** before beta, and at the latest during Phase 10. Sign-out and account switching come first.
+2. **Git:** commit, push, then a PR into `develop`.
+3. Usernames can't be Arabic (Identity defaults).
+4. No password change, avatars, Save or Taste Match in this phase.
+5. **Test data:** `smoke8-…` accounts remain in the development database.
+
+### Files changed in Phase 8 (summary)
+Backend files in §2, Mobile files in §11.2, plus `docs/phase8-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`. One migration: `AddUserBio`. No new dependencies.

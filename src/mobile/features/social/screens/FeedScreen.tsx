@@ -100,7 +100,7 @@ export function FeedScreen() {
         refreshControl={
           <RefreshControl colors={[colors.primary]} onRefresh={() => void refresh()} refreshing={refreshing} />
         }
-        renderItem={({ item }) => <ReviewCard review={item} stack="activity" />}
+        renderItem={({ item }) => <ReviewCard review={item} />}
       />
     </View>
   );

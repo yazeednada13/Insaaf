@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { openReview, openUser, useCurrentStack } from '@/features/navigation/stackRoutes';
 import { FadeInView } from '@/features/restaurants/components/FadeInView';
 import { StarRating } from '@/features/restaurants/components/StarRating';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
@@ -19,8 +20,6 @@ const PREVIEW_LENGTH = 120;
 
 interface ReviewCardProps {
   review: ReviewListItemDto & Partial<Pick<FeedItemDto, 'restaurant'>>;
-  /** The tab whose stack opens Review Detail, so Back returns to this list. */
-  stack?: 'restaurants' | 'activity';
 }
 
 /**
@@ -28,27 +27,29 @@ interface ReviewCardProps {
  * restaurant line shows only when the review carries a restaurant (the feed); it's redundant on the
  * restaurant's own page. Photos, official reply and save are not rendered.
  */
-export function ReviewCard({ review, stack = 'restaurants' }: ReviewCardProps) {
+export function ReviewCard({ review }: ReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
   const likeMutation = useReviewLike();
   const reviewerName = review.reviewer.fullName ?? review.reviewer.userName ?? '';
   const isLong = review.text.length > PREVIEW_LENGTH;
   const { restaurant } = review;
-  const openDetail = () =>
-    router.push({
-      pathname: stack === 'activity' ? '/activity/review/[reviewId]' : '/restaurants/review/[reviewId]',
-      params: { reviewId: review.id },
-    });
+  const stack = useCurrentStack();
+  const openDetail = () => openReview(stack, review.id);
+  const openReviewer = () => openUser(stack, review.reviewer.id);
 
   return (
     <FadeInView>
       {/* Founder decision: the whole card opens Review Detail; the inner buttons keep their own action. */}
       <Pressable accessible={false} onPress={openDetail} style={styles.card}>
         <View style={styles.header}>
-          <UserAvatar name={reviewerName} size={44} />
+          <Pressable disabled={!review.reviewer.hasPublicProfile} onPress={openReviewer}>
+            <UserAvatar name={reviewerName} size={44} />
+          </Pressable>
           <View style={styles.identity}>
             <View style={styles.nameRow}>
-              <Text style={styles.name}>{reviewerName}</Text>
+              <Pressable disabled={!review.reviewer.hasPublicProfile} onPress={openReviewer}>
+                <Text style={styles.name}>{reviewerName}</Text>
+              </Pressable>
               {review.isVerified ? <VerifiedBadge /> : null}
             </View>
             {restaurant ? (

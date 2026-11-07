@@ -14,6 +14,9 @@ export const reviewQueryKeys = {
   details: ['reviews', 'detail'] as const,
   detail: (reviewId: string) => ['reviews', 'detail', reviewId] as const,
   feed: ['reviews', 'feed'] as const,
+  /** Every user's review list. */
+  userLists: ['reviews', 'user'] as const,
+  user: (userId: string) => ['reviews', 'user', userId] as const,
   comments: (reviewId: string) => ['reviews', 'comments', reviewId] as const,
 };
 

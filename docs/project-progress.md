@@ -6,12 +6,12 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 8 — Profiles (**Backend complete**; Mobile not started) |
+| **CURRENT PHASE** | 8 — Profiles (**Backend verified; Mobile implemented, not device-tested**) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phases 5–7 (merged). Phase 8 Backend — tasks 8.1, 8.2 + backend part of 8.4; see [phase8-report.md](phase8-report.md). Earlier: [phase7-report.md](phase7-report.md) |
-| **NEXT** | Founder: review the Backend report; Git checkpoint on `feature/phase8-profiles`; then `Phase 8 — Mobile` |
-| **BLOCKERS** | None. iOS is untested on a device; planned for Phase 10 |
+| **COMPLETED** | Phases 5–7 (merged). Phase 8 — tasks 8.1–8.3 (Mobile not device-tested); see [phase8-report.md](phase8-report.md). Earlier: [phase7-report.md](phase7-report.md) |
+| **NEXT** | Founder: commit/push `feature/phase8-profiles`, PR into `develop`; run the Phase 8 device checklist before beta |
+| **BLOCKERS** | None. Open: Phase 8 device checklist not run (sign-out and account isolation first); iOS untested, planned for Phase 10 |
 
 ## Phase 8 checklist
 
@@ -19,8 +19,8 @@
 |------|-------|-------------|--------|
 | 8.1 | Backend | `Bio`, `AddUserBio`; profile read and edit; logout | Verified (migration applied by founder) |
 | 8.2 | Backend | User reviews, lists, search, `hasPublicProfile` | Verified |
-| 8.3 | Mobile | Profile screens, Settings, people in Search | Not started |
-| 8.4 | Both | Tests and report | Backend done (232/232, smoke 24/24); Mobile not started |
+| 8.3 | Mobile | Profile screens, Settings, people in Search | Implemented — checks pass; **not device-tested** |
+| 8.4 | Both | Tests and report | Backend done (232/232, smoke 24/24); Mobile device checklist not run |
 
 ---
 
@@ -214,7 +214,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 5 | QR verified review write | **Complete** (merged to `develop`) |
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
-| 8 | Profiles | **In progress** (Backend complete 2026-11-05; Mobile pending) |
+| 8 | Profiles | **In progress** (Backend 2026-11-05; Mobile implemented 2026-11-07, not device-tested) |
 | 8A | Home, notifications and Taste Match | Not started |
 | 9 | Admin and moderation | Not started |
 | 9A | Review photos | Not started |
