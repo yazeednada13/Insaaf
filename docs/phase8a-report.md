@@ -3,7 +3,7 @@
 **Date:** 2026-11-07
 **Branch:** `feature/phase8a-home-notifications` (from `develop` after the Phase 8 merge; the founder manages Git)
 **References:** the roadmap (Phase 8A), the approved Phase 8A plan (decisions D-1…D-11), [decisions.md](decisions.md) ADR-014/ADR-016, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`HomeScreen.tsx`, `ActivityScreen.tsx`, `ProfileScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⏳ Mobile Track not started (waiting for `Phase 8A — Mobile`)
+**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented; not device-tested**
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -196,4 +196,123 @@ All routes need `[Authorize]` and use the standard envelope.
 ---
 
 ## 11. Mobile Track
-⏳ **Not started.** Waiting for the founder's instruction: `Phase 8A — Mobile`.
+
+**Date:** 2026-11-07.
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 8A.3 | الرئيسية tab | ⚠️ Implemented, not device-tested | typecheck, lint, bundles |
+| 8A.4 | "الإشعارات" chip with unread count | ⚠️ Implemented, not device-tested | Same; the backend side is verified on SQL Server |
+| 8A.6 | "ذوقي في الطعام" and "توافق في الذوق" | ⚠️ Implemented, not device-tested | Same |
+| 8A.7 (Mobile) | Tests and verification | ⚠️ Partial | Automated checks only; **device checklist not run** |
+
+**Applied decisions:**
+| # | Implementation |
+|---|---|
+| D-1 | ✅ `/` redirects to `/home`; Scan's "العودة للرئيسية" goes to `/home` |
+| D-2 | ✅ The first 2 feed items; "عرض الكل" opens النشاط |
+| D-3 | ✅ "تقييمات حديثة" not built |
+| D-8 | ✅ Opening the chip loads the list, then calls `read-all` once; pull-to-refresh calls it again |
+| D-9 | ✅ Verified-visit sheet not built |
+| D-10 | ✅ The count refreshes when النشاط gains focus and on pull-to-refresh; no polling |
+| D-11 | ✅ The count shows only on the chip, not on the bottom tab |
+
+**Deviations from the plan's wording (same behaviour):**
+1. Figma's vertical `RestaurantCard` variant is a separate component, `RestaurantTile`, so the existing horizontal card stays unchanged.
+2. The unread-count query key is `['notifications','unread-count']`.
+3. After `read-all`, only the count updates. The list keeps its unread styling until it's refreshed, so the user can still see what was new.
+
+### 11.2 Application structure (new/modified)
+| File | Responsibility |
+|---|---|
+| `app/(tabs)/home/_layout.tsx`, `index.tsx` | الرئيسية tab and its stack |
+| `app/(tabs)/home/review/[reviewId].tsx`, `users/[userId]/{index,followers,following}.tsx` | Review and profiles inside the Home stack, so Back stays in the tab |
+| `features/home/screens/HomeScreen.tsx` | Greeting, search bar, three sections |
+| `features/home/hooks/useHomeQueries.ts` | `suggested`, `trending` |
+| `features/restaurants/components/RestaurantTile.tsx` | Figma vertical card ("موصى به", open status) |
+| `features/social/components/NotificationsList.tsx`, `NotificationItem.tsx` | Chip content and Figma notification card |
+| `features/social/hooks/useNotifications.ts` | List (cursor), unread count, mark all read |
+| `features/profile/components/TasteViews.tsx` | `TasteProfileCard`, `TasteMatchButton` and its sheet |
+| `features/profile/hooks/useTasteQueries.ts` | `taste`, `taste-match` |
+
+Modified: `app/(tabs)/_layout.tsx` (home tab first), `app/index.tsx`, `BottomNav.tsx` (five tabs, Figma home icon), `stackRoutes.ts` (`home` stack), `FeedScreen.tsx` (two chips), `ProfileScreens.tsx`, `ScanScreen.tsx`, `socialApi.ts`, `types/social.ts`.
+
+### 11.3 User journeys and states
+- **Open the app →** الرئيسية. The greeting follows the hour: صباح الخير before 12, مساء الخير before 17, then مساء النور.
+- **Home →** search bar opens Search; the avatar opens ملفي; review cards open Review Detail in the Home stack; restaurant cards open the restaurant page in استكشاف.
+- **Home states:** each section has its own loading spinner, error with "إعادة المحاولة", and empty text. Pull-to-refresh reloads all three.
+- **النشاط → الإشعارات:**
+  - Skeletons, then the list, or "لا توجد إشعارات بعد" when empty.
+  - Unread items get a tinted background and a dot.
+  - A like or comment notification opens the review; a follow opens the profile when `hasPublicProfile` is true.
+  - More pages load at the end of the list.
+- **My Profile:** the "ذوقي في الطعام" card, or a hint when there are fewer than 3 reviews.
+- **Another profile:** the "{x}% توافق في الذوق" button next to Follow, shown only when `available`. It opens a sheet with category bars.
+
+### 11.4 State management
+- **TanStack Query only.** New keys: `['home','suggested']`, `['home','trending']`, `['notifications','list']`, `['notifications','unread-count']`, `['users','taste',id]`, `['users','taste-match',id]`.
+- `read-all` writes its `{ count: 0 }` straight into the count cache.
+- Account isolation from Phase 8 covers the new keys: the whole cache is cleared when the account changes.
+
+### 11.5 API data flow
+Screens → `features/{home,social,profile}/hooks` → `socialApi` → `apiClient` (Axios + Bearer + refresh) → `/api/v1/home/*`, `/api/v1/notifications*`, `/api/v1/users/{id}/taste*`. Notification text is built on the device from `type` and the actor's name.
+
+### 11.6 RTL and Figma
+- **RTL:** the same patterns as earlier screens: `textAlignStart`, row layouts, and `start`/`end` for badges. **Not checked on a device.**
+- **Built from Figma:** Home header and sections, the vertical card, the النشاط chips, the notification card, the taste card, and the match button and sheet.
+- **Not built:** "تقييمات حديثة" (D-3) and the verified-visit sheet (D-9).
+- **No Figma design:** the per-section empty and error texts, and the hint for fewer than 3 reviews.
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` |
+| `expo export` Android (1569 modules) and iOS (1445 modules) | ✅ |
+| Backend APIs on SQL Server | ✅ Smoke 16/16 (§7) |
+| **Device checklist** | ❌ **Not run** |
+| iOS | ❌ Not tested (Phase 10) |
+
+**Device checklist (to run; nothing here has been verified):**
+1. The app opens on الرئيسية; five tabs in Figma's order; the home icon fills when active.
+2. Greeting, the avatar initial, and the search bar opening Search.
+3. The following section shows 2 reviews; "عرض الكل" opens النشاط.
+4. "مقترح لك" scrolls horizontally with "موصى به"; "رائج" shows distance; cards open the restaurant.
+5. A review from Home opens in the Home stack, and Back returns to Home.
+6. Scan's "العودة للرئيسية" goes to Home.
+7. With a second account: like, comment and follow, then check that the first account's chip shows the count.
+8. Opening "الإشعارات" shows unread styling, and the count disappears.
+9. Tapping each notification type opens the right review or profile.
+10. Unlike, unfollow and deleting the comment remove the notification after a refresh.
+11. "ذوقي في الطعام" with 3 or more reviews, and the hint with fewer.
+12. "توافق في الذوق" appears only when both users qualify; the sheet opens and closes.
+13. Sign out and sign in with another account: no notifications, taste or Home data from the first account.
+14. RTL on every new screen.
+
+### 11.8 Educational summary (Mobile)
+- **One tab, its own stack:** Home has its own review and profile routes, so opening a review from Home doesn't jump to another tab, and Back works as expected.
+- **Sections fail independently:** each section has its own query, so a failed "رائج" doesn't hide "مقترح لك".
+- **Read state is a server fact:** the app asks the server to mark everything read and trusts the count it returns. It doesn't guess locally.
+- **Facts from the server, words on the device:** notifications arrive as `type` plus actor; the app writes the Arabic sentence.
+- **Hide rather than mislead:** Taste Match is hidden when the server says it isn't `available`, instead of showing a weak percentage.
+
+---
+
+## 12. Consolidated Phase 8A status
+| ID | Track | Status |
+|---|---|---|
+| 8A.1, 8A.2, 8A.5 | Backend | ✅ Verified (255/255, smoke 16/16 on SQL Server) |
+| 8A.3, 8A.4, 8A.6 | Mobile | ⚠️ Implemented; automated checks pass; **not tested on a device** |
+| 8A.7 | Both | Backend ✅; Mobile ⚠️ device checklist not run |
+
+**The Phase 8A gate:** proven at API level (notifications for the right person only, rankings, and taste from verified history). The mobile side is **not proven on a device**.
+
+### Limitations and founder actions
+1. **Run the 14-item checklist in §11.7**, together with the open Phase 8 checklist, before beta. Item 13 (account isolation) comes first.
+2. No push notifications; the count refreshes only when النشاط opens.
+3. Rankings and Taste Match are simple rules, to tune after the pilot.
+4. **Test data:** `smoke8a-…` accounts remain in the development database.
+
+### Files changed in Phase 8A (summary)
+Backend files in §2, Mobile files in §11.2, plus `docs/phase8a-report.md`, `project-progress.md`, `decisions.md`. One migration: `AddNotifications`. No new dependencies.

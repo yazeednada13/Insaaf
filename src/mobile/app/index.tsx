@@ -1,10 +1,10 @@
-import { Redirect } from 'expo-router';
+import { Redirect, type Href } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
-// Entry route: authenticated users land on restaurant discovery (Phase 3).
+// Entry route: authenticated users land on الرئيسية (Phase 8A, decision D-1).
 export default function IndexScreen() {
   const { isAuthenticated, isBootstrapping } = useAuth();
 
@@ -16,7 +16,7 @@ export default function IndexScreen() {
     );
   }
 
-  return <Redirect href={isAuthenticated ? '/restaurants' : '/login'} />;
+  return <Redirect href={(isAuthenticated ? '/home' : '/login') as Href} />;
 }
 
 const styles = StyleSheet.create({

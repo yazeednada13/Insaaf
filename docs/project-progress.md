@@ -1,17 +1,17 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-07
 
 ## Current state
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 8A — Home, notifications and Taste Match (**Backend complete**; Mobile not started) |
+| **CURRENT PHASE** | 8A — Home, notifications and Taste Match (**Backend verified; Mobile implemented, not device-tested**) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 5–8 (merged into `develop`, PR #8, `84e320c`); Phase 8 Mobile not device-tested; see [phase8-report.md](phase8-report.md). Earlier: [phase7-report.md](phase7-report.md) |
-| **NEXT** | Founder: review [phase8a-report.md](phase8a-report.md); Git checkpoint; then `Phase 8A — Mobile`; run the Phase 8 device checklist before beta |
-| **BLOCKERS** | None. Open: Phase 8 device checklist not run (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+| **NEXT** | Founder: review [phase8a-report.md](phase8a-report.md); Git checkpoint and PR; run the Phase 8 and 8A device checklists before beta; then the next phase |
+| **BLOCKERS** | None. Open: Phase 8 and 8A device checklists not run (sign-out and account isolation first); iOS untested, planned for Phase 10 |
 
 ## Phase 8A checklist
 
@@ -19,11 +19,11 @@
 |------|-------|-------------|--------|
 | 8A.1 | Backend | Notifications: entity, `AddNotifications`, triggers, API | Verified (migration applied by founder) |
 | 8A.2 | Backend | Suggested and trending restaurants | Verified |
-| 8A.3 | Mobile | الرئيسية tab | Not started |
-| 8A.4 | Mobile | Notifications chip | Not started |
+| 8A.3 | Mobile | الرئيسية tab | Implemented — checks pass; **not device-tested** |
+| 8A.4 | Mobile | Notifications chip | Implemented — checks pass; **not device-tested** |
 | 8A.5 | Backend | Taste and Taste Match | Verified |
-| 8A.6 | Mobile | Taste on profiles | Not started |
-| 8A.7 | Both | Tests and report | Backend done (255/255, smoke 16/16); Mobile not started |
+| 8A.6 | Mobile | Taste on profiles | Implemented — checks pass; **not device-tested** |
+| 8A.7 | Both | Tests and report | Backend done (255/255, smoke 16/16); Mobile checks pass, device checklist not run |
 
 ---
 

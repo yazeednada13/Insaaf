@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -18,19 +18,34 @@ import {
 } from '@/features/restaurants/components/RestaurantListStates';
 import { ReviewCard } from '@/features/reviews/components/ReviewCard';
 import { ReviewCardSkeleton } from '@/features/reviews/components/ReviewCardSkeleton';
+import { NotificationsList } from '@/features/social/components/NotificationsList';
 import { useFeedQuery } from '@/features/social/hooks/useFeedQuery';
+import { useUnreadCountQuery } from '@/features/social/hooks/useNotifications';
 
-// Figma ActivityScreen.tsx "following" tab. The notifications chip is out of scope (decision D-9).
+type ActivityTab = 'following' | 'notifications';
+
+// Figma ActivityScreen.tsx: "المتابعة" (the feed) and "الإشعارات" chips.
 export function FeedScreen() {
   const insets = useSafeAreaInsets();
+  const [tab, setTab] = useState<ActivityTab>('following');
   const feedQuery = useFeedQuery();
+  const countQuery = useUnreadCountQuery();
   const [refreshing, setRefreshing] = useState(false);
+  const unread = countQuery.data?.count ?? 0;
+
+  // The unread count refreshes whenever النشاط opens (decision D-10).
+  const { refetch: refetchCount } = countQuery;
+  useFocusEffect(
+    useCallback(() => {
+      void refetchCount();
+    }, [refetchCount]),
+  );
 
   const reviews = feedQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   const refresh = async () => {
     setRefreshing(true);
-    await feedQuery.refetch();
+    await Promise.all([feedQuery.refetch(), countQuery.refetch()]);
     setRefreshing(false);
   };
 
@@ -75,12 +90,34 @@ export function FeedScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.title}>النشاط</Text>
-        <View style={styles.chip}>
-          <Text style={styles.chipLabel}>المتابعة</Text>
+        <View style={styles.chips}>
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === 'following' }}
+            onPress={() => setTab('following')}
+            style={[styles.chip, tab === 'following' && styles.chipSelected]}
+          >
+            <Text style={[styles.chipLabel, tab === 'following' && styles.chipLabelSelected]}>المتابعة</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === 'notifications' }}
+            onPress={() => setTab('notifications')}
+            style={[styles.chip, tab === 'notifications' && styles.chipSelected]}
+          >
+            <Text style={[styles.chipLabel, tab === 'notifications' && styles.chipLabelSelected]}>الإشعارات</Text>
+            {unread > 0 ? (
+              <View style={styles.count}>
+                <Text style={styles.countLabel}>{unread}</Text>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
       </View>
 
-      <FlatList
+      {tab === 'notifications' ? <NotificationsList /> : null}
+
+      {tab === 'following' ? <FlatList
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={
@@ -101,12 +138,34 @@ export function FeedScreen() {
           <RefreshControl colors={[colors.primary]} onRefresh={() => void refresh()} refreshing={refreshing} />
         }
         renderItem={({ item }) => <ReviewCard review={item} />}
-      />
+      /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  chips: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  chipLabelSelected: {
+    color: colors.primaryForeground,
+  },
+  chipSelected: {
+    backgroundColor: colors.primary,
+  },
+  count: {
+    backgroundColor: colors.accent,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  countLabel: {
+    color: '#FFFFFF',
+    fontFamily: fonts.numericMedium,
+    fontSize: 10,
+    lineHeight: 14,
+  },
   chip: {
     alignSelf: 'flex-start',
     backgroundColor: colors.primary,

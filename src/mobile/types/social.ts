@@ -1,3 +1,4 @@
+import type { RestaurantListItemDto } from '@/types/restaurant';
 import type { ReviewerDto, ReviewListItemDto } from '@/types/review';
 
 // Social contracts (docs/phase6-report.md §5, docs/phase7-report.md §5).
@@ -82,6 +83,51 @@ export interface UserSearchResultDto {
   page: number;
   pageSize: number;
   totalCount: number;
+}
+
+export type NotificationType = 'like' | 'comment' | 'follow';
+
+export interface NotificationDto {
+  id: string;
+  type: NotificationType;
+  actor: ReviewerDto;
+  /** The liked or commented review; null for a follow. */
+  reviewId: string | null;
+  createdAt: string;
+  isRead: boolean;
+}
+
+export interface NotificationListResultDto {
+  items: NotificationDto[];
+  nextCursor: string | null;
+}
+
+export interface UnreadCountDto {
+  count: number;
+}
+
+export interface HomeRestaurantsDto {
+  items: RestaurantListItemDto[];
+}
+
+export interface CategoryTasteDto {
+  name: string;
+  slug: string;
+  /** Percentage of the user's reviews in this category. */
+  share: number;
+  level: 'very_high' | 'high' | 'medium';
+}
+
+export interface TasteDto {
+  reviewCount: number;
+  hasEnoughReviews: boolean;
+  categories: CategoryTasteDto[];
+}
+
+export interface TasteMatchDto {
+  available: boolean;
+  percentage: number | null;
+  categories: { name: string; slug: string; percentage: number }[];
 }
 
 export interface FeedItemDto extends ReviewListItemDto {

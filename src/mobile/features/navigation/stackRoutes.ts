@@ -1,6 +1,6 @@
 import { router, usePathname, type Href } from 'expo-router';
 
-export type TabStack = 'restaurants' | 'activity' | 'profile';
+export type TabStack = 'home' | 'restaurants' | 'activity' | 'profile';
 
 /**
  * The tab the current screen belongs to. Profile and Review Detail have a route in each tab's
@@ -11,6 +11,10 @@ export function useCurrentStack(): TabStack {
 
   if (pathname.startsWith('/activity')) {
     return 'activity';
+  }
+
+  if (pathname.startsWith('/home')) {
+    return 'home';
   }
 
   return pathname.startsWith('/profile') ? 'profile' : 'restaurants';

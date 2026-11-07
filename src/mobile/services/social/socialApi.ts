@@ -5,10 +5,15 @@ import type { ApiResponse } from '@/services/api/types';
 import type { ReviewDetailDto } from '@/types/review';
 import type {
   FeedResultDto,
+  HomeRestaurantsDto,
+  NotificationListResultDto,
   ReviewCommentDeletedDto,
   ReviewCommentDto,
   ReviewCommentListResultDto,
   ReviewLikeStateDto,
+  TasteDto,
+  TasteMatchDto,
+  UnreadCountDto,
   UpdateProfileRequest,
   UserFollowStateDto,
   UserListResultDto,
@@ -99,6 +104,32 @@ export function getFeed(cursor: string | undefined, limit: number): Promise<Feed
   return request(() =>
     apiClient.get<ApiResponse<FeedResultDto>>('/api/v1/feed', { params: { cursor, limit } }),
   );
+}
+
+export function listNotifications(cursor: string | undefined, limit: number): Promise<NotificationListResultDto> {
+  return request(() =>
+    apiClient.get<ApiResponse<NotificationListResultDto>>('/api/v1/notifications', { params: { cursor, limit } }),
+  );
+}
+
+export function getUnreadCount(): Promise<UnreadCountDto> {
+  return request(() => apiClient.get<ApiResponse<UnreadCountDto>>('/api/v1/notifications/unread-count'));
+}
+
+export function markAllNotificationsRead(): Promise<UnreadCountDto> {
+  return request(() => apiClient.post<ApiResponse<UnreadCountDto>>('/api/v1/notifications/read-all'));
+}
+
+export function getHomeRestaurants(section: 'suggested' | 'trending', limit: number): Promise<HomeRestaurantsDto> {
+  return request(() => apiClient.get<ApiResponse<HomeRestaurantsDto>>(`/api/v1/home/${section}`, { params: { limit } }));
+}
+
+export function getTaste(userId: string): Promise<TasteDto> {
+  return request(() => apiClient.get<ApiResponse<TasteDto>>(`/api/v1/users/${userId}/taste`));
+}
+
+export function getTasteMatch(userId: string): Promise<TasteMatchDto> {
+  return request(() => apiClient.get<ApiResponse<TasteMatchDto>>(`/api/v1/users/${userId}/taste-match`));
 }
 
 export function getMyProfile(): Promise<UserProfileDto> {
