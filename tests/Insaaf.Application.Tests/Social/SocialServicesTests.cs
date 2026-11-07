@@ -379,10 +379,10 @@ public sealed class SocialServicesTests
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private ReviewLikeService CreateLikeService(AppDbContext context) =>
-        new(new ReviewRepository(context), new ReviewLikeRepository(context), _clock.Object);
+        new(new ReviewRepository(context), new ReviewLikeRepository(context), _clock.Object, TestNotifications.Publisher(context, _clock.Object));
 
     private ReviewCommentService CreateCommentService(AppDbContext context) =>
-        new(new ReviewRepository(context), new ReviewCommentRepository(context), _clock.Object);
+        new(new ReviewRepository(context), new ReviewCommentRepository(context), _clock.Object, TestNotifications.Publisher(context, _clock.Object));
 
     private static ReviewService CreateReviewService(AppDbContext context) =>
         new(new ReviewRepository(context), new RestaurantRepository(context));

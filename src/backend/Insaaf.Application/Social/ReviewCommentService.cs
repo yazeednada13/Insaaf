@@ -39,15 +39,18 @@ public sealed class ReviewCommentService : IReviewCommentService
     private readonly IReviewRepository _reviews;
     private readonly IReviewCommentRepository _comments;
     private readonly IDateTimeProvider _clock;
+    private readonly INotificationPublisher _notifications;
 
     public ReviewCommentService(
         IReviewRepository reviews,
         IReviewCommentRepository comments,
-        IDateTimeProvider clock)
+        IDateTimeProvider clock,
+        INotificationPublisher notifications)
     {
         _reviews = reviews;
         _comments = comments;
         _clock = clock;
+        _notifications = notifications;
     }
 
     public async Task<ReviewCommentListResultDto> ListAsync(
@@ -87,6 +90,7 @@ public sealed class ReviewCommentService : IReviewCommentService
         };
 
         await _comments.AddAsync(comment, cancellationToken);
+        await _notifications.CommentedAsync(reviewId, comment.Id, userId, cancellationToken);
 
         var created = await _comments.GetAsync(comment.Id, cancellationToken);
         return ToDto(created!, userId);
@@ -118,6 +122,8 @@ public sealed class ReviewCommentService : IReviewCommentService
         {
             throw CommentNotFound();
         }
+
+        await _notifications.CommentDeletedAsync(commentId, cancellationToken);
 
         return new ReviewCommentDeletedDto(reviewId, await _comments.CountAsync(reviewId, cancellationToken));
     }

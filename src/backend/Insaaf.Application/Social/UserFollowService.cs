@@ -19,15 +19,18 @@ public sealed class UserFollowService : IUserFollowService
     private readonly IUserFollowRepository _follows;
     private readonly IUserProfileRepository _profiles;
     private readonly IDateTimeProvider _clock;
+    private readonly INotificationPublisher _notifications;
 
     public UserFollowService(
         IUserFollowRepository follows,
         IUserProfileRepository profiles,
-        IDateTimeProvider clock)
+        IDateTimeProvider clock,
+        INotificationPublisher notifications)
     {
         _follows = follows;
         _profiles = profiles;
         _clock = clock;
+        _notifications = notifications;
     }
 
     public async Task<UserFollowStateDto> FollowAsync(
@@ -40,6 +43,7 @@ public sealed class UserFollowService : IUserFollowService
         await _follows.AddIfMissingAsync(
             new UserFollow { FollowerId = followerId, FolloweeId = userId, CreatedAt = _clock.UtcNow },
             cancellationToken);
+        await _notifications.FollowedAsync(followerId, userId, cancellationToken);
 
         return new UserFollowStateDto(userId, true);
     }
@@ -52,6 +56,7 @@ public sealed class UserFollowService : IUserFollowService
         await EnsureValidTargetAsync(followerId, userId, cancellationToken);
 
         await _follows.RemoveIfExistsAsync(followerId, userId, cancellationToken);
+        await _notifications.UnfollowedAsync(followerId, userId, cancellationToken);
 
         return new UserFollowStateDto(userId, false);
     }

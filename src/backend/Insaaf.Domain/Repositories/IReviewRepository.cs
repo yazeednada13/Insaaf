@@ -34,6 +34,9 @@ public interface IReviewRepository
         int take,
         CancellationToken cancellationToken = default);
 
+    /// <summary>The review's author, or null when the review doesn't exist.</summary>
+    Task<Guid?> GetAuthorIdAsync(Guid reviewId, CancellationToken cancellationToken = default);
+
     /// <summary>True when the review is public and its restaurant is active.</summary>
     Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default);
 }

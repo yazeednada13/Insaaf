@@ -187,6 +187,19 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-016: Home, notifications and Taste Match (Phase 8A)
+
+**Decision:**
+- The app opens on الرئيسية. Its following section shows the first 2 feed items. "تقييمات حديثة" and the verified-visit sheet aren't built.
+- "مقترح لك" recommends active restaurants in categories the user reviewed, not yet reviewed by them, ordered by rating, then review count; with no history, the top-rated.
+- "رائج بالقرب منك" ranks active restaurants by public reviews in the last 30 days, then rating. Distance is shown on the device; no radius in the pilot.
+- In-app notifications for likes, comments and follows. No notification for your own action; one like notification per actor per review; undoing the action removes it. Text is built on the device. Opening the chip marks all as read. The count refreshes when النشاط opens and on pull-to-refresh, shown only on the chip. Everything is kept for the pilot.
+- Taste uses verified public reviews of active restaurants: a category's share sets its level (≥ 40% very high, ≥ 20% high, else medium). Taste Match compares average ratings per shared category, `100 − 25 × |difference|`, weighted by the smaller count. Both need at least 3 reviews.
+
+**Rationale:** simple, explainable rules on the data that exists, adjustable after the pilot.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

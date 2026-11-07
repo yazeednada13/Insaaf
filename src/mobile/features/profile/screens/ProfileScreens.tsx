@@ -24,6 +24,7 @@ import {
   SkeletonBlock,
 } from '@/features/restaurants/components/RestaurantListStates';
 import { ReviewCard } from '@/features/reviews/components/ReviewCard';
+import { TasteMatchButton, TasteProfileCard } from '@/features/profile/components/TasteViews';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import { FollowButton } from '@/features/social/components/FollowButton';
 import type { SocialApiError } from '@/services/social/socialApi';
@@ -86,10 +87,13 @@ function ProfileHeader({ profile }: { profile: UserProfileDto }) {
           </Pressable>
         ) : (
           <View style={styles.actions}>
+            <TasteMatchButton name={name} userId={profile.id} />
             <FollowButton isFollowing={profile.isFollowedByMe} size="full" userId={profile.id} />
           </View>
         )}
       </View>
+
+      {profile.isMe ? <TasteProfileCard userId={profile.id} /> : null}
 
       <View style={styles.tab}>
         <Text style={styles.tabLabel}>{profile.isMe ? 'تقييماتي' : 'التقييمات'}</Text>
@@ -115,8 +119,7 @@ interface ProfileViewProps {
   query: UseQueryResult<UserProfileDto, SocialApiError>;
 }
 
-// Figma ProfileScreen.tsx. Not built: Taste profile and Taste Match (Phase 8A), the المحفوظات tab,
-// and "مشاركة الملف" (decision D-8).
+// Figma ProfileScreen.tsx. Not built: the المحفوظات tab and "مشاركة الملف" (Phase 8 decision D-8).
 function ProfileView({ title, showBack, showSettings, query }: ProfileViewProps) {
   const insets = useSafeAreaInsets();
   const profile = query.data;

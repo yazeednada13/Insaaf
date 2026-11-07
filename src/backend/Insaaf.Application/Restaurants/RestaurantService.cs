@@ -84,7 +84,7 @@ public sealed class RestaurantService : IRestaurantService
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static RestaurantListItemDto ToListItemDto(RestaurantListItemProjection item, DateTime utcNow) =>
+    internal static RestaurantListItemDto ToListItemDto(RestaurantListItemProjection item, DateTime utcNow) =>
         new(
             item.Id,
             item.Name,

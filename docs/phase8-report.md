@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase8-profiles` (from `develop` after the Phase 7 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 8), the approved Phase 8 plan (decisions D-1…D-14), [decisions.md](decisions.md) ADR-003/ADR-015, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ProfileScreen.tsx`, `EditProfileScreen.tsx`, `SettingsScreen.tsx`, `SearchScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented, not tested on a device** (§11.7) · ⏳ Phase 8 awaiting the founder's actions (§12)
+**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented, not tested on a device** (§11.7) · ✅ Phase 8 merged into `develop` (PR #8, `84e320c`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -316,10 +316,9 @@ Screens → `features/profile/hooks` or `features/social/hooks` → `socialApi` 
 
 ### Limitations and founder actions
 1. **Run the 14-item device checklist** before beta, and at the latest during Phase 10. Sign-out and account switching come first.
-2. **Git:** commit, push, then a PR into `develop`.
-3. Usernames can't be Arabic (Identity defaults).
-4. No password change, avatars, Save or Taste Match in this phase.
-5. **Test data:** `smoke8-…` accounts remain in the development database.
+2. Usernames can't be Arabic (Identity defaults).
+3. No password change, avatars, Save or Taste Match in this phase.
+4. **Test data:** `smoke8-…` accounts remain in the development database.
 
 ### Files changed in Phase 8 (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase8-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`. One migration: `AddUserBio`. No new dependencies.

@@ -108,7 +108,7 @@ public sealed class UserProfileTests
     public async Task Follow_TreatsAdminAsUnknown()
     {
         await using var context = CreateContext();
-        var follows = new UserFollowService(new UserFollowRepository(context), new UserProfileRepository(context), _clock.Object);
+        var follows = new UserFollowService(new UserFollowRepository(context), new UserProfileRepository(context), _clock.Object, TestNotifications.Publisher(context, _clock.Object));
 
         var error = await Assert.ThrowsAsync<SocialException>(() => follows.FollowAsync(_userId, _adminId));
 
@@ -290,7 +290,7 @@ public sealed class UserProfileTests
     {
         await using var context = CreateContext();
         var reviewId = (await context.Reviews.FirstAsync(review => review.IsVerified && review.RestaurantId == _restaurantId)).Id;
-        var comments = new ReviewCommentService(new ReviewRepository(context), new ReviewCommentRepository(context), _clock.Object);
+        var comments = new ReviewCommentService(new ReviewRepository(context), new ReviewCommentRepository(context), _clock.Object, TestNotifications.Publisher(context, _clock.Object));
 
         var admin = await comments.CreateAsync(reviewId, _adminId, new CreateReviewCommentRequest("تعليق"));
         var user = await comments.CreateAsync(reviewId, _otherId, new CreateReviewCommentRequest("تعليق"));

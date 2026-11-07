@@ -173,6 +173,13 @@ public sealed class ReviewRepository : IReviewRepository
             .ToListAsync(cancellationToken);
     }
 
+    public Task<Guid?> GetAuthorIdAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
+        _dbContext.Reviews
+            .AsNoTracking()
+            .Where(review => review.Id == reviewId)
+            .Select(review => (Guid?)review.UserId)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
         PublicReviewsOfActiveRestaurants().AnyAsync(review => review.Id == reviewId, cancellationToken);
 

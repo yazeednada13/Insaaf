@@ -27,4 +27,18 @@ public interface IRestaurantRepository
 
     /// <summary>Distinct time zones of active restaurants, used to evaluate the openNow filter.</summary>
     Task<IReadOnlyList<string>> GetTimeZoneIdsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Active restaurants by id, in no particular order.</summary>
+    Task<IReadOnlyList<RestaurantListItemProjection>> ListByIdsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Active restaurants the user hasn't reviewed, in categories they have reviewed; best rated first.
+    /// With no match, the best rated restaurants the user hasn't reviewed.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> ListSuggestedIdsAsync(Guid userId, int take, CancellationToken cancellationToken = default);
+
+    /// <summary>Active restaurants by public reviews since <paramref name="since"/>, then rating.</summary>
+    Task<IReadOnlyList<Guid>> ListTrendingIdsAsync(DateTime since, int take, CancellationToken cancellationToken = default);
 }

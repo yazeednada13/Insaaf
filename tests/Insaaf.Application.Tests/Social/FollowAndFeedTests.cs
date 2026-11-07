@@ -327,7 +327,7 @@ public sealed class FollowAndFeedTests
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private UserFollowService CreateFollowService(AppDbContext context) =>
-        new(new UserFollowRepository(context), new UserProfileRepository(context), _clock.Object);
+        new(new UserFollowRepository(context), new UserProfileRepository(context), _clock.Object, TestNotifications.Publisher(context, _clock.Object));
 
     private static FeedService CreateFeedService(AppDbContext context) => new(new ReviewRepository(context));
 

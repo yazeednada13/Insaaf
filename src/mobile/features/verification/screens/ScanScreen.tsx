@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 
 import { ScannerView } from '@/features/verification/components/ScannerView';
@@ -157,7 +157,7 @@ export function ScanScreen() {
       <ScanSuccessState
         onGoHome={() => {
           reset();
-          router.navigate('/restaurants');
+          router.navigate('/home' as Href);
         }}
         onViewReview={() => {
           reset();

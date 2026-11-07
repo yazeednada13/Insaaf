@@ -38,7 +38,73 @@ public sealed class RestaurantRepository : IRestaurantRepository
             .ThenBy(restaurant => restaurant.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(restaurant => new RestaurantListItemProjection(
+            .Select(ListItem)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<RestaurantListItemProjection>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+        };
+    }
+
+    public async Task<IReadOnlyList<RestaurantListItemProjection>> ListByIdsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken = default) =>
+        ids.Count == 0
+            ? []
+            : await ActiveRestaurants().Where(restaurant => ids.Contains(restaurant.Id)).Select(ListItem).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> ListSuggestedIdsAsync(
+        Guid userId,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        var reviewedIds = _dbContext.PublicReviewsOfActiveRestaurants()
+            .Where(review => review.UserId == userId)
+            .Select(review => review.RestaurantId);
+        var categoryIds = _dbContext.RestaurantCategories
+            .Where(join => reviewedIds.Contains(join.RestaurantId))
+            .Select(join => join.CategoryId);
+        var notReviewed = ActiveRestaurants().Where(restaurant => !reviewedIds.Contains(restaurant.Id));
+
+        var suggested = await BestRated(notReviewed
+                .Where(restaurant => restaurant.RestaurantCategories.Any(join => categoryIds.Contains(join.CategoryId))))
+            .Take(take)
+            .Select(restaurant => restaurant.Id)
+            .ToListAsync(cancellationToken);
+
+        return suggested.Count > 0
+            ? suggested
+            : await BestRated(notReviewed).Take(take).Select(restaurant => restaurant.Id).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Guid>> ListTrendingIdsAsync(
+        DateTime since,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        await ActiveRestaurants()
+            .OrderByDescending(restaurant =>
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Count(review => review.CreatedAt >= since))
+            .ThenByDescending(restaurant =>
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal?)review.Rating) ?? 0)
+            .ThenBy(restaurant => restaurant.Id)
+            .Take(take)
+            .Select(restaurant => restaurant.Id)
+            .ToListAsync(cancellationToken);
+
+    // Unrated restaurants sort last; the id makes ties deterministic.
+    private static IOrderedQueryable<Restaurant> BestRated(IQueryable<Restaurant> restaurants) =>
+        restaurants
+            .OrderByDescending(restaurant =>
+                restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Average(review => (decimal?)review.Rating) ?? 0)
+            .ThenByDescending(restaurant => restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Count())
+            .ThenBy(restaurant => restaurant.Id);
+
+    private static readonly Expression<Func<Restaurant, RestaurantListItemProjection>> ListItem =
+        restaurant => new RestaurantListItemProjection(
                 restaurant.Id,
                 restaurant.Name,
                 restaurant.City,
@@ -60,17 +126,7 @@ public sealed class RestaurantRepository : IRestaurantRepository
                 restaurant.TimeZoneId,
                 restaurant.OpeningHours
                     .Select(hours => new OpeningHoursProjection(hours.DayOfWeek, hours.OpensAt, hours.ClosesAt))
-                    .ToList()))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<RestaurantListItemProjection>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-        };
-    }
+                    .ToList());
 
     public Task<RestaurantDetailProjection?> GetByIdAsync(
         Guid id,
