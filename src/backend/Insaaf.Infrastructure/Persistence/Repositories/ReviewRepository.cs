@@ -183,6 +183,85 @@ public sealed class ReviewRepository : IReviewRepository
     public Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
         PublicReviewsOfActiveRestaurants().AnyAsync(review => review.Id == reviewId, cancellationToken);
 
+    // Admin (Phase 9): no visibility filter, so hidden reviews and inactive restaurants are included.
+
+    public async Task<IReadOnlyList<AdminReviewProjection>> ListForAdminAsync(
+        Guid? restaurantId,
+        Guid? userId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        var reviews = _dbContext.Reviews.AsNoTracking();
+        if (restaurantId is { } restaurant)
+        {
+            reviews = reviews.Where(review => review.RestaurantId == restaurant);
+        }
+
+        if (userId is { } user)
+        {
+            reviews = reviews.Where(review => review.UserId == user);
+        }
+
+        if (after is not null)
+        {
+            reviews = reviews.Where(review =>
+                review.CreatedAt < after.CreatedAt
+                || (review.CreatedAt == after.CreatedAt && review.Id < after.Id));
+        }
+
+        return await AdminItems(reviews
+                .OrderByDescending(review => review.CreatedAt)
+                .ThenByDescending(review => review.Id)
+                .Take(take))
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<AdminReviewProjection?> GetForAdminAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
+        AdminItems(_dbContext.Reviews.AsNoTracking().Where(review => review.Id == reviewId))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<bool?> SetHiddenAsync(
+        Guid reviewId,
+        bool hidden,
+        Guid adminId,
+        string? reason,
+        DateTime utcNow,
+        CancellationToken cancellationToken = default)
+    {
+        var review = await _dbContext.Reviews.SingleOrDefaultAsync(item => item.Id == reviewId, cancellationToken);
+        if (review is null)
+        {
+            return null;
+        }
+
+        if ((review.HiddenAt is not null) == hidden)
+        {
+            return false;
+        }
+
+        // The visit token is never touched: a hidden review keeps its redeemed token, so it can't be rewritten.
+        review.HiddenAt = hidden ? utcNow : null;
+        review.HiddenByUserId = hidden ? adminId : null;
+        review.HiddenReason = hidden ? reason : null;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private IQueryable<AdminReviewProjection> AdminItems(IQueryable<Review> reviews) =>
+        reviews.Select(review => new AdminReviewProjection(
+            review.Id,
+            review.RestaurantId,
+            review.Restaurant.Name,
+            review.UserId,
+            _dbContext.Users.Where(user => user.Id == review.UserId).Select(user => user.UserName).FirstOrDefault(),
+            review.Rating,
+            review.Text,
+            review.CreatedAt,
+            review.HiddenAt,
+            review.HiddenReason,
+            _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id)));
+
     private IQueryable<Review> PublicReviewsOfActiveRestaurants() =>
         _dbContext.PublicReviewsOfActiveRestaurants();
 

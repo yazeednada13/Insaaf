@@ -35,4 +35,16 @@ public sealed class Review
     public Guid? VisitTokenId { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Set when an Admin hides the review (Phase 9). A hidden review is excluded from every public read,
+    /// ratings included, and can't be liked or commented on; its visit token stays redeemed.
+    /// </summary>
+    public DateTime? HiddenAt { get; set; }
+
+    /// <summary>The Admin who hid the review.</summary>
+    public Guid? HiddenByUserId { get; set; }
+
+    /// <summary>Internal moderation note; never returned by public endpoints or written to logs.</summary>
+    public string? HiddenReason { get; set; }
 }

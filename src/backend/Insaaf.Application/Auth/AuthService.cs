@@ -74,6 +74,11 @@ public sealed class AuthService : IAuthService
             request.Password,
             cancellationToken);
 
+        if (signIn.IsSuspended)
+        {
+            throw AccountSuspended();
+        }
+
         if (!signIn.Succeeded || signIn.User is null)
         {
             throw new AuthException(
@@ -98,6 +103,11 @@ public sealed class AuthService : IAuthService
         }
 
         var rotation = await _refreshTokenService.RotateAsync(request.RefreshToken, cancellationToken);
+
+        if (rotation.FailureReason == RefreshTokenFailureReason.Suspended)
+        {
+            throw AccountSuspended();
+        }
 
         if (!rotation.Succeeded || rotation.UserId is null)
         {
@@ -169,4 +179,7 @@ public sealed class AuthService : IAuthService
             refresh.ExpiresAt,
             new UserDto(userId, email, roles));
     }
+
+    private static AuthException AccountSuspended() =>
+        new("account_suspended", "This account is suspended.", AuthStatusCodes.Forbidden);
 }

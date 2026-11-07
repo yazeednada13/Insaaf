@@ -41,4 +41,5 @@ public sealed record UserAccount(Guid Id, string Email);
 
 public sealed record AccountCreationResult(bool Succeeded, Guid? UserId, IReadOnlyList<string> Errors);
 
-public sealed record AccountSignInResult(bool Succeeded, UserAccount? User, IReadOnlyList<string> Errors);
+/// <summary><see cref="IsSuspended"/> is true only when the password was correct but an Admin suspended the account.</summary>
+public sealed record AccountSignInResult(bool Succeeded, UserAccount? User, IReadOnlyList<string> Errors, bool IsSuspended = false);

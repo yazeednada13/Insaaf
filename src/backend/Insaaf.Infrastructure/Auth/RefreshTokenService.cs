@@ -91,6 +91,21 @@ public sealed class RefreshTokenService : IRefreshTokenService
                 RefreshTokenFailureReason.Expired);
         }
 
+        // A suspended account can't refresh (Phase 9). Its tokens are already revoked on suspension;
+        // this check runs only on refresh, never on every request.
+        if (await _dbContext.Users.AnyAsync(
+                user => user.Id == storedToken.UserId && user.SuspendedAt != null,
+                cancellationToken))
+        {
+            await RevokeAllActiveTokensForUserAsync(storedToken.UserId, cancellationToken);
+            return new RefreshTokenRotationResult(
+                false,
+                storedToken.UserId,
+                null,
+                null,
+                RefreshTokenFailureReason.Suspended);
+        }
+
         var newRawToken = GenerateRawToken();
         var newTokenHash = HashToken(newRawToken);
         var newExpiresAt = _dateTimeProvider.UtcNow.AddDays(_jwtOptions.RefreshTokenDays);

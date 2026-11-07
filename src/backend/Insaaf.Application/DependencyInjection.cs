@@ -28,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<IVisitTokenIssuer, VisitTokenIssuer>();
         services.AddScoped<IVisitTokenLifecycleService, VisitTokenLifecycleService>();
         services.AddScoped<IRestaurantPartnershipService, RestaurantPartnershipService>();
+        services.AddScoped<IRestaurantAdminService, RestaurantAdminService>();
+        services.AddScoped<IReviewModerationService, ReviewModerationService>();
+        services.AddScoped<IUserModerationService, UserModerationService>();
         return services;
     }
 }

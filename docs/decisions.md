@@ -200,6 +200,23 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-017: Admin and moderation (Phase 9)
+
+**Status:** Accepted
+**Date:** 2026-11-07
+
+**Decision:**
+- Admin stays API-only. The role is checked only by `[Authorize(Roles = Admin)]` on the controllers, which pass the acting Admin's id from the JWT to Application services as `actorId`.
+- Restaurants are never deleted, only deactivated. A full update replaces categories and opening hours as sets. `categorySlugs` and `openingHours` are required (explicit `[]` means unknown hours). Periods may run past midnight but may not overlap anywhere in the week. `opensAt == closesAt` is refused. Time zones must be IANA ids.
+- Reviews are hidden, not deleted: `ReviewVisibility.IsPublic` is `IsVerified && HiddenAt == null`, so hidden reviews leave every public read and can't be liked or commented on. The visit token stays redeemed. Unhide restores everything.
+- Admin deletes any comment permanently, with its notification (ADR-012).
+- Suspension uses its own `SuspendedAt` column, never Identity's lockout. It blocks sign-in (after a correct password) and refresh with `account_suspended`, and revokes refresh tokens. Admin accounts can't be suspended. **An access token issued before suspension stays valid until it expires (15 minutes); there is no per-request check in the MVP.**
+- Admin actions are recorded as structured log lines through `IAdminAuditLog`: action, Admin id, target type and id, timestamp, result. No text, reasons, emails, names, phone numbers or tokens. No audit table.
+
+**Rationale:** reversible moderation keeps the verified-review guarantee intact; one visibility rule means one change; separating suspension from lockout keeps password-guessing protection intact.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

@@ -254,6 +254,16 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Property<int>("FoodRating")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("HiddenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("HiddenByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("HiddenReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool>("IsVerified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -283,6 +293,8 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("HiddenByUserId");
 
                     b.HasIndex("UserId");
 
@@ -498,6 +510,12 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("SuspendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SuspendedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -701,6 +719,11 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Insaaf.Domain.Entities.Review", b =>
                 {
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("HiddenByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Insaaf.Domain.Entities.Restaurant", "Restaurant")
                         .WithMany("Reviews")
                         .HasForeignKey("RestaurantId")

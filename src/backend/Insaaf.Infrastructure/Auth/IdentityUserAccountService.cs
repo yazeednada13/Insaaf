@@ -85,6 +85,13 @@ public sealed class IdentityUserAccountService : IUserAccountService
             password,
             lockoutOnFailure: true);
 
+        // Suspension (Phase 9) is reported only after a correct password, so it doesn't reveal accounts.
+        // It is separate from the lockout check above, which stays unchanged.
+        if (signInResult.Succeeded && user.SuspendedAt is not null)
+        {
+            return new AccountSignInResult(false, null, Array.Empty<string>(), IsSuspended: true);
+        }
+
         if (signInResult.Succeeded)
         {
             return new AccountSignInResult(true, new UserAccount(user.Id, user.Email!), Array.Empty<string>());

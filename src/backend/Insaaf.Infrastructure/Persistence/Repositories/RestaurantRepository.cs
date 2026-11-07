@@ -224,6 +224,176 @@ public sealed class RestaurantRepository : IRestaurantRepository
             restaurant.PartnerSince);
     }
 
+    // Admin (Phase 9).
+
+    private static readonly Expression<Func<Restaurant, AdminRestaurantProjection>> AdminItem =
+        restaurant => new AdminRestaurantProjection(
+            restaurant.Id,
+            restaurant.Name,
+            restaurant.Description,
+            restaurant.City,
+            restaurant.Address,
+            restaurant.Latitude,
+            restaurant.Longitude,
+            restaurant.PriceLevel,
+            restaurant.Phone,
+            restaurant.ImageUrl,
+            restaurant.TimeZoneId,
+            restaurant.IsActive,
+            restaurant.IsPartner,
+            restaurant.CreatedAt,
+            restaurant.RestaurantCategories
+                .OrderBy(join => join.Category.Name)
+                .Select(join => new CategoryProjection(join.Category.Id, join.Category.Name, join.Category.Slug))
+                .ToList(),
+            restaurant.OpeningHours
+                .Select(hours => new OpeningHoursProjection(hours.DayOfWeek, hours.OpensAt, hours.ClosesAt))
+                .ToList(),
+            restaurant.Reviews.AsQueryable().Where(ReviewVisibility.IsPublic).Count());
+
+    public async Task<PagedResult<AdminRestaurantProjection>> ListForAdminAsync(
+        bool includeInactive,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Restaurants.AsNoTracking();
+        if (!includeInactive)
+        {
+            query = query.Where(restaurant => restaurant.IsActive);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderBy(restaurant => restaurant.Name)
+            .ThenBy(restaurant => restaurant.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(AdminItem)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<AdminRestaurantProjection>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+        };
+    }
+
+    public Task<AdminRestaurantProjection?> GetForAdminAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _dbContext.Restaurants
+            .AsNoTracking()
+            .Where(restaurant => restaurant.Id == id)
+            .Select(AdminItem)
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<CategoryProjection>> GetCategoriesBySlugsAsync(
+        IReadOnlyCollection<string> slugs,
+        CancellationToken cancellationToken = default)
+    {
+        var lowered = slugs.Select(slug => slug.ToLower()).ToList();
+        return await _dbContext.Categories
+            .AsNoTracking()
+            .Where(category => lowered.Contains(category.Slug.ToLower()))
+            .Select(category => new CategoryProjection(category.Id, category.Name, category.Slug))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(
+        RestaurantWriteModel model,
+        DateTime createdAt,
+        CancellationToken cancellationToken = default)
+    {
+        var restaurant = new Restaurant
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = createdAt,
+            IsActive = true,
+            IsPartner = false,
+        };
+        Apply(restaurant, model);
+        _dbContext.Restaurants.Add(restaurant);
+        AddChildren(restaurant.Id, model);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return restaurant.Id;
+    }
+
+    public async Task<bool> UpdateAsync(Guid id, RestaurantWriteModel model, CancellationToken cancellationToken = default)
+    {
+        var restaurant = await _dbContext.Restaurants.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (restaurant is null)
+        {
+            return false;
+        }
+
+        Apply(restaurant, model);
+
+        // Categories and hours are replaced as sets, in the same SaveChanges as the restaurant row.
+        // Category links have a composite key, so kept links stay tracked instead of being removed and re-added.
+        var links = await _dbContext.RestaurantCategories.Where(join => join.RestaurantId == id).ToListAsync(cancellationToken);
+        _dbContext.RestaurantCategories.RemoveRange(links.Where(join => !model.CategoryIds.Contains(join.CategoryId)));
+        _dbContext.RestaurantOpeningHours.RemoveRange(
+            await _dbContext.RestaurantOpeningHours.Where(hours => hours.RestaurantId == id).ToListAsync(cancellationToken));
+        AddChildren(id, model with
+        {
+            CategoryIds = model.CategoryIds.Where(categoryId => links.All(join => join.CategoryId != categoryId)).ToList(),
+        });
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool?> SetActiveAsync(Guid id, bool isActive, CancellationToken cancellationToken = default)
+    {
+        var restaurant = await _dbContext.Restaurants.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (restaurant is null)
+        {
+            return null;
+        }
+
+        if (restaurant.IsActive == isActive)
+        {
+            return false;
+        }
+
+        restaurant.IsActive = isActive;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private static void Apply(Restaurant restaurant, RestaurantWriteModel model)
+    {
+        restaurant.Name = model.Name;
+        restaurant.Description = model.Description;
+        restaurant.City = model.City;
+        restaurant.Address = model.Address;
+        restaurant.Latitude = model.Latitude;
+        restaurant.Longitude = model.Longitude;
+        restaurant.PriceLevel = model.PriceLevel;
+        restaurant.Phone = model.Phone;
+        restaurant.ImageUrl = model.ImageUrl;
+        restaurant.TimeZoneId = model.TimeZoneId;
+    }
+
+    private void AddChildren(Guid restaurantId, RestaurantWriteModel model)
+    {
+        _dbContext.RestaurantCategories.AddRange(model.CategoryIds.Select(categoryId => new RestaurantCategory
+        {
+            RestaurantId = restaurantId,
+            CategoryId = categoryId,
+        }));
+        _dbContext.RestaurantOpeningHours.AddRange(model.OpeningHours.Select(hours => new RestaurantOpeningHours
+        {
+            Id = Guid.NewGuid(),
+            RestaurantId = restaurantId,
+            DayOfWeek = hours.DayOfWeek,
+            OpensAt = hours.OpensAt,
+            ClosesAt = hours.ClosesAt,
+        }));
+    }
+
     private IQueryable<Restaurant> ActiveRestaurants() =>
         _dbContext.Restaurants
             .AsNoTracking()

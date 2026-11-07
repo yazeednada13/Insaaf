@@ -17,7 +17,9 @@ public enum RefreshTokenFailureReason
 {
     Invalid,
     Expired,
-    Reused
+    Reused,
+    /// <summary>The account is suspended by an Admin (Phase 9).</summary>
+    Suspended
 }
 
 public sealed record RefreshTokenRotationResult(

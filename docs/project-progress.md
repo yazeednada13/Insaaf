@@ -6,12 +6,28 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | — (Phase 8A merged; next phase not started) |
+| **CURRENT PHASE** | 9 — Admin and moderation (**Backend complete**; no Mobile track; not merged) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 5–8A (Phase 8A merged into `develop`, PR #9, `b9ebbcc`); Phase 8 and 8A Mobile not device-tested; see [phase8a-report.md](phase8a-report.md). Earlier: [phase8-report.md](phase8-report.md) |
-| **NEXT** | Founder: run the Phase 8 and 8A device checklists before beta; then instruct the next phase (Phase 9 — Admin and moderation) |
-| **BLOCKERS** | None. Open: Phase 8 and 8A device checklists not run (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+| **NEXT** | Founder: review [phase9-report.md](phase9-report.md); decide the `account_suspended` app message; Git checkpoint and PR; run the Phase 8 and 8A device checklists before beta |
+| **BLOCKERS** | None. Open: Phase 8 and 8A device checklists not run (still unresolved release items) (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+
+## Phase 9 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 9.1 | Backend | Restaurant management, hours, IANA time zone | Verified |
+| 9.2a | Backend | Moderation fields, `AddModeration` | Verified (migration applied by founder) |
+| 9.2b | Backend | Hide / unhide reviews | Verified |
+| 9.3 | Backend | Admin comment delete | Verified |
+| 9.4 | Backend | Suspend / unsuspend accounts | Verified |
+| 9.5 | Backend | Admin review list, user search | Verified |
+| 9.6 | Backend | Tests and report | Done — 307/307, smoke 19/19 |
+
+No Mobile track (Admin is API-only). Open decision: the app's message for `account_suspended` ([phase9-report.md](phase9-report.md) §8).
+
+---
 
 ## Phase 8A checklist
 
@@ -230,7 +246,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
 | 8 | Profiles | **Complete with an open item** (merged via PR #8, `84e320c`; device checklist not run) |
 | 8A | Home, notifications and Taste Match | **Complete with an open item** (merged via PR #9, `b9ebbcc`; device checklist not run) |
-| 9 | Admin and moderation | Not started |
+| 9 | Admin and moderation | **Backend complete** (2026-11-07; 307/307, smoke 19/19; not merged) |
 | 9A | Review photos | Not started |
 | 10 | Hardening and beta | Not started |
 | 11 | Production readiness | Not started |
