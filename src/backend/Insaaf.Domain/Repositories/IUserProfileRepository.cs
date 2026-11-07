@@ -32,6 +32,9 @@ public interface IUserProfileRepository
         int pageSize,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Review count and per-category counts and averages, from public reviews of active restaurants.</summary>
+    Task<TasteProjection> GetTasteAsync(Guid userId, CancellationToken cancellationToken = default);
+
     /// <summary>Non-Admin users whose name or username contains the term.</summary>
     Task<PagedResult<UserSearchItemProjection>> SearchAsync(
         string term,

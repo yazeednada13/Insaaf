@@ -21,11 +21,16 @@ public sealed class UsersController : ControllerBase
 {
     private readonly IUserFollowService _followService;
     private readonly IUserProfileService _profileService;
+    private readonly IUserTasteService _tasteService;
 
-    public UsersController(IUserFollowService followService, IUserProfileService profileService)
+    public UsersController(
+        IUserFollowService followService,
+        IUserProfileService profileService,
+        IUserTasteService tasteService)
     {
         _followService = followService;
         _profileService = profileService;
+        _tasteService = tasteService;
     }
 
     [HttpGet("me")]
@@ -67,6 +72,18 @@ public sealed class UsersController : ControllerBase
         [FromQuery] FeedQuery query,
         CancellationToken cancellationToken) =>
         Run(userId => _profileService.ListReviewsAsync(id, userId, query, cancellationToken));
+
+    [HttpGet("{id:guid}/taste")]
+    [ProducesResponseType(typeof(ApiResponse<TasteDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TasteDto>), StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ApiResponse<TasteDto>>> GetTaste(Guid id, CancellationToken cancellationToken) =>
+        Run(userId => _tasteService.GetTasteAsync(id, userId, cancellationToken));
+
+    [HttpGet("{id:guid}/taste-match")]
+    [ProducesResponseType(typeof(ApiResponse<TasteMatchDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TasteMatchDto>), StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ApiResponse<TasteMatchDto>>> GetTasteMatch(Guid id, CancellationToken cancellationToken) =>
+        Run(userId => _tasteService.GetMatchAsync(id, userId, cancellationToken));
 
     [HttpGet("{id:guid}/followers")]
     [ProducesResponseType(typeof(ApiResponse<UserListResultDto>), StatusCodes.Status200OK)]

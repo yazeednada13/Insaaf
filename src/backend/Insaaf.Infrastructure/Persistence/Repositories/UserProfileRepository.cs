@@ -92,6 +92,34 @@ public sealed class UserProfileRepository : IUserProfileRepository
         };
     }
 
+    public async Task<TasteProjection> GetTasteAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var reviews = _dbContext.PublicReviewsOfActiveRestaurants().Where(review => review.UserId == userId);
+
+        var reviewCount = await reviews.CountAsync(cancellationToken);
+        if (reviewCount == 0)
+        {
+            return new TasteProjection(0, []);
+        }
+
+        // A restaurant with two categories counts its review in both.
+        var categories = await reviews
+            .Join(
+                _dbContext.RestaurantCategories,
+                review => review.RestaurantId,
+                join => join.RestaurantId,
+                (review, join) => new { join.Category.Name, join.Category.Slug, review.Rating })
+            .GroupBy(row => new { row.Name, row.Slug })
+            .Select(group => new CategoryTasteProjection(
+                group.Key.Name,
+                group.Key.Slug,
+                group.Count(),
+                group.Average(row => (double)row.Rating)))
+            .ToListAsync(cancellationToken);
+
+        return new TasteProjection(reviewCount, categories);
+    }
+
     private IQueryable<ApplicationUser> PublicUsers() =>
         _dbContext.Users.AsNoTracking().Where(user => !_dbContext.AdminUserIds().Contains(user.Id));
 

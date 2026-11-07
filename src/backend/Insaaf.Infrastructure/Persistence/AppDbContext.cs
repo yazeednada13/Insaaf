@@ -34,6 +34,8 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
 
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
 
+    public DbSet<Notification> Notifications => Set<Notification>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -48,5 +50,6 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
         builder.ApplyConfiguration(new ReviewLikeConfiguration());
         builder.ApplyConfiguration(new ReviewCommentConfiguration());
         builder.ApplyConfiguration(new UserFollowConfiguration());
+        builder.ApplyConfiguration(new NotificationConfiguration());
     }
 }

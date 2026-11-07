@@ -6,12 +6,26 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | None active: Phase 8 merged, Phase 8A waits for the founder |
+| **CURRENT PHASE** | 8A — Home, notifications and Taste Match (**Backend complete**; Mobile not started) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 5–8 (merged into `develop`, PR #8, `84e320c`); Phase 8 Mobile not device-tested; see [phase8-report.md](phase8-report.md). Earlier: [phase7-report.md](phase7-report.md) |
-| **NEXT** | Phase 8A planning, on the founder's request; run the Phase 8 device checklist before beta |
+| **NEXT** | Founder: review [phase8a-report.md](phase8a-report.md); Git checkpoint; then `Phase 8A — Mobile`; run the Phase 8 device checklist before beta |
 | **BLOCKERS** | None. Open: Phase 8 device checklist not run (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+
+## Phase 8A checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 8A.1 | Backend | Notifications: entity, `AddNotifications`, triggers, API | Verified (migration applied by founder) |
+| 8A.2 | Backend | Suggested and trending restaurants | Verified |
+| 8A.3 | Mobile | الرئيسية tab | Not started |
+| 8A.4 | Mobile | Notifications chip | Not started |
+| 8A.5 | Backend | Taste and Taste Match | Verified |
+| 8A.6 | Mobile | Taste on profiles | Not started |
+| 8A.7 | Both | Tests and report | Backend done (255/255, smoke 16/16); Mobile not started |
+
+---
 
 ## Phase 8 checklist
 
@@ -215,7 +229,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
 | 8 | Profiles | **Complete with an open item** (merged via PR #8, `84e320c`; device checklist not run) |
-| 8A | Home, notifications and Taste Match | Not started |
+| 8A | Home, notifications and Taste Match | **In progress** (Backend complete 2026-11-07; Mobile pending) |
 | 9 | Admin and moderation | Not started |
 | 9A | Review photos | Not started |
 | 10 | Hardening and beta | Not started |

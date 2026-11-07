@@ -20,15 +20,18 @@ public sealed class ReviewLikeService : IReviewLikeService
     private readonly IReviewRepository _reviews;
     private readonly IReviewLikeRepository _likes;
     private readonly IDateTimeProvider _clock;
+    private readonly INotificationPublisher _notifications;
 
     public ReviewLikeService(
         IReviewRepository reviews,
         IReviewLikeRepository likes,
-        IDateTimeProvider clock)
+        IDateTimeProvider clock,
+        INotificationPublisher notifications)
     {
         _reviews = reviews;
         _likes = likes;
         _clock = clock;
+        _notifications = notifications;
     }
 
     public async Task<ReviewLikeStateDto> LikeAsync(
@@ -41,6 +44,7 @@ public sealed class ReviewLikeService : IReviewLikeService
         await _likes.AddIfMissingAsync(
             new ReviewLike { ReviewId = reviewId, UserId = userId, CreatedAt = _clock.UtcNow },
             cancellationToken);
+        await _notifications.LikedAsync(reviewId, userId, cancellationToken);
 
         return new ReviewLikeStateDto(reviewId, await _likes.CountAsync(reviewId, cancellationToken), true);
     }
@@ -53,6 +57,7 @@ public sealed class ReviewLikeService : IReviewLikeService
         await EnsureReviewIsPublicAsync(reviewId, cancellationToken);
 
         await _likes.RemoveIfExistsAsync(reviewId, userId, cancellationToken);
+        await _notifications.UnlikedAsync(reviewId, userId, cancellationToken);
 
         return new ReviewLikeStateDto(reviewId, await _likes.CountAsync(reviewId, cancellationToken), false);
     }
