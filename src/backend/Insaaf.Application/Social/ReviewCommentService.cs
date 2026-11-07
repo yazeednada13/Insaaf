@@ -147,6 +147,6 @@ public sealed class ReviewCommentService : IReviewCommentService
             comment.Text,
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(comment.CreatedAt, DateTimeKind.Utc),
-            new ReviewerDto(comment.AuthorId, comment.AuthorFullName, comment.AuthorUserName),
+            new ReviewerDto(comment.AuthorId, comment.AuthorFullName, comment.AuthorUserName, comment.AuthorHasPublicProfile),
             comment.AuthorId == viewerUserId);
 }

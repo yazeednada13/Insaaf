@@ -6,7 +6,8 @@ public sealed record RestaurantReviewsQuery(
     int Page = 1,
     int PageSize = 20);
 
-public sealed record ReviewerDto(Guid Id, string? FullName, string? UserName);
+/// <remarks><c>HasPublicProfile</c> is false for Admin accounts: the name shows, but isn't navigable.</remarks>
+public sealed record ReviewerDto(Guid Id, string? FullName, string? UserName, bool HasPublicProfile = true);
 
 /// <remarks><c>CreatedAt</c> is UTC.</remarks>
 public sealed record ReviewListItemDto(

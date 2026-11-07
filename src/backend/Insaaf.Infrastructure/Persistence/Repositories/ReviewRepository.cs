@@ -51,7 +51,8 @@ public sealed class ReviewRepository : IReviewRepository
                     user.UserName,
                     _dbContext.ReviewLikes.Count(like => like.ReviewId == review.Id),
                     _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id),
-                    _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == criteria.ViewerUserId)))
+                    _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == criteria.ViewerUserId),
+                    !_dbContext.AdminUserIds().Contains(user.Id)))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ReviewListItemProjection>
@@ -94,10 +95,24 @@ public sealed class ReviewRepository : IReviewRepository
                     _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id),
                     _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == viewerUserId),
                     _dbContext.UserFollows.Any(follow =>
-                        follow.FollowerId == viewerUserId && follow.FolloweeId == review.UserId)))
+                        follow.FollowerId == viewerUserId && follow.FolloweeId == review.UserId),
+                    !_dbContext.AdminUserIds().Contains(user.Id)))
             .SingleOrDefaultAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<FeedItemProjection>> ListFollowingFeedAsync(
+    public Task<IReadOnlyList<FeedItemProjection>> ListByUserAsync(
+        Guid userId,
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        ReadStreamAsync(
+            PublicReviewsOfActiveRestaurants().Where(review => review.UserId == userId),
+            viewerUserId,
+            after,
+            take,
+            cancellationToken);
+
+    public Task<IReadOnlyList<FeedItemProjection>> ListFollowingFeedAsync(
         Guid viewerUserId,
         FeedCursor? after,
         int take,
@@ -111,6 +126,16 @@ public sealed class ReviewRepository : IReviewRepository
         var reviews = PublicReviewsOfActiveRestaurants()
             .Where(review => review.UserId != viewerUserId && followedUserIds.Contains(review.UserId));
 
+        return ReadStreamAsync(reviews, viewerUserId, after, take, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<FeedItemProjection>> ReadStreamAsync(
+        IQueryable<Review> reviews,
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken)
+    {
         if (after is not null)
         {
             reviews = reviews.Where(review =>
@@ -143,7 +168,8 @@ public sealed class ReviewRepository : IReviewRepository
                 row.Review.Restaurant.Address,
                 _dbContext.ReviewLikes.Count(like => like.ReviewId == row.Review.Id),
                 _dbContext.ReviewComments.Count(comment => comment.ReviewId == row.Review.Id),
-                _dbContext.ReviewLikes.Any(like => like.ReviewId == row.Review.Id && like.UserId == viewerUserId)))
+                _dbContext.ReviewLikes.Any(like => like.ReviewId == row.Review.Id && like.UserId == viewerUserId),
+                !_dbContext.AdminUserIds().Contains(row.User.Id)))
             .ToListAsync(cancellationToken);
     }
 
@@ -151,7 +177,7 @@ public sealed class ReviewRepository : IReviewRepository
         PublicReviewsOfActiveRestaurants().AnyAsync(review => review.Id == reviewId, cancellationToken);
 
     private IQueryable<Review> PublicReviewsOfActiveRestaurants() =>
-        PublicReviews().Where(review => review.Restaurant.IsActive);
+        _dbContext.PublicReviewsOfActiveRestaurants();
 
     private IQueryable<Review> PublicReviews() =>
         _dbContext.Reviews

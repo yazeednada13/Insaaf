@@ -4,6 +4,8 @@ export interface ReviewerDto {
   id: string;
   fullName: string | null;
   userName: string | null;
+  /** False for Admin accounts: the name shows, but doesn't lead to a profile. */
+  hasPublicProfile: boolean;
 }
 
 export interface ReviewListItemDto {

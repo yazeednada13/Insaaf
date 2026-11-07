@@ -10,6 +10,8 @@ public sealed record LoginRequest(string Email, string Password);
 
 public sealed record RefreshRequest(string RefreshToken);
 
+public sealed record LogoutResultDto(bool SignedOut);
+
 public sealed record UserDto(Guid Id, string Email, IReadOnlyList<string> Roles);
 
 public sealed record AuthResponseDto(

@@ -14,9 +14,6 @@ public sealed class UserFollowRepository : IUserFollowRepository
         _dbContext = dbContext;
     }
 
-    public Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default) =>
-        _dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken);
-
     public async Task AddIfMissingAsync(UserFollow follow, CancellationToken cancellationToken = default)
     {
         var exists = await _dbContext.UserFollows.AnyAsync(

@@ -165,6 +165,28 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-014: Home tab, in-app notifications and Taste Match in the MVP
+
+**Decision:** The الرئيسية tab, with "مقترح لك" and "رائج بالقرب منك", in-app notifications, and Taste Match are part of the MVP, in new **Phase 8A**. Push notifications stay post-MVP. Restaurant official replies and their notification are not in the MVP (founder decision), so ADR-003 stays unchanged.
+
+**Rationale:** both are in Figma but had no phase. They depend on the feed and on profiles, so they follow Phase 8. The 8A number keeps existing phases and Task IDs unchanged.
+
+---
+
+## ADR-015: Profiles (Phase 8)
+
+**Decision:**
+- Usernames change only through Identity's `UserManager`, so normalization and case-insensitive uniqueness stay Identity's. Sign-in stays by email.
+- Profile stats are computed on read from verified public reviews.
+- Admin accounts aren't public: their profile, lists and follow return 404, they're left out of search and lists, and their names in content stay visible but aren't navigable.
+- Sign-out revokes all the user's refresh tokens, which signs out every device, and the app clears all account data from memory.
+- Followers and following are page-based, ordered by `CreatedAt DESC, UserId DESC`.
+- Avatars, Save and Saved Reviews are out of this phase. Save has no roadmap phase.
+
+**Rationale:** Identity already solves username integrity, and hiding Admin accounts avoids exposing administrative information.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

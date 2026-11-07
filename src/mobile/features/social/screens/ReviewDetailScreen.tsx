@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, lineHeights, restaurantLayout, textAlignStart } from '@/constants/theme';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { openUser, useCurrentStack } from '@/features/navigation/stackRoutes';
 import { ChevronLeftIcon } from '@/features/restaurants/components/RestaurantIcons';
 import {
   RestaurantListErrorState,
@@ -23,6 +24,7 @@ import { StarRating } from '@/features/restaurants/components/StarRating';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import { VerifiedBadge } from '@/features/reviews/components/VerifiedBadge';
 import { CommentInputBar } from '@/features/social/components/CommentInputBar';
+import { FollowButton } from '@/features/social/components/FollowButton';
 import { CommentItem } from '@/features/social/components/CommentItem';
 import { CommentIcon, HeartIcon } from '@/features/social/components/ReviewActionIcons';
 import {
@@ -30,7 +32,6 @@ import {
   useDeleteCommentMutation,
   useReviewCommentsQuery,
 } from '@/features/social/hooks/useReviewComments';
-import { useFollowUser } from '@/features/social/hooks/useFollowUser';
 import { useReviewDetailQuery } from '@/features/social/hooks/useReviewDetailQuery';
 import { useReviewLike } from '@/features/social/hooks/useReviewLike';
 import type { ReviewDetailDto } from '@/types/review';
@@ -63,39 +64,24 @@ function DetailedRating({ label, value }: { label: string; value: number }) {
   );
 }
 
-// Decision D-1: Figma has this button on the profile (Phase 8); until then it lives here, and it's
-// also the only place to unfollow. Styled like Figma's profile button, in a compact size.
-function FollowButton({ userId, isFollowing }: { userId: string; isFollowing: boolean }) {
-  const followMutation = useFollowUser();
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: isFollowing, disabled: followMutation.isPending }}
-      disabled={followMutation.isPending}
-      hitSlop={6}
-      onPress={() => followMutation.mutate({ userId, follow: !isFollowing })}
-      style={[styles.followButton, isFollowing && styles.followingButton]}
-    >
-      <Text style={[styles.followLabel, isFollowing && styles.followingLabel]}>
-        {isFollowing ? 'تتابع' : 'متابعة'}
-      </Text>
-    </Pressable>
-  );
-}
-
 function ReviewContent({ review }: { review: ReviewDetailDto }) {
   const { user } = useAuth();
+  const stack = useCurrentStack();
   const likeMutation = useReviewLike();
+  const openReviewer = () => openUser(stack, review.reviewer.id);
   const reviewerName = review.reviewer.fullName ?? review.reviewer.userName ?? '';
 
   return (
     <View>
       <View style={styles.reviewer}>
-        <UserAvatar name={reviewerName} size={52} />
+        <Pressable disabled={!review.reviewer.hasPublicProfile} onPress={openReviewer}>
+          <UserAvatar name={reviewerName} size={52} />
+        </Pressable>
         <View style={styles.reviewerText}>
           <View style={styles.nameRow}>
-            <Text style={styles.reviewerName}>{reviewerName}</Text>
+            <Pressable disabled={!review.reviewer.hasPublicProfile} onPress={openReviewer}>
+              <Text style={styles.reviewerName}>{reviewerName}</Text>
+            </Pressable>
             {review.isVerified ? <VerifiedBadge /> : null}
           </View>
           <Pressable
@@ -111,7 +97,7 @@ function ReviewContent({ review }: { review: ReviewDetailDto }) {
         </View>
         <View style={styles.reviewerSide}>
           <Text style={styles.reviewerTime}>{formatRelativeTime(review.createdAt)}</Text>
-          {user?.id === review.reviewer.id ? null : (
+          {user?.id === review.reviewer.id || !review.reviewer.hasPublicProfile ? null : (
             <FollowButton isFollowing={review.isReviewerFollowedByMe} userId={review.reviewer.id} />
           )}
         </View>
@@ -353,24 +339,6 @@ const styles = StyleSheet.create({
     direction: 'ltr',
     flexDirection: 'row',
     gap: 4,
-  },
-  followButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  followLabel: {
-    color: colors.primaryForeground,
-    fontFamily: fonts.arabicSemiBold,
-    fontSize: 12,
-    lineHeight: lineHeights.xs,
-  },
-  followingButton: {
-    backgroundColor: colors.border,
-  },
-  followingLabel: {
-    color: colors.textPrimary,
   },
   header: {
     alignItems: 'center',

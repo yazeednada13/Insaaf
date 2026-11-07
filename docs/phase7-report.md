@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase7-feed-following` (from `develop` after the Phase 6 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 7), the approved Phase 7 plan (decisions D-1…D-9), [decisions.md](decisions.md) ADR-004/ADR-013, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ActivityScreen.tsx`, `ProfileScreen.tsx`, `ReviewCard.tsx`)
-**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ⏳ Phase 7 awaiting the founder's actions (§12)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete** · ✅ Phase 7 merged into `develop` (PR #7, `cbc6d31`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -309,10 +309,9 @@ Review Detail ──"متابعة"──► النشاط feed ──card──�
 **The Phase 7 gate:** follow and unfollow from Review Detail ✅; followed users' verified reviews in the feed ✅; the user's own, hidden and inactive-restaurant reviews never shown ✅; paging without duplicates ✅; no N+1 (one SQL command) ✅.
 
 ### Limitations and founder actions
-1. **Git:** commit, push, then a PR into `develop`.
-2. **Unfollow access:** only from a review of that person, until Phase 8's lists.
-3. **Feed performance:** re-measure with realistic data in Phase 10.
-4. **Test data:** `smoke7-…` accounts and device test data remain in the development database.
+1. **Unfollow access:** only from a review of that person, until Phase 8's lists.
+2. **Feed performance:** re-measure with realistic data in Phase 10.
+3. **Test data:** `smoke7-…` accounts and device test data remain in the development database.
 
 ### Files changed in Phase 7 (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase7-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`. One migration: `AddUserFollows`. No new dependencies.

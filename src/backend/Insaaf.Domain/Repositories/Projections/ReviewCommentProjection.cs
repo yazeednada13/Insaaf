@@ -7,4 +7,5 @@ public sealed record ReviewCommentProjection(
     DateTime CreatedAt,
     Guid AuthorId,
     string? AuthorFullName,
-    string? AuthorUserName);
+    string? AuthorUserName,
+    bool AuthorHasPublicProfile = true);

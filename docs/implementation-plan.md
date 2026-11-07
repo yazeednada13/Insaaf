@@ -17,8 +17,9 @@ Phases 0–11. Each phase has a **gate** and requires **founder approval** befor
 Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7
                               Phase 2 → Phase 8
                               Phase 3,5 → Phase 9
+                              Phase 7,8 → Phase 8A
                               Phase 6,7,8,9 → Phase 9A
-                              Phase 7,8,9,9A → Phase 10 → Phase 11
+                              Phase 7,8,8A,9,9A → Phase 10 → Phase 11
 ```
 
 ---
@@ -125,7 +126,38 @@ The feed contains verified public reviews of active restaurants, by followed use
 
 ## Phase 8 — Profiles
 
-**Gate:** Public profile matches Figma
+**Gate:** Public profile matches Figma; stats from verified reviews
+
+| Task | Track | Scope |
+|------|-------|-------|
+| 8.1 | Backend | `Bio`, `AddUserBio` migration; profile read and edit; username through Identity; `POST /auth/logout` |
+| 8.2 | Backend | User reviews, followers and following lists, people search, `hasPublicProfile` |
+| 8.3 | Mobile | ملفي tab, other profiles, lists, Edit Profile, Settings with sign-out, people in Search |
+| 8.4 | Both | Tests and report |
+
+Admin accounts aren't public. Avatars, Save and Saved Reviews aren't in this phase.
+
+---
+
+## Phase 8A — Home, notifications and Taste Match
+
+**Gate:** The الرئيسية tab shows the following section, "مقترح لك" and "رائج بالقرب منك", the النشاط tab shows in-app notifications, and profiles show Taste Match from real review history
+
+**Why here:** Home reuses the feed (Phase 7) and links to people (Phase 8), and notifications point to reviews and profiles. Numbered 8A so existing phases and Task IDs stay unchanged. Added by founder decision (ADR-014).
+
+| Task | Track | Scope |
+|------|-------|-------|
+| 8A.1 | Backend | Notification entity, created on like, comment and follow; list and mark-as-read API |
+| 8A.2 | Backend | Suggested and trending restaurant queries |
+| 8A.3 | Mobile | الرئيسية tab per Figma: greeting, search bar, following section, "مقترح لك", "رائج بالقرب منك" |
+| 8A.4 | Mobile | "الإشعارات" chip in النشاط with an unread count |
+| 8A.5 | Backend | Taste profile and Taste Match, computed from verified review history |
+| 8A.6 | Mobile | "ذوقي في الطعام" on My Profile; "توافق في الذوق" and its sheet on other profiles (Figma) |
+| 8A.7 | Both | Tests and report |
+
+**Excluded:** push notifications (post-MVP default); restaurant official replies and their notification (not in the MVP).
+
+**Decided at its planning gate:** how "مقترح لك" and "رائج بالقرب منك" rank restaurants, the Taste Match formula and its minimum review count, and how long notifications are kept.
 
 ---
 

@@ -36,6 +36,7 @@ function applyLikeState(queryClient: QueryClient, reviewId: string, state: Omit<
     };
 
   queryClient.setQueriesData<ReviewPages>({ queryKey: reviewQueryKeys.restaurantLists }, update);
+  queryClient.setQueriesData<ReviewPages>({ queryKey: reviewQueryKeys.userLists }, update);
   queryClient.setQueryData<ReviewPages>(reviewQueryKeys.feed, update);
   queryClient.setQueryData<ReviewDetailDto>(
     reviewQueryKeys.detail(reviewId),
@@ -55,11 +56,13 @@ export function useReviewLike() {
       like ? socialApi.likeReview(reviewId) : socialApi.unlikeReview(reviewId),
     onMutate: async ({ reviewId, like }) => {
       await queryClient.cancelQueries({ queryKey: reviewQueryKeys.restaurantLists });
+      await queryClient.cancelQueries({ queryKey: reviewQueryKeys.userLists });
       await queryClient.cancelQueries({ queryKey: reviewQueryKeys.feed });
       await queryClient.cancelQueries({ queryKey: reviewQueryKeys.detail(reviewId) });
 
       const snapshots: [QueryKey, unknown][] = [
         ...queryClient.getQueriesData({ queryKey: reviewQueryKeys.restaurantLists }),
+        ...queryClient.getQueriesData({ queryKey: reviewQueryKeys.userLists }),
         [reviewQueryKeys.feed, queryClient.getQueryData(reviewQueryKeys.feed)],
         [reviewQueryKeys.detail(reviewId), queryClient.getQueryData(reviewQueryKeys.detail(reviewId))],
       ];
@@ -91,6 +94,7 @@ function findLikeState(queryClient: QueryClient, reviewId: string) {
 
   const caches = [
     ...queryClient.getQueriesData<ReviewPages>({ queryKey: reviewQueryKeys.restaurantLists }),
+    ...queryClient.getQueriesData<ReviewPages>({ queryKey: reviewQueryKeys.userLists }),
     [reviewQueryKeys.feed, queryClient.getQueryData<ReviewPages>(reviewQueryKeys.feed)] as const,
   ];
 

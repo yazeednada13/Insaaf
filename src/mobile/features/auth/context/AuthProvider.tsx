@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import {
   createContext,
   useCallback,
@@ -17,7 +18,8 @@ import {
   useRegisterMutation,
   useSetCurrentUser,
 } from '@/features/auth/hooks/useAuthQueries';
-import { getSessionUser } from '@/services/auth/session';
+import * as authApi from '@/services/auth/authApi';
+import { getSessionUser, onSessionCleared } from '@/services/auth/session';
 import { getRefreshToken } from '@/services/auth/tokenStorage';
 
 interface AuthContextValue {
@@ -38,14 +40,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useRegisterMutation();
   const refreshMutation = useRefreshMutation();
   const setCurrentUser = useSetCurrentUser();
+  const queryClient = useQueryClient();
+  const accountId = useRef(user?.id ?? null);
 
   const syncUser = useCallback(
     (nextUser: UserDto | null) => {
+      const nextAccountId = nextUser?.id ?? null;
+
+      // Account isolation: whenever the account changes, by any path, nothing cached survives.
+      if (nextAccountId !== accountId.current) {
+        accountId.current = nextAccountId;
+        void queryClient.cancelQueries();
+        queryClient.clear();
+      }
+
       setUser(nextUser);
       setCurrentUser(nextUser);
     },
-    [setCurrentUser],
+    [queryClient, setCurrentUser],
   );
+
+  // The Axios interceptor ends the session when a refresh fails, without calling logout().
+  useEffect(() => onSessionCleared(() => syncUser(null)), [syncUser]);
 
   const bootstrap = useCallback(async () => {
     try {
@@ -97,6 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // The server is unreachable: sign-out still completes on this device.
+    }
+
     await logoutSession();
     syncUser(null);
   }, [syncUser]);

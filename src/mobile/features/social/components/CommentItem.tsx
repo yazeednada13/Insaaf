@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, lineHeights, textAlignStart } from '@/constants/theme';
+import { openUser, useCurrentStack } from '@/features/navigation/stackRoutes';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import type { ReviewCommentDto } from '@/types/social';
 import { formatRelativeTime } from '@/utils/relativeTime';
@@ -14,14 +15,20 @@ interface CommentItemProps {
 // Figma ReviewDetailScreen.tsx comment. "إعجاب" and "رد" are out of scope; "حذف" has no Figma design
 // (decision D-7) and shows only on the user's own comments.
 export function CommentItem({ comment, deleting, onDelete }: CommentItemProps) {
+  const stack = useCurrentStack();
   const authorName = comment.author.fullName ?? comment.author.userName ?? '';
+  const openAuthor = () => openUser(stack, comment.author.id);
 
   return (
     <View style={styles.row}>
-      <UserAvatar name={authorName} size={36} />
+      <Pressable disabled={!comment.author.hasPublicProfile} onPress={openAuthor}>
+        <UserAvatar name={authorName} size={36} />
+      </Pressable>
       <View style={styles.body}>
         <View style={styles.bubble}>
-          <Text style={styles.author}>{authorName}</Text>
+          <Pressable disabled={!comment.author.hasPublicProfile} onPress={openAuthor}>
+            <Text style={styles.author}>{authorName}</Text>
+          </Pressable>
           <Text style={styles.text}>{comment.text}</Text>
         </View>
         <View style={styles.meta}>

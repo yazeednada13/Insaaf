@@ -75,7 +75,11 @@ public sealed class ReviewService : IReviewService
             review.Text,
             DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc),
             review.IsVerified,
-            new ReviewerDto(review.ReviewerId, review.ReviewerFullName, review.ReviewerUserName),
+            new ReviewerDto(
+                review.ReviewerId,
+                review.ReviewerFullName,
+                review.ReviewerUserName,
+                review.ReviewerHasPublicProfile),
             new ReviewRestaurantDto(
                 review.RestaurantId,
                 review.RestaurantName,
@@ -95,7 +99,11 @@ public sealed class ReviewService : IReviewService
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc),
             review.IsVerified,
-            new ReviewerDto(review.ReviewerId, review.ReviewerFullName, review.ReviewerUserName),
+            new ReviewerDto(
+                review.ReviewerId,
+                review.ReviewerFullName,
+                review.ReviewerUserName,
+                review.ReviewerHasPublicProfile),
             review.LikeCount,
             review.CommentCount,
             review.IsLikedByViewer);

@@ -5,4 +5,6 @@ namespace Insaaf.Infrastructure.Identity;
 public sealed class ApplicationUser : IdentityUser<Guid>
 {
     public string? FullName { get; set; }
+
+    public string? Bio { get; set; }
 }

@@ -19,6 +19,22 @@ public interface IUserAccountService
     Task<UserAccount?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Updates the profile; the username goes through Identity's validation and normalization.</summary>
+    Task<ProfileUpdateResult> UpdateProfileAsync(
+        Guid userId,
+        string fullName,
+        string userName,
+        string? bio,
+        CancellationToken cancellationToken = default);
+}
+
+public enum ProfileUpdateResult
+{
+    Updated,
+    UsernameTaken,
+    InvalidUsername,
+    NotFound,
 }
 
 public sealed record UserAccount(Guid Id, string Email);

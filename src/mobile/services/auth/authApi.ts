@@ -33,6 +33,11 @@ export async function login(request: LoginRequest): Promise<AuthResponseDto> {
   }
 }
 
+/** Revokes the user's refresh tokens on every device. Short timeout: sign-out must not hang offline. */
+export async function logout(): Promise<void> {
+  await apiClient.post('/api/v1/auth/logout', undefined, { timeout: 5000 });
+}
+
 export async function refresh(request: RefreshRequest): Promise<AuthResponseDto> {
   try {
     const response = await apiClient.post<ApiResponse<AuthResponseDto>>(

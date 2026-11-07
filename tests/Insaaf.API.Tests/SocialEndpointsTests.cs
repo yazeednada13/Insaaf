@@ -293,7 +293,7 @@ internal sealed class SocialApi
         return _client.SendAsync(request);
     }
 
-    private async Task<AuthResponseDto> RegisterUserAsync()
+    public async Task<AuthResponseDto> RegisterUserAsync()
     {
         var response = await _client.PostAsJsonAsync(
             "/api/v1/auth/register",
@@ -333,6 +333,7 @@ public sealed class LowSocialRateLimitWebApplicationFactory : CustomWebApplicati
         builder.UseSetting("RateLimiting:SocialLikePerMinute", "2");
         builder.UseSetting("RateLimiting:SocialCommentPerMinute", "1");
         builder.UseSetting("RateLimiting:SocialFollowPerMinute", "2");
+        builder.UseSetting("RateLimiting:SocialSearchPerMinute", "1");
     }
 }
 

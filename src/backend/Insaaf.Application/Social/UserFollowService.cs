@@ -17,11 +17,16 @@ public interface IUserFollowService
 public sealed class UserFollowService : IUserFollowService
 {
     private readonly IUserFollowRepository _follows;
+    private readonly IUserProfileRepository _profiles;
     private readonly IDateTimeProvider _clock;
 
-    public UserFollowService(IUserFollowRepository follows, IDateTimeProvider clock)
+    public UserFollowService(
+        IUserFollowRepository follows,
+        IUserProfileRepository profiles,
+        IDateTimeProvider clock)
     {
         _follows = follows;
+        _profiles = profiles;
         _clock = clock;
     }
 
@@ -58,7 +63,8 @@ public sealed class UserFollowService : IUserFollowService
             throw new SocialException("cannot_follow_self", "You can't follow yourself.");
         }
 
-        if (!await _follows.UserExistsAsync(userId, cancellationToken))
+        // Admin accounts aren't public, so they behave as unknown users here.
+        if (!await _profiles.IsPublicAsync(userId, cancellationToken))
         {
             throw new SocialException("not_found", "User was not found.", SocialStatusCodes.NotFound);
         }

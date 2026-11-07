@@ -6,6 +6,8 @@ interface SessionState {
   user: UserDto | null;
 }
 
+const clearedListeners = new Set<() => void>();
+
 const session: SessionState = {
   accessToken: null,
   accessTokenExpiresAt: null,
@@ -42,4 +44,13 @@ export function clearSession(): void {
   session.accessToken = null;
   session.accessTokenExpiresAt = null;
   session.user = null;
+  clearedListeners.forEach((listener) => listener());
+}
+
+/** Tells the app the session ended, including forced sign-out from the Axios interceptor. */
+export function onSessionCleared(listener: () => void): () => void {
+  clearedListeners.add(listener);
+  return () => {
+    clearedListeners.delete(listener);
+  };
 }
