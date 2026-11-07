@@ -167,6 +167,20 @@ Admin accounts aren't public. Avatars, Save and Saved Reviews aren't in this pha
 
 Admin deletion of other users' comments was moved here from Phase 6 by founder decision.
 
+The roadmap had no task table for this phase; these IDs were added at its planning gate (2026-11-07). Visit-token issuing was already delivered in Phase 5.
+
+| Task | Track | Scope |
+|------|-------|-------|
+| 9.1 | Backend | Restaurant management: create, full update, activate/deactivate, categories, opening hours, IANA time zone |
+| 9.2a | Backend | Moderation fields; migration `AddModeration` |
+| 9.2b | Backend | Hide / unhide a review (excluded from ratings and interaction) |
+| 9.3 | Backend | Admin deletes any comment |
+| 9.4 | Backend | Suspend / unsuspend an account |
+| 9.5 | Backend | Admin review list and user search |
+| 9.6 | Backend | Tests and report |
+
+**Excluded:** Admin UI of any kind, audit-log table, user reports, photo moderation (9A). No Mobile track: Admin is API-only.
+
 ---
 
 ## Phase 9A — Review photos

@@ -8,6 +8,7 @@ namespace Insaaf.Infrastructure.Persistence.Configurations;
 public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
 {
     public const int MaxTextLength = 2000;
+    public const int MaxHiddenReasonLength = 500;
 
     public void Configure(EntityTypeBuilder<Review> builder)
     {
@@ -37,6 +38,9 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.Property(review => review.CreatedAt)
             .IsRequired();
 
+        builder.Property(review => review.HiddenReason)
+            .HasMaxLength(MaxHiddenReasonLength);
+
         builder.HasOne(review => review.Restaurant)
             .WithMany(restaurant => restaurant.Reviews)
             .HasForeignKey(review => review.RestaurantId)
@@ -47,6 +51,12 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(review => review.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Phase 9: the Admin who hid the review. Restrict, like the author relationship.
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(review => review.HiddenByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Phase 5: a review references the visit token it was created from.

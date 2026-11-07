@@ -1,4 +1,6 @@
 using System.Text;
+using Insaaf.Application.Admin;
+using Insaaf.Infrastructure.Admin;
 using Insaaf.Application.Auth.Abstractions;
 using Insaaf.Application.Verification.Abstractions;
 using Insaaf.Infrastructure.Verification;
@@ -88,6 +90,8 @@ public static class DependencyInjection
         services.AddScoped<IUserFollowRepository, UserFollowRepository>();
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IUserModerationRepository, UserModerationRepository>();
+        services.AddSingleton<IAdminAuditLog, AdminAuditLog>();
         services.AddSingleton<IVisitTokenCodec, VisitTokenCodec>();
 
         return services;

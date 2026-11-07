@@ -39,4 +39,28 @@ public interface IReviewRepository
 
     /// <summary>True when the review is public and its restaurant is active.</summary>
     Task<bool> IsPublicAsync(Guid reviewId, CancellationToken cancellationToken = default);
+
+    // Admin (Phase 9). Hidden reviews and inactive restaurants are included.
+
+    /// <summary>Any review, hidden or not, newest first; up to <paramref name="take"/> rows after <paramref name="after"/>.</summary>
+    Task<IReadOnlyList<AdminReviewProjection>> ListForAdminAsync(
+        Guid? restaurantId,
+        Guid? userId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminReviewProjection?> GetForAdminAsync(Guid reviewId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Hides or unhides a review. Null when it doesn't exist; otherwise whether it changed. Unhiding clears
+    /// the Admin and the reason.
+    /// </summary>
+    Task<bool?> SetHiddenAsync(
+        Guid reviewId,
+        bool hidden,
+        Guid adminId,
+        string? reason,
+        DateTime utcNow,
+        CancellationToken cancellationToken = default);
 }

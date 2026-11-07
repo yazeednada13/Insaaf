@@ -6,12 +6,30 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 8A — Home, notifications and Taste Match (**Backend verified; Mobile implemented, not device-tested**) |
+| **CURRENT PHASE** | 9 — Admin and moderation (**Backend verified; Mobile 9.7 implemented, not device-tested**; not merged) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phases 5–8 (merged into `develop`, PR #8, `84e320c`); Phase 8 Mobile not device-tested; see [phase8-report.md](phase8-report.md). Earlier: [phase7-report.md](phase7-report.md) |
-| **NEXT** | Founder: review [phase8a-report.md](phase8a-report.md); Git checkpoint and PR; run the Phase 8 and 8A device checklists before beta; then the next phase |
-| **BLOCKERS** | None. Open: Phase 8 and 8A device checklists not run (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+| **COMPLETED** | Phases 5–8A (Phase 8A merged into `develop`, PR #9, `b9ebbcc`); Phase 8 and 8A Mobile not device-tested; see [phase8a-report.md](phase8a-report.md). Earlier: [phase8-report.md](phase8-report.md) |
+| **NEXT** | Founder: review [phase9-report.md](phase9-report.md); Git checkpoint and PR; run the Phase 8, 8A and 9 device checklists before beta |
+| **BLOCKERS** | None. Open: Phase 8, 8A and 9 device checklists not run (still unresolved release items) (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+
+## Phase 9 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 9.1 | Backend | Restaurant management, hours, IANA time zone | Verified |
+| 9.2a | Backend | Moderation fields, `AddModeration` | Verified (migration applied by founder) |
+| 9.2b | Backend | Hide / unhide reviews | Verified |
+| 9.3 | Backend | Admin comment delete | Verified |
+| 9.4 | Backend | Suspend / unsuspend accounts | Verified |
+| 9.5 | Backend | Admin review list, user search | Verified |
+| 9.6 | Backend | Tests and report | Done — 307/307, smoke 19/19 |
+| 9.7 | Mobile | `account_suspended` login message | Implemented — checks pass; **not device-tested** |
+| 9.8 | Mobile | Checks and device checklist | Automated checks pass; device checklist not run |
+
+Admin stays API-only; the Mobile track only maps the suspended-login message ([phase9-report.md](phase9-report.md) §11).
+
+---
 
 ## Phase 8A checklist
 
@@ -229,8 +247,8 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
 | 8 | Profiles | **Complete with an open item** (merged via PR #8, `84e320c`; device checklist not run) |
-| 8A | Home, notifications and Taste Match | **In progress** (Backend complete 2026-11-07; Mobile pending) |
-| 9 | Admin and moderation | Not started |
+| 8A | Home, notifications and Taste Match | **Complete with an open item** (merged via PR #9, `b9ebbcc`; device checklist not run) |
+| 9 | Admin and moderation | **In progress** (Backend verified 307/307, smoke 19/19; Mobile 9.7 implemented, not device-tested; not merged) |
 | 9A | Review photos | Not started |
 | 10 | Hardening and beta | Not started |
 | 11 | Production readiness | Not started |

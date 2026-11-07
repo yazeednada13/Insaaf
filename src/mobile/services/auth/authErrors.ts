@@ -16,6 +16,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   validation_error: 'يرجى التحقق من البيانات المدخلة.',
   duplicate_email: 'البريد الإلكتروني مستخدم بالفعل.',
   invalid_credentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+  account_suspended: 'تم إيقاف هذا الحساب. تواصل مع فريق إنصاف.',
   invalid_refresh_token: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.',
   refresh_token_reused: 'تم اكتشاف استخدام غير مصرح به. يرجى تسجيل الدخول مرة أخرى.',
   unauthorized: 'يرجى تسجيل الدخول للمتابعة.',

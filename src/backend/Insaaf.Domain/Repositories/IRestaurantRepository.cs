@@ -41,4 +41,28 @@ public interface IRestaurantRepository
 
     /// <summary>Active restaurants by public reviews since <paramref name="since"/>, then rating.</summary>
     Task<IReadOnlyList<Guid>> ListTrendingIdsAsync(DateTime since, int take, CancellationToken cancellationToken = default);
+
+    // Admin (Phase 9). Inactive restaurants are included.
+
+    Task<PagedResult<AdminRestaurantProjection>> ListForAdminAsync(
+        bool includeInactive,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminRestaurantProjection?> GetForAdminAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>The categories that exist among <paramref name="slugs"/> (case-insensitive).</summary>
+    Task<IReadOnlyList<CategoryProjection>> GetCategoriesBySlugsAsync(
+        IReadOnlyCollection<string> slugs,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Creates an active, non-partner restaurant with its categories and hours; returns its id.</summary>
+    Task<Guid> CreateAsync(RestaurantWriteModel model, DateTime createdAt, CancellationToken cancellationToken = default);
+
+    /// <summary>Full update: categories and hours are replaced as sets. False when the restaurant doesn't exist.</summary>
+    Task<bool> UpdateAsync(Guid id, RestaurantWriteModel model, CancellationToken cancellationToken = default);
+
+    /// <summary>Null when the restaurant doesn't exist; otherwise whether the flag changed.</summary>
+    Task<bool?> SetActiveAsync(Guid id, bool isActive, CancellationToken cancellationToken = default);
 }
