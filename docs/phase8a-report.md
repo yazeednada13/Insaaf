@@ -3,7 +3,7 @@
 **Date:** 2026-11-07
 **Branch:** `feature/phase8a-home-notifications` (from `develop` after the Phase 8 merge; the founder manages Git)
 **References:** the roadmap (Phase 8A), the approved Phase 8A plan (decisions D-1…D-11), [decisions.md](decisions.md) ADR-014/ADR-016, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`HomeScreen.tsx`, `ActivityScreen.tsx`, `ProfileScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented; not device-tested**
+**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented; not device-tested** (§11.7) · ✅ Phase 8A merged into `develop` (PR #9, `b9ebbcc`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
