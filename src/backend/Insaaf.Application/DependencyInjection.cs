@@ -1,6 +1,7 @@
 using Insaaf.Application.Auth;
 using Insaaf.Application.Restaurants;
 using Insaaf.Application.Admin;
+using Insaaf.Application.Photos;
 using Insaaf.Application.Reviews;
 using Insaaf.Application.Social;
 using Insaaf.Application.Verification;
@@ -31,6 +32,9 @@ public static class DependencyInjection
         services.AddScoped<IRestaurantAdminService, RestaurantAdminService>();
         services.AddScoped<IReviewModerationService, ReviewModerationService>();
         services.AddScoped<IUserModerationService, UserModerationService>();
+        services.AddScoped<ReviewPhotoRemoval>();
+        services.AddScoped<IReviewPhotoService, ReviewPhotoService>();
+        services.AddScoped<IReviewPhotoCleanupService, ReviewPhotoCleanupService>();
         return services;
     }
 }

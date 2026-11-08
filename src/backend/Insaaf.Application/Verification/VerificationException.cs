@@ -7,6 +7,10 @@ public static class VerificationStatusCodes
     public const int NotFound = 404;
     public const int Conflict = 409;
     public const int Gone = 410;
+    public const int PayloadTooLarge = 413;
+    public const int UnsupportedMediaType = 415;
+    public const int ServerError = 500;
+    public const int ServiceUnavailable = 503;
 }
 
 /// <summary>

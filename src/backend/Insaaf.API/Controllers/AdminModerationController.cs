@@ -2,6 +2,7 @@ using Insaaf.API.Extensions;
 using Insaaf.Application.Admin;
 using Insaaf.Application.Admin.Dtos;
 using Insaaf.Application.Common.Models;
+using Insaaf.Application.Photos.Dtos;
 using Insaaf.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +46,10 @@ public sealed class AdminModerationController : ControllerBase
     [HttpDelete("comments/{id:guid}")]
     public Task<ActionResult<ApiResponse<AdminCommentDeletedDto>>> DeleteComment(Guid id, CancellationToken cancellationToken) =>
         Run(actorId => _reviews.DeleteCommentAsync(actorId, id, cancellationToken));
+
+    [HttpDelete("photos/{id:guid}")]
+    public Task<ActionResult<ApiResponse<PhotoRemovedDto>>> DeletePhoto(Guid id, CancellationToken cancellationToken) =>
+        Run(actorId => _reviews.DeletePhotoAsync(actorId, id, cancellationToken));
 
     [HttpGet("users")]
     public Task<ActionResult<ApiResponse<AdminUserSearchResultDto>>> SearchUsers(

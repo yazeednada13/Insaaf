@@ -29,6 +29,7 @@ public sealed record CreateVerifiedReviewRequest(
     int ServiceRating,
     int ValueRating,
     int AtmosphereRating,
-    string? Text);
+    string? Text,
+    IReadOnlyList<Guid>? PhotoIds = null);
 
 public sealed record VerifiedReviewCreatedDto(Guid ReviewId, Guid RestaurantId);

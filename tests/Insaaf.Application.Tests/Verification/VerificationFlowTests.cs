@@ -184,8 +184,8 @@ public sealed class VerificationFlowTests
         var firstToken = await new VisitTokenRepository(first).FindByHashAsync(hash);
         var secondToken = await new VisitTokenRepository(second).FindByHashAsync(hash);
 
-        var firstResult = await new VisitTokenRepository(first).RedeemWithReviewAsync(firstToken!, NewReview(firstToken!));
-        var secondResult = await new VisitTokenRepository(second).RedeemWithReviewAsync(secondToken!, NewReview(secondToken!));
+        var firstResult = await new VisitTokenRepository(first).RedeemWithReviewAsync(firstToken!, NewReview(firstToken!), []);
+        var secondResult = await new VisitTokenRepository(second).RedeemWithReviewAsync(secondToken!, NewReview(secondToken!), []);
 
         Assert.Equal(RedemptionResult.Redeemed, firstResult);
         Assert.Equal(RedemptionResult.AlreadyRedeemed, secondResult);
@@ -318,7 +318,7 @@ public sealed class VerificationFlowTests
         new(new VisitTokenRepository(context), new RestaurantRepository(context), _codec, _clock.Object);
 
     private VerificationService CreateVerification(AppDbContext context) =>
-        new(new VisitTokenRepository(context), new RestaurantRepository(context), _codec, _clock.Object);
+        new(new VisitTokenRepository(context), new RestaurantRepository(context), _codec, _clock.Object, new ReviewPhotoRepository(context));
 
     private VisitTokenLifecycleService CreateLifecycle(AppDbContext context) =>
         new(new VisitTokenRepository(context), new RestaurantRepository(context), _clock.Object);

@@ -6,12 +6,26 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | — (Phase 9 merged; Phase 9A planning) |
+| **CURRENT PHASE** | 9A — Review photos (**Backend complete**; Mobile not started) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 5–9 (Phase 9 merged into `develop`, PR #10, `983161a`); Phase 8, 8A and 9 Mobile not device-tested; see [phase9-report.md](phase9-report.md). Earlier: [phase8a-report.md](phase8a-report.md) |
-| **NEXT** | Phase 9A planning (review photos); run the Phase 8, 8A and 9 device checklists before beta |
+| **NEXT** | Founder: review [phase9a-report.md](phase9a-report.md); Git checkpoint; then `Phase 9A — Mobile` (needs a new EAS build); run the Phase 8, 8A and 9 device checklists before beta |
 | **BLOCKERS** | None. Open: Phase 8, 8A and 9 device checklists not run (still unresolved release items) (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+
+## Phase 9A checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 9A.1 | Backend | `ReviewPhoto`, `AddReviewPhotos`, storage and processing | Verified (migration applied by founder) |
+| 9A.2 | Backend | Upload for a valid token; uploader's own delete | Verified |
+| 9A.3 | Backend | `photoIds` on review creation; photos on reads; cleanup | Verified |
+| 9A.4 | Backend | Admin photo removal | Verified |
+| 9A.5 | Mobile | "إضافة صور" in the review form (new EAS build) | Not started |
+| 9A.6 | Mobile | Photos on `ReviewCard` and Review Detail | Not started |
+| 9A.7 | Both | Tests and report | Backend done (340/340, probes 7/7 ×4, smoke 16/16); Mobile not started |
+
+---
 
 ## Phase 9 checklist
 
@@ -249,7 +263,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 8 | Profiles | **Complete with an open item** (merged via PR #8, `84e320c`; device checklist not run) |
 | 8A | Home, notifications and Taste Match | **Complete with an open item** (merged via PR #9, `b9ebbcc`; device checklist not run) |
 | 9 | Admin and moderation | **Complete with an open item** (merged via PR #10, `983161a`; device checklist not run) |
-| 9A | Review photos | Not started |
+| 9A | Review photos | **In progress** (Backend complete 2026-11-08; Mobile not started) |
 | 10 | Hardening and beta | Not started |
 | 11 | Production readiness | Not started |
 

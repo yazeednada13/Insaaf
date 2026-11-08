@@ -2,6 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Insaaf.API.Extensions;
 using Insaaf.Application.Common.Models;
+using Insaaf.Application.Photos;
+using Insaaf.Application.Photos.Dtos;
 using Insaaf.Application.Verification;
 using Insaaf.Application.Verification.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +21,83 @@ namespace Insaaf.API.Controllers;
 [Route("api/v1/verification")]
 public sealed class VerificationController : ControllerBase
 {
-    private readonly IVerificationService _verificationService;
+    // A little above the 5 MB photo limit, so the service can answer file_too_large itself.
+    private const long MaxRequestBytes = 6 * 1024 * 1024;
 
-    public VerificationController(IVerificationService verificationService)
+    private readonly IVerificationService _verificationService;
+    private readonly IReviewPhotoService _photoService;
+
+    public VerificationController(IVerificationService verificationService, IReviewPhotoService photoService)
     {
         _verificationService = verificationService;
+        _photoService = photoService;
+    }
+
+    /// <summary>
+    /// Uploads one photo for a visit token (Phase 9A). Multipart fields: token, clientUploadId, file.
+    /// 201 for a new photo, 200 when the same clientUploadId was already uploaded. Never redeems the token.
+    /// </summary>
+    [HttpPost("photos")]
+    [EnableRateLimiting(RateLimitingExtensions.VerificationPhotoPolicy)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxRequestBytes)]
+    public async Task<ActionResult<ApiResponse<UploadedPhotoDto>>> UploadPhoto(
+        [FromForm] string? token,
+        [FromForm] Guid? clientUploadId,
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.FailEnvelope<UploadedPhotoDto>("unauthorized", "Authentication is required.", StatusCodes.Status401Unauthorized);
+        }
+
+        if (file is not null && file.Length > ReviewPhotoService.MaxBytes)
+        {
+            return this.FailEnvelope<UploadedPhotoDto>(
+                "file_too_large",
+                "A photo must be at most 5 MB.",
+                StatusCodes.Status413PayloadTooLarge);
+        }
+
+        byte[] content = [];
+        if (file is not null)
+        {
+            using var buffer = new MemoryStream((int)file.Length);
+            await file.CopyToAsync(buffer, cancellationToken);
+            content = buffer.ToArray();
+        }
+
+        try
+        {
+            var result = await _photoService.UploadAsync(userId, token, clientUploadId, content, cancellationToken);
+            return result.Created ? this.CreatedEnvelope(result.Photo) : this.OkEnvelope(result.Photo);
+        }
+        catch (VerificationException ex)
+        {
+            return this.FailEnvelope<UploadedPhotoDto>(ex.Code, ex.Message, ex.StatusCode);
+        }
+    }
+
+    /// <summary>The uploader removes their own photo before it's attached (frees its slot).</summary>
+    [HttpDelete("photos/{id:guid}")]
+    [EnableRateLimiting(RateLimitingExtensions.VerificationPhotoPolicy)]
+    public async Task<ActionResult<ApiResponse<PhotoRemovedDto>>> DeletePhoto(Guid id, CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.FailEnvelope<PhotoRemovedDto>("unauthorized", "Authentication is required.", StatusCodes.Status401Unauthorized);
+        }
+
+        try
+        {
+            return this.OkEnvelope(await _photoService.DeleteOwnAsync(userId, id, cancellationToken));
+        }
+        catch (VerificationException ex)
+        {
+            return this.FailEnvelope<PhotoRemovedDto>(ex.Code, ex.Message, ex.StatusCode);
+        }
     }
 
     [HttpPost("visits/resolve")]

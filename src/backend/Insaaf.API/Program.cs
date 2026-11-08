@@ -3,6 +3,8 @@ using Insaaf.API.Middleware;
 using Insaaf.Application;
 using Insaaf.Infrastructure;
 using Insaaf.Infrastructure.Identity;
+using Insaaf.Infrastructure.Photos;
+using Microsoft.Extensions.Options;
 using Insaaf.Infrastructure.Persistence.Seeding;
 using Serilog;
 
@@ -27,6 +29,11 @@ try
     builder.Services.AddInsaafSwagger();
 
     var app = builder.Build();
+
+    // Review photos must be stored outside the content root, which is inside the repository (Phase 9A).
+    PhotoStorageOptions.EnsureOutsideContentRoot(
+        app.Services.GetRequiredService<IOptions<PhotoStorageOptions>>().Value.ResolveRoot(),
+        app.Environment.ContentRootPath);
 
     app.UseExceptionHandling();
 

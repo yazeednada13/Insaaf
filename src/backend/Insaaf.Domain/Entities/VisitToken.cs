@@ -37,4 +37,13 @@ public sealed class VisitToken
 
     /// <summary>Optimistic concurrency token: changes on redemption so two redemptions cannot both succeed.</summary>
     public Guid ConcurrencyStamp { get; set; }
+
+    /// <summary>
+    /// The user who uploaded photos with this token (Phase 9A). While set, only that user can upload or
+    /// redeem the token. Released when that user's last live photo row for the token is purged.
+    /// </summary>
+    public Guid? PhotoClaimedByUserId { get; set; }
+
+    /// <summary>Unattached live photo rows (Pending, Ready, Deleting) for this token; at most 5.</summary>
+    public int PhotoSlotsUsed { get; set; }
 }

@@ -19,6 +19,8 @@ public sealed class VisitTokenConfiguration : IEntityTypeConfiguration<VisitToke
             table.HasCheckConstraint(
                 "CK_VisitTokens_ManualRequiresIssuer",
                 "[IssuanceChannel] <> 1 OR [IssuedByUserId] IS NOT NULL");
+            // Phase 9A: at most 5 unattached photos per token.
+            table.HasCheckConstraint("CK_VisitTokens_PhotoSlotsUsed", "[PhotoSlotsUsed] BETWEEN 0 AND 5");
         });
 
         builder.HasKey(token => token.Id);
@@ -56,6 +58,11 @@ public sealed class VisitTokenConfiguration : IEntityTypeConfiguration<VisitToke
             .WithMany()
             .HasForeignKey(token => token.RedeemedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Phase 9A. No FK on the claim, like the other moderation ids.
+        builder.Property(token => token.PhotoSlotsUsed)
+            .HasDefaultValue(0)
+            .IsRequired();
 
         builder.HasIndex(token => token.IssuanceId);
         builder.HasIndex(token => new { token.RestaurantId, token.RedeemedAt, token.RevokedAt });

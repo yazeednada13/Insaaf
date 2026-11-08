@@ -1,3 +1,4 @@
+using Insaaf.Application.Photos;
 using Insaaf.Application.Restaurants;
 using Insaaf.Application.Reviews.Dtos;
 using Insaaf.Application.Reviews.Validation;
@@ -88,7 +89,8 @@ public sealed class ReviewService : IReviewService
             review.LikeCount,
             review.CommentCount,
             review.IsLikedByViewer,
-            review.IsReviewerFollowedByViewer);
+            review.IsReviewerFollowedByViewer,
+            ReviewPhotos.ToDtos(review.Photos));
     }
 
     private static ReviewListItemDto ToDto(ReviewListItemProjection review) =>
@@ -106,5 +108,6 @@ public sealed class ReviewService : IReviewService
                 review.ReviewerHasPublicProfile),
             review.LikeCount,
             review.CommentCount,
-            review.IsLikedByViewer);
+            review.IsLikedByViewer,
+            ReviewPhotos.ToDtos(review.Photos));
 }
