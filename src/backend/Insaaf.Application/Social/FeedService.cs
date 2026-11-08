@@ -1,3 +1,4 @@
+using Insaaf.Application.Photos;
 using Insaaf.Application.Reviews.Dtos;
 using Insaaf.Application.Social.Dtos;
 using Insaaf.Domain.Repositories;
@@ -55,5 +56,6 @@ public sealed class FeedService : IFeedService
             new ReviewRestaurantDto(item.RestaurantId, item.RestaurantName, item.RestaurantCity, item.RestaurantAddress),
             item.LikeCount,
             item.CommentCount,
-            item.IsLikedByViewer);
+            item.IsLikedByViewer,
+            ReviewPhotos.ToDtos(item.Photos));
 }

@@ -6,6 +6,8 @@ using Insaaf.Application.Reviews;
 using Insaaf.Application.Reviews.Dtos;
 using Insaaf.Application.Social;
 using Insaaf.Application.Social.Dtos;
+using Insaaf.Application.Photos;
+using Insaaf.Application.Tests.Photos;
 using Insaaf.Application.Tests.Social;
 using Insaaf.Domain.Constants;
 using Insaaf.Domain.Entities;
@@ -350,7 +352,14 @@ public sealed class ModerationTests
         new RestaurantService(new RestaurantRepository(context), _clock.Object).GetByIdAsync(_restaurantId);
 
     private ReviewModerationService CreateModeration(AppDbContext context) =>
-        new(new ReviewRepository(context), new ReviewCommentRepository(context), TestNotifications.Publisher(context, _clock.Object), _clock.Object, _audit);
+        new(
+            new ReviewRepository(context),
+            new ReviewCommentRepository(context),
+            TestNotifications.Publisher(context, _clock.Object),
+            _clock.Object,
+            _audit,
+            new ReviewPhotoRepository(context),
+            new ReviewPhotoRemoval(new ReviewPhotoRepository(context), new NoPhotoStorage(), _clock.Object));
 
     private UserModerationService CreateUserModeration(AppDbContext context, IRefreshTokenService tokens) =>
         new(new UserModerationRepository(context), tokens, _clock.Object, _audit);

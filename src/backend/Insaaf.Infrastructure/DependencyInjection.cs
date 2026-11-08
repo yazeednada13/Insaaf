@@ -1,6 +1,8 @@
 using System.Text;
 using Insaaf.Application.Admin;
 using Insaaf.Infrastructure.Admin;
+using Insaaf.Application.Photos.Abstractions;
+using Insaaf.Infrastructure.Photos;
 using Insaaf.Application.Auth.Abstractions;
 using Insaaf.Application.Verification.Abstractions;
 using Insaaf.Infrastructure.Verification;
@@ -92,6 +94,13 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserModerationRepository, UserModerationRepository>();
         services.AddSingleton<IAdminAuditLog, AdminAuditLog>();
+
+        // Phase 9A: review photos. Files live outside the repository (checked at startup in Program.cs).
+        services.Configure<PhotoStorageOptions>(configuration.GetSection(PhotoStorageOptions.SectionName));
+        services.AddSingleton<IPhotoStorage, LocalPhotoStorage>();
+        services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
+        services.AddScoped<IReviewPhotoRepository, ReviewPhotoRepository>();
+        services.AddHostedService<ReviewPhotoCleanupHostedService>();
         services.AddSingleton<IVisitTokenCodec, VisitTokenCodec>();
 
         return services;

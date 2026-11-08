@@ -3,7 +3,7 @@
 **Date:** 2026-11-07
 **Branch:** `feature/phase8a-home-notifications` (from `develop` after the Phase 8 merge; the founder manages Git)
 **References:** the roadmap (Phase 8A), the approved Phase 8A plan (decisions D-1…D-11), [decisions.md](decisions.md) ADR-014/ADR-016, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`HomeScreen.tsx`, `ActivityScreen.tsx`, `ProfileScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented; not device-tested** (§11.7) · ✅ Phase 8A merged into `develop` (PR #9, `b9ebbcc`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track device-tested on Android, 2026-11-08** (§13) · ✅ Phase 8A merged into `develop` (PR #9, `b9ebbcc`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -316,3 +316,38 @@ Screens → `features/{home,social,profile}/hooks` → `socialApi` → `apiClien
 
 ### Files changed in Phase 8A (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase8a-report.md`, `project-progress.md`, `decisions.md`. One migration: `AddNotifications`. No new dependencies.
+
+---
+
+## 13. Device verification addendum (2026-11-08)
+
+> **How these results were obtained:** run by the founder on an Android phone with the Phase 9A development build, against the local API and SQL Server, and reported item by item in chat. They were not observed by Claude. iOS isn't tested (Phase 10).
+
+| # | Check (§11.7) | Result |
+|---|---|---|
+| 8A.1–8A.2 | Five tabs, landing on الرئيسية; greeting, avatar, search bar | ✅ Passed |
+| 8A.3 | Following section and النشاط after following someone | ✅ Passed on re-check. The first run looked empty because the person followed had no reviews yet. The database showed the server returns them once they exist |
+| 8A.4–8A.6 | "مقترح لك", "رائج", Home stack and Back, Scan's "العودة للرئيسية" | ✅ Passed |
+| 8A.7–8A.10 | Count on the chip, unread styling, opening each type, removal after undo | ✅ Passed |
+| 8A.11 | "ذوقي في الطعام" | ✅ Passed **after a fix** (below) |
+| 8A.12 | "توافق في الذوق" button and sheet | ✅ Passed |
+| 8A.13 | Account switch shows nothing from the previous account | ✅ Passed |
+| 8A.14 | RTL | ✅ Passed |
+
+### Defects found on the device and fixed (mobile only; no backend change)
+1. **Taste didn't refresh after a new review:** "ذوقي في الطعام" appeared only after signing out and in.
+   - **Cause:** the taste query is cached for 5 minutes, and creating a review didn't invalidate it.
+   - **Fix:** `useCreateVerifiedReviewMutation` now also invalidates `['users']`, `['reviews']` and `['home']` (taste, counts, own lists, suggestions).
+   - Re-tested by the founder: passed.
+2. **Both النشاط chips looked selected:** the base chip style used the selected colour, a leftover from when there was only one chip.
+   - **Fix:** the unselected chip is now white with the sand border, per Figma.
+
+### Founder decision changed on the device (replaces D-11)
+- A **brown dot** (`#B77945`, a 10 px circle) now shows on the **النشاط tab** whenever there are unread notifications.
+- Inside, the chip count is a **brown circle on the chip's corner** (shows 99+ above 99).
+- The count refreshes on every tab change and when the app returns to the foreground. There's still no polling.
+- `BottomNav.tsx` and `FeedScreen.tsx`. Typecheck, lint and bundles pass; **the founder reported the full run as passed.**
+
+**Status update:**
+- 8A.3, 8A.4 and 8A.6 are **verified on Android**.
+- The open item from §12 is **closed**.

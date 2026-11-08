@@ -15,14 +15,14 @@ An Arabic, RTL-first mobile app for trustworthy restaurant reviews and social fo
 | 5 | QR verification and verified review creation | Complete |
 | 6 | Social core: likes, comments, follows | Complete |
 | 7 | Feed and following | Complete |
-| 8 | Profiles | Complete with an open item: device checklist not run |
-| 8A | Home, notifications and Taste Match | Complete with an open item: device checklist not run |
-| 9 | Admin and moderation | Backend verified; Mobile message implemented, not device-tested (not merged); Admin is API-only |
-| 9A | Review photos | Not started |
+| 8 | Profiles | Complete |
+| 8A | Home, notifications and Taste Match | Complete |
+| 9 | Admin and moderation | Complete; Admin is API-only |
+| 9A | Review photos | Complete (not merged); device-tested on Android |
 | 10 | Hardening and beta (including iOS testing) | Not started |
 | 11 | Production readiness | Not started |
 
-**Open items:** the Phase 8, 8A and 9 device checklists have not been run; iOS is untested (planned for Phase 10).
+**Open items:** iOS is untested (planned for Phase 10).
 
 ## Stack
 
@@ -42,6 +42,7 @@ An Arabic, RTL-first mobile app for trustworthy restaurant reviews and social fo
 - **Profiles:** My Profile, other users' profiles, followers and following lists, edit profile, settings, and people in search.
 - **Home (8A):** greeting, search bar, reviews from people you follow, "مقترح لك" and "رائج بالقرب منك".
 - **Notifications (8A):** in-app notifications for likes, comments and follows, with an unread count. Push notifications are not included.
+- **Review photos (9A):** up to 5 photos per verified review, uploaded with the visit token, stripped of all metadata, moderated by Admin.
 - **Taste (8A):** "ذوقي في الطعام" and Taste Match, built from verified reviews (at least 3).
 - **Roles:** `User` and `Admin` only. Admin accounts are not public profiles.
 

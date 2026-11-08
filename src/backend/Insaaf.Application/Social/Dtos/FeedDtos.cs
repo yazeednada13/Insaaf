@@ -1,3 +1,4 @@
+using Insaaf.Application.Photos.Dtos;
 using Insaaf.Application.Reviews.Dtos;
 
 namespace Insaaf.Application.Social.Dtos;
@@ -17,7 +18,8 @@ public sealed record FeedItemDto(
     ReviewRestaurantDto Restaurant,
     int LikeCount,
     int CommentCount,
-    bool IsLikedByMe);
+    bool IsLikedByMe,
+    IReadOnlyList<ReviewPhotoDto> Photos);
 
 /// <remarks><c>NextCursor</c> is opaque, and null on the last page.</remarks>
 public sealed record FeedResultDto(IReadOnlyList<FeedItemDto> Items, string? NextCursor);

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
 import { colors, fonts } from '@/constants/theme';
+import { useUnreadCountQuery } from '@/features/social/hooks/useNotifications';
 
 const INACTIVE = '#888888';
 const INACTIVE_LABEL = '#999999';
@@ -91,6 +92,14 @@ export function BottomNav({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   // Hidden while typing (e.g. the review text) so it does not sit on top of the keyboard.
   const keyboardVisible = useKeyboardVisible();
+  // Founder decision (replaces D-11): a dot on النشاط when there are unread notifications. The count
+  // refreshes on every tab change and, app-wide, when the app returns to the foreground. No polling.
+  const unreadQuery = useUnreadCountQuery();
+  const hasUnread = (unreadQuery.data?.count ?? 0) > 0;
+  const { refetch: refetchUnread } = unreadQuery;
+  useEffect(() => {
+    void refetchUnread();
+  }, [state.index, refetchUnread]);
 
   if (keyboardVisible) {
     return null;
@@ -124,7 +133,12 @@ export function BottomNav({ state, navigation }: BottomTabBarProps) {
             {tab.prominent ? (
               <View style={styles.prominentIcon}>{tab.icon(isActive)}</View>
             ) : (
-              <View style={styles.icon}>{tab.icon(isActive)}</View>
+              <View style={styles.icon}>
+                {tab.icon(isActive)}
+                {route.name === 'activity' && hasUnread ? (
+                  <View accessibilityLabel="إشعارات جديدة" style={styles.unreadDot} />
+                ) : null}
+              </View>
             )}
             <Text
               style={[
@@ -164,6 +178,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.arabicMedium,
     fontSize: 10,
     lineHeight: 14,
+  },
+  unreadDot: {
+    backgroundColor: colors.accent,
+    borderColor: colors.background,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    end: -3,
+    height: 10,
+    position: 'absolute',
+    top: 2,
+    width: 10,
   },
   prominentIcon: {
     alignItems: 'center',

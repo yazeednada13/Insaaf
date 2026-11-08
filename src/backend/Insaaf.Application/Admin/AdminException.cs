@@ -5,6 +5,7 @@ public static class AdminStatusCodes
     public const int BadRequest = 400;
     public const int Forbidden = 403;
     public const int NotFound = 404;
+    public const int ServiceUnavailable = 503;
 }
 
 /// <summary>An Admin operation that can't be done; the controller turns it into the envelope.</summary>

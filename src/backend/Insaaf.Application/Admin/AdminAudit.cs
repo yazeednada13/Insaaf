@@ -8,6 +8,9 @@ public static class AdminAuditResult
     public const string NotFound = "not_found";
     public const string Refused = "refused";
     public const string ValidationFailed = "validation_failed";
+
+    /// <summary>The photo is no longer visible, but its files are still being deleted (Phase 9A).</summary>
+    public const string RemovedFilePending = "removed_file_pending";
 }
 
 /// <summary>

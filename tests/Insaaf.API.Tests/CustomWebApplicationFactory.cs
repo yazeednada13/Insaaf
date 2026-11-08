@@ -13,6 +13,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"InsaafTests_{Guid.NewGuid():N}";
 
+    /// <summary>Each test host stores photos in its own temporary folder, outside the repository.</summary>
+    public string PhotoRoot { get; } = Path.Combine(Path.GetTempPath(), $"insaaf-api-photos-{Guid.NewGuid():N}");
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -20,6 +23,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("InMemoryDatabaseName", _databaseName);
         builder.UseSetting("Jwt:SigningKey", "IntegrationTestSigningKey_32CharsMin!");
         builder.UseSetting("Identity:SeedAdmin:Enabled", "false");
+        builder.UseSetting("Storage:ReviewPhotos:RootPath", PhotoRoot);
+        builder.UseSetting("Storage:ReviewPhotos:CleanupIntervalMinutes", "0");
         ConfigureTestSettings(builder);
     }
 

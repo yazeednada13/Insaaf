@@ -18,6 +18,7 @@ public static class RateLimitingExtensions
     public const string SocialCommentPolicy = "social-comment";
     public const string SocialFollowPolicy = "social-follow";
     public const string SocialSearchPolicy = "social-search";
+    public const string VerificationPhotoPolicy = "verification-photo";
 
     public static IServiceCollection AddInsaafRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
@@ -27,6 +28,7 @@ public static class RateLimitingExtensions
         var commentsPerMinute = configuration.GetValue("RateLimiting:SocialCommentPerMinute", 10);
         var followsPerMinute = configuration.GetValue("RateLimiting:SocialFollowPerMinute", 30);
         var searchesPerMinute = configuration.GetValue("RateLimiting:SocialSearchPerMinute", 60);
+        var photosPerMinute = configuration.GetValue("RateLimiting:VerificationPhotoPerMinute", 30);
 
         services.AddRateLimiter(options =>
         {
@@ -45,6 +47,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(SocialCommentPolicy, httpContext => PerUserFixedWindow(httpContext, commentsPerMinute));
             options.AddPolicy(SocialFollowPolicy, httpContext => PerUserFixedWindow(httpContext, followsPerMinute));
             options.AddPolicy(SocialSearchPolicy, httpContext => PerUserFixedWindow(httpContext, searchesPerMinute));
+            options.AddPolicy(VerificationPhotoPolicy, httpContext => PerUserFixedWindow(httpContext, photosPerMinute));
         });
 
         return services;

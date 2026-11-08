@@ -1,3 +1,5 @@
+using Insaaf.Application.Photos.Dtos;
+
 namespace Insaaf.Application.Reviews.Dtos;
 
 /// <remarks><c>Sort</c>: newest (default), highest, lowest.</remarks>
@@ -19,7 +21,8 @@ public sealed record ReviewListItemDto(
     ReviewerDto Reviewer,
     int LikeCount,
     int CommentCount,
-    bool IsLikedByMe);
+    bool IsLikedByMe,
+    IReadOnlyList<ReviewPhotoDto> Photos);
 
 public sealed record ReviewRestaurantDto(Guid Id, string Name, string City, string? Address);
 
@@ -39,7 +42,8 @@ public sealed record ReviewDetailDto(
     int LikeCount,
     int CommentCount,
     bool IsLikedByMe,
-    bool IsReviewerFollowedByMe);
+    bool IsReviewerFollowedByMe,
+    IReadOnlyList<ReviewPhotoDto> Photos);
 
 public sealed record ReviewListResultDto(
     IReadOnlyList<ReviewListItemDto> Items,

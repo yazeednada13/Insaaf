@@ -12,4 +12,5 @@ public sealed record ReviewListItemProjection(
     int LikeCount = 0,
     int CommentCount = 0,
     bool IsLikedByViewer = false,
-    bool ReviewerHasPublicProfile = true);
+    bool ReviewerHasPublicProfile = true,
+    IReadOnlyList<ReviewPhotoProjection>? Photos = null);

@@ -25,6 +25,8 @@ import { ReviewCard } from '@/features/reviews/components/ReviewCard';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import { useFeedQuery } from '@/features/social/hooks/useFeedQuery';
 import type { RestaurantListItemDto } from '@/types/restaurant';
+import { RefreshFailedNotice } from '@/features/reviews/components/RefreshFailedNotice';
+import { useRefreshOnFocus } from '@/features/reviews/hooks/useRefreshOnFocus';
 
 /** Decision D-2: the following section shows the first feed items. */
 const FOLLOWING_PREVIEW = 2;
@@ -87,6 +89,7 @@ export function HomeScreen() {
   const formatDistance = useRestaurantDistance();
   const profileQuery = useMyProfileQuery();
   const feedQuery = useFeedQuery();
+  useRefreshOnFocus(feedQuery);
   const suggestedQuery = useSuggestedRestaurantsQuery();
   const trendingQuery = useTrendingRestaurantsQuery();
   const [refreshing, setRefreshing] = useState(false);
@@ -131,6 +134,7 @@ export function HomeScreen() {
           <RefreshControl colors={[colors.primary]} onRefresh={() => void refresh()} refreshing={refreshing} />
         }
       >
+        <RefreshFailedNotice visible={feedQuery.isRefetchError} />
         <Section onSeeAll={() => router.navigate('/activity' as Href)} title="من الأشخاص الذين تتابعهم">
           {following.length > 0 ? (
             <View style={styles.reviews}>

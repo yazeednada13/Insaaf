@@ -1,4 +1,5 @@
 using Insaaf.Domain.Entities;
+using Insaaf.Domain.Enums;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Repositories.Projections;
 using Insaaf.Domain.Rules;
@@ -52,7 +53,12 @@ public sealed class ReviewRepository : IReviewRepository
                     _dbContext.ReviewLikes.Count(like => like.ReviewId == review.Id),
                     _dbContext.ReviewComments.Count(comment => comment.ReviewId == review.Id),
                     _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == criteria.ViewerUserId),
-                    !_dbContext.AdminUserIds().Contains(user.Id)))
+                    !_dbContext.AdminUserIds().Contains(user.Id),
+                    _dbContext.ReviewPhotos
+                        .Where(photo => photo.ReviewId == review.Id && photo.Status == ReviewPhotoStatus.Ready)
+                        .OrderBy(photo => photo.SortOrder)
+                        .Select(photo => new ReviewPhotoProjection(photo.Id, photo.Width ?? 0, photo.Height ?? 0))
+                        .ToList()))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ReviewListItemProjection>
@@ -96,7 +102,12 @@ public sealed class ReviewRepository : IReviewRepository
                     _dbContext.ReviewLikes.Any(like => like.ReviewId == review.Id && like.UserId == viewerUserId),
                     _dbContext.UserFollows.Any(follow =>
                         follow.FollowerId == viewerUserId && follow.FolloweeId == review.UserId),
-                    !_dbContext.AdminUserIds().Contains(user.Id)))
+                    !_dbContext.AdminUserIds().Contains(user.Id),
+                    _dbContext.ReviewPhotos
+                        .Where(photo => photo.ReviewId == review.Id && photo.Status == ReviewPhotoStatus.Ready)
+                        .OrderBy(photo => photo.SortOrder)
+                        .Select(photo => new ReviewPhotoProjection(photo.Id, photo.Width ?? 0, photo.Height ?? 0))
+                        .ToList()))
             .SingleOrDefaultAsync(cancellationToken);
 
     public Task<IReadOnlyList<FeedItemProjection>> ListByUserAsync(
@@ -169,7 +180,12 @@ public sealed class ReviewRepository : IReviewRepository
                 _dbContext.ReviewLikes.Count(like => like.ReviewId == row.Review.Id),
                 _dbContext.ReviewComments.Count(comment => comment.ReviewId == row.Review.Id),
                 _dbContext.ReviewLikes.Any(like => like.ReviewId == row.Review.Id && like.UserId == viewerUserId),
-                !_dbContext.AdminUserIds().Contains(row.User.Id)))
+                !_dbContext.AdminUserIds().Contains(row.User.Id),
+                _dbContext.ReviewPhotos
+                        .Where(photo => photo.ReviewId == row.Review.Id && photo.Status == ReviewPhotoStatus.Ready)
+                        .OrderBy(photo => photo.SortOrder)
+                        .Select(photo => new ReviewPhotoProjection(photo.Id, photo.Width ?? 0, photo.Height ?? 0))
+                        .ToList()))
             .ToListAsync(cancellationToken);
     }
 

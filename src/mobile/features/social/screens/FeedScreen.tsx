@@ -21,6 +21,8 @@ import { ReviewCardSkeleton } from '@/features/reviews/components/ReviewCardSkel
 import { NotificationsList } from '@/features/social/components/NotificationsList';
 import { useFeedQuery } from '@/features/social/hooks/useFeedQuery';
 import { useUnreadCountQuery } from '@/features/social/hooks/useNotifications';
+import { RefreshFailedNotice } from '@/features/reviews/components/RefreshFailedNotice';
+import { useRefreshOnFocus } from '@/features/reviews/hooks/useRefreshOnFocus';
 
 type ActivityTab = 'following' | 'notifications';
 
@@ -29,6 +31,7 @@ export function FeedScreen() {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<ActivityTab>('following');
   const feedQuery = useFeedQuery();
+  useRefreshOnFocus(feedQuery);
   const countQuery = useUnreadCountQuery();
   const [refreshing, setRefreshing] = useState(false);
   const unread = countQuery.data?.count ?? 0;
@@ -108,7 +111,7 @@ export function FeedScreen() {
             <Text style={[styles.chipLabel, tab === 'notifications' && styles.chipLabelSelected]}>الإشعارات</Text>
             {unread > 0 ? (
               <View style={styles.count}>
-                <Text style={styles.countLabel}>{unread}</Text>
+                <Text style={styles.countLabel}>{unread > 99 ? '99+' : unread}</Text>
               </View>
             ) : null}
           </Pressable>
@@ -124,7 +127,10 @@ export function FeedScreen() {
           feedQuery.isFetchingNextPage ? <ActivityIndicator color={colors.primary} style={styles.footer} /> : null
         }
         ListHeaderComponent={
-          reviews.length > 0 ? <Text style={styles.hint}>تقييمات الأشخاص الذين تتابعهم</Text> : null
+          <>
+            <RefreshFailedNotice visible={feedQuery.isRefetchError} />
+            {reviews.length > 0 ? <Text style={styles.hint}>تقييمات الأشخاص الذين تتابعهم</Text> : null}
+          </>
         }
         contentContainerStyle={styles.content}
         data={reviews}
@@ -155,10 +161,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   count: {
+    alignItems: 'center',
     backgroundColor: colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    borderColor: colors.background,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    end: -6,
+    height: 20,
+    justifyContent: 'center',
+    minWidth: 20,
+    paddingHorizontal: 4,
+    position: 'absolute',
+    top: -6,
   },
   countLabel: {
     color: '#FFFFFF',
@@ -168,7 +182,7 @@ const styles = StyleSheet.create({
   },
   chip: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: 999,
     borderWidth: 1.5,
@@ -176,7 +190,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   chipLabel: {
-    color: colors.primaryForeground,
+    color: colors.textBody,
     fontFamily: fonts.arabicMedium,
     fontSize: 14,
     lineHeight: lineHeights.sm,

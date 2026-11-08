@@ -1,5 +1,7 @@
 using Insaaf.Application.Admin.Dtos;
 using Insaaf.Application.Auth.Abstractions;
+using Insaaf.Application.Photos;
+using Insaaf.Application.Photos.Dtos;
 using Insaaf.Application.Social;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Repositories.Projections;
@@ -17,6 +19,9 @@ public interface IReviewModerationService
         CancellationToken cancellationToken = default);
 
     Task<AdminCommentDeletedDto> DeleteCommentAsync(Guid actorId, Guid commentId, CancellationToken cancellationToken = default);
+
+    /// <summary>Removes any review photo (Phase 9A, task 9A.4).</summary>
+    Task<PhotoRemovedDto> DeletePhotoAsync(Guid actorId, Guid photoId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -34,19 +39,55 @@ public sealed class ReviewModerationService : IReviewModerationService
     private readonly INotificationPublisher _notifications;
     private readonly IDateTimeProvider _clock;
     private readonly IAdminAuditLog _audit;
+    private readonly IReviewPhotoRepository _photos;
+    private readonly ReviewPhotoRemoval _photoRemoval;
 
     public ReviewModerationService(
         IReviewRepository reviews,
         IReviewCommentRepository comments,
         INotificationPublisher notifications,
         IDateTimeProvider clock,
-        IAdminAuditLog audit)
+        IAdminAuditLog audit,
+        IReviewPhotoRepository photos,
+        ReviewPhotoRemoval photoRemoval)
     {
         _reviews = reviews;
         _comments = comments;
         _notifications = notifications;
         _clock = clock;
         _audit = audit;
+        _photos = photos;
+        _photoRemoval = photoRemoval;
+    }
+
+    public async Task<PhotoRemovedDto> DeletePhotoAsync(Guid actorId, Guid photoId, CancellationToken cancellationToken = default)
+    {
+        var photo = await _photos.GetAsync(photoId, cancellationToken);
+        string? fileDeletion = null;
+        if (photo is not null)
+        {
+            try
+            {
+                fileDeletion = await _photoRemoval.RemoveAsync(photo, actorId, cancellationToken);
+            }
+            catch (RepositoryBusyException)
+            {
+                throw new AdminException("try_again", "Please try again.", AdminStatusCodes.ServiceUnavailable);
+            }
+        }
+
+        // The audit says whether the files are really gone; it is never rewritten later (plan section 8).
+        var result = fileDeletion switch
+        {
+            null => AdminAuditResult.NotFound,
+            FileDeletionState.Completed => AdminAuditResult.Succeeded,
+            _ => AdminAuditResult.RemovedFilePending,
+        };
+        _audit.Record(new AdminAuditEntry("photo.remove", actorId, "photo", photoId, _clock.UtcNow, result));
+
+        return fileDeletion is null
+            ? throw AdminException.NotFound("Photo")
+            : new PhotoRemovedDto(photoId, true, fileDeletion);
     }
 
     public async Task<AdminReviewListResultDto> ListAsync(

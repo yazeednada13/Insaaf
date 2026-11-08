@@ -217,6 +217,29 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-018: Review photos (Phase 9A)
+
+**Status:** Accepted
+**Date:** 2026-11-08
+
+**Decision:**
+- Photos are uploaded with a valid, unredeemed visit token before the review is submitted, then attached by id inside the review's redeem transaction. Uploads never redeem the token.
+- The first upload claims the token for the uploader. While they have a live photo, nobody else can upload or redeem with it. Tokens without photos keep Phase 5 behaviour.
+- Up to 5 photos per review. JPEG, PNG or WebP up to 5 MB are decoded and re-encoded with SkiaSharp as JPEG (q85, longest side 2048 px). No metadata survives, GPS included.
+- Files are stored on local disk behind `IPhotoStorage`, outside the repository (the API refuses a root inside its content root). Cloud storage comes in Phase 11.
+- **Concurrency:** the 5-photo limit and the claim are enforced by a conditional UPDATE on the token row. Every multi-statement transaction locks the token first, then photos. Deadlocks are retried whole.
+- **Files:**
+  - Uploads are idempotent per `clientUploadId`.
+  - Each processing attempt writes its own file, and only the lease holder's conditional UPDATE (the fence) chooses the served file.
+  - Rows track their folder until it's confirmed empty, then stay as `Purged` tombstones for 30 days.
+  - No foreign key on `ReviewPhotos` cascades.
+- **Serving:** images are served anonymously, only for Ready photos of public reviews, with `private, no-cache` and an `ETag`. The app's correctness relies on data refresh, not on HTTP caching.
+- **Removal:** reports `fileDeletion: completed | pending` honestly, and the Admin audit records `succeeded` or `removed_file_pending`.
+
+**Rationale:** photos must ship before beta because tokens are single-use. Every rule above keeps the verified-review guarantee, prevents lost or leaked files, and keeps moderation effective on every request.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

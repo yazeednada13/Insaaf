@@ -31,6 +31,8 @@ import {
   formatPriceLevel,
   type RestaurantDetailDto,
 } from '@/types/restaurant';
+import { RefreshFailedNotice } from '@/features/reviews/components/RefreshFailedNotice';
+import { useRefreshOnFocus } from '@/features/reviews/hooks/useRefreshOnFocus';
 
 type DetailTab = 'details' | 'reviews';
 
@@ -77,6 +79,7 @@ export function RestaurantDetailScreen() {
   const [tab, setTab] = useState<DetailTab>(initialTab === 'reviews' ? 'reviews' : 'details');
   // Fetched when the reviews tab is first opened; cached afterwards.
   const reviewsQuery = useRestaurantReviewsQuery(id, tab === 'reviews');
+  useRefreshOnFocus(reviewsQuery);
 
   const onContentScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (
@@ -218,7 +221,10 @@ export function RestaurantDetailScreen() {
           </View>
         ) : (
           // Read-only list (Phase 4). No write-review action in MVP (ADR-004).
-          <RestaurantReviewsList query={reviewsQuery} />
+          <>
+            <RefreshFailedNotice visible={reviewsQuery.isRefetchError} />
+            <RestaurantReviewsList query={reviewsQuery} />
+          </>
         )}
       </ScrollView>
     </View>

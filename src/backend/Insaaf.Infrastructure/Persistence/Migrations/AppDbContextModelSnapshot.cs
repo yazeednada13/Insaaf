@@ -370,6 +370,98 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.ToTable("ReviewLikes", (string)null);
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewPhoto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AttachedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ClientUploadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("PurgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("SizeBytes")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VisitTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.HasIndex("ReviewId", "SortOrder");
+
+                    b.HasIndex("VisitTokenId", "Status");
+
+                    b.HasIndex("Status", "ReviewId", "UpdatedAt")
+                        .HasDatabaseName("IX_ReviewPhotos_Cleanup");
+
+                    b.HasIndex("VisitTokenId", "UploadedByUserId", "ClientUploadId")
+                        .IsUnique();
+
+                    b.ToTable("ReviewPhotos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ReviewPhotos_AttachedHasOrder", "[ReviewId] IS NULL OR [SortOrder] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_ReviewPhotos_ReadyHasFile", "[Status] <> 1 OR [StorageKey] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_ReviewPhotos_SortOrder", "[SortOrder] IS NULL OR [SortOrder] BETWEEN 0 AND 4");
+
+                            t.HasCheckConstraint("CK_ReviewPhotos_Status", "[Status] BETWEEN 0 AND 3");
+                        });
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.UserFollow", b =>
                 {
                     b.Property<Guid>("FollowerId")
@@ -416,6 +508,14 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("IssuedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("PhotoClaimedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PhotoSlotsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("RedeemedAt")
                         .HasColumnType("datetime2");
 
@@ -451,6 +551,8 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_VisitTokens_ExpiresAfterIssued", "[ExpiresAt] > [IssuedAt]");
 
                             t.HasCheckConstraint("CK_VisitTokens_ManualRequiresIssuer", "[IssuanceChannel] <> 1 OR [IssuedByUserId] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_VisitTokens_PhotoSlotsUsed", "[PhotoSlotsUsed] BETWEEN 0 AND 5");
 
                             t.HasCheckConstraint("CK_VisitTokens_RedeemerRequiresRedemption", "[RedeemedByUserId] IS NULL OR [RedeemedAt] IS NOT NULL");
                         });
@@ -770,6 +872,26 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewPhoto", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Review", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Domain.Entities.VisitToken", null)
+                        .WithMany()
+                        .HasForeignKey("VisitTokenId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

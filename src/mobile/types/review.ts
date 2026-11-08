@@ -8,6 +8,14 @@ export interface ReviewerDto {
   hasPublicProfile: boolean;
 }
 
+/** Phase 9A: a Ready photo of a review. `url` is a relative API path. */
+export interface ReviewPhotoDto {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
 export interface ReviewListItemDto {
   id: string;
   /** Overall rating, 1–5. */
@@ -21,6 +29,8 @@ export interface ReviewListItemDto {
   likeCount: number;
   commentCount: number;
   isLikedByMe: boolean;
+  /** In display order; empty when the review has no photos. */
+  photos: ReviewPhotoDto[];
 }
 
 export interface ReviewDetailDto extends ReviewListItemDto {
