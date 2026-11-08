@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { openReview, openUser, useCurrentStack } from '@/features/navigation/stackRoutes';
 import { FadeInView } from '@/features/restaurants/components/FadeInView';
 import { StarRating } from '@/features/restaurants/components/StarRating';
+import { ReviewPhotoStrip } from '@/features/reviews/components/ReviewPhotoStrip';
 import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import { VerifiedBadge } from '@/features/reviews/components/VerifiedBadge';
 import { CommentIcon, HeartIcon } from '@/features/social/components/ReviewActionIcons';
@@ -25,7 +26,7 @@ interface ReviewCardProps {
 /**
  * Figma ReviewCard.tsx: reviewer, verified badge, rating, time, text, like and comment actions. The
  * restaurant line shows only when the review carries a restaurant (the feed); it's redundant on the
- * restaurant's own page. Photos, official reply and save are not rendered.
+ * restaurant's own page. Photos follow Figma (up to 3, Phase 9A); official reply and save are not rendered.
  */
 export function ReviewCard({ review }: ReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -80,6 +81,8 @@ export function ReviewCard({ review }: ReviewCardProps) {
             <Text style={styles.toggle}>{expanded ? 'عرض أقل' : 'اقرأ المزيد'}</Text>
           </Pressable>
         ) : null}
+
+        <ReviewPhotoStrip photos={review.photos} variant="card" />
 
         <View style={styles.actions}>
           <Pressable

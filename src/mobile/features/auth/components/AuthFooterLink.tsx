@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { authLayout, colors, fonts, typography } from '@/constants/theme';
 
@@ -11,11 +11,12 @@ interface AuthFooterLinkProps {
 export function AuthFooterLink({ prompt, actionLabel, onPress }: AuthFooterLinkProps) {
   return (
     <View style={styles.container}>
+      {/* A nested Text (not a Pressable view) keeps the link on the same baseline as the prompt. */}
       <Text style={styles.text}>
         {prompt}{' '}
-        <Pressable accessibilityRole="button" onPress={onPress}>
-          <Text style={styles.action}>{actionLabel}</Text>
-        </Pressable>
+        <Text accessibilityRole="link" onPress={onPress} style={styles.action} suppressHighlighting>
+          {actionLabel}
+        </Text>
       </Text>
     </View>
   );

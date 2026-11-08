@@ -38,6 +38,9 @@ import type { ReviewDetailDto } from '@/types/review';
 import { formatLocation } from '@/types/restaurant';
 import type { ReviewCommentDto } from '@/types/social';
 import { formatRelativeTime } from '@/utils/relativeTime';
+import { RefreshFailedNotice } from '@/features/reviews/components/RefreshFailedNotice';
+import { ReviewPhotoStrip } from '@/features/reviews/components/ReviewPhotoStrip';
+import { useRefreshOnFocus } from '@/features/reviews/hooks/useRefreshOnFocus';
 
 const STARS = [1, 2, 3, 4, 5] as const;
 
@@ -117,6 +120,8 @@ function ReviewContent({ review }: { review: ReviewDetailDto }) {
 
       {review.text ? <Text style={styles.reviewText}>{review.text}</Text> : null}
 
+      <ReviewPhotoStrip photos={review.photos} variant="detail" />
+
       <View style={styles.actions}>
         <Pressable
           accessibilityLabel={review.isLikedByMe ? 'إلغاء الإعجاب' : 'إعجاب'}
@@ -161,6 +166,7 @@ export function ReviewDetailScreen() {
   const [commentError, setCommentError] = useState<string | null>(null);
 
   const reviewQuery = useReviewDetailQuery(reviewId);
+  useRefreshOnFocus(reviewQuery);
   const commentsQuery = useReviewCommentsQuery(reviewId);
   const createMutation = useCreateCommentMutation(reviewId ?? '');
   const deleteMutation = useDeleteCommentMutation(reviewId ?? '');
@@ -237,7 +243,12 @@ export function ReviewDetailScreen() {
             ListFooterComponent={
               commentsQuery.isFetchingNextPage ? <ActivityIndicator color={colors.primary} /> : null
             }
-            ListHeaderComponent={<ReviewContent review={reviewQuery.data} />}
+            ListHeaderComponent={
+              <>
+                <RefreshFailedNotice visible={reviewQuery.isRefetchError} />
+                <ReviewContent review={reviewQuery.data} />
+              </>
+            }
             contentContainerStyle={styles.content}
             data={comments}
             keyExtractor={(comment) => comment.id}

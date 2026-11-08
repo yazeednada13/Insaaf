@@ -10,17 +10,29 @@ import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { AppState, Platform } from 'react-native';
 
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+// React Native has no window focus: tell TanStack when the app returns to the foreground, so active
+// queries with stale data refetch on resume (Phase 9A, D-14).
+focusManager.setEventListener((handleFocus) => {
+  if (Platform.OS === 'web') {
+    return undefined;
+  }
+
+  const subscription = AppState.addEventListener('change', (state) => handleFocus(state === 'active'));
+  return () => subscription.remove();
+});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({

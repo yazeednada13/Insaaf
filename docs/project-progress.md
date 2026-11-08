@@ -6,12 +6,12 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 9A — Review photos (**Backend complete**; Mobile not started) |
+| **CURRENT PHASE** | 9A — Review photos (**Backend and Mobile complete**; device-tested on Android; not merged) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 5–9 (Phase 9 merged into `develop`, PR #10, `983161a`); Phase 8, 8A and 9 Mobile not device-tested; see [phase9-report.md](phase9-report.md). Earlier: [phase8a-report.md](phase8a-report.md) |
-| **NEXT** | Founder: review [phase9a-report.md](phase9a-report.md); Git checkpoint; then `Phase 9A — Mobile` (needs a new EAS build); run the Phase 8, 8A and 9 device checklists before beta |
-| **BLOCKERS** | None. Open: Phase 8, 8A and 9 device checklists not run (still unresolved release items) (sign-out and account isolation first); iOS untested, planned for Phase 10 |
+| **NEXT** | Founder: review [phase9a-report.md](phase9a-report.md); check the login footer fix on the device; Git checkpoint and PR; then Phase 10 |
+| **BLOCKERS** | None. Phase 8, 8A, 9 and 9A device checklists run on Android (2026-11-08, founder-reported). Open: iOS untested (Phase 10) |
 
 ## Phase 9A checklist
 
@@ -21,9 +21,9 @@
 | 9A.2 | Backend | Upload for a valid token; uploader's own delete | Verified |
 | 9A.3 | Backend | `photoIds` on review creation; photos on reads; cleanup | Verified |
 | 9A.4 | Backend | Admin photo removal | Verified |
-| 9A.5 | Mobile | "إضافة صور" in the review form (new EAS build) | Not started |
-| 9A.6 | Mobile | Photos on `ReviewCard` and Review Detail | Not started |
-| 9A.7 | Both | Tests and report | Backend done (340/340, probes 7/7 ×4, smoke 16/16); Mobile not started |
+| 9A.5 | Mobile | "إضافة صور" in the review form (new EAS build) | Verified on Android |
+| 9A.6 | Mobile | Photos on `ReviewCard` and Review Detail | Verified on Android |
+| 9A.7 | Both | Tests and report | Done — backend 340/340, probes, smoke 16/16; mobile checks; device checklist passed (Android) |
 
 ---
 
@@ -38,8 +38,8 @@
 | 9.4 | Backend | Suspend / unsuspend accounts | Verified |
 | 9.5 | Backend | Admin review list, user search | Verified |
 | 9.6 | Backend | Tests and report | Done — 307/307, smoke 19/19 |
-| 9.7 | Mobile | `account_suspended` login message | Implemented — checks pass; **not device-tested** |
-| 9.8 | Mobile | Checks and device checklist | Automated checks pass; device checklist not run |
+| 9.7 | Mobile | `account_suspended` login message | Verified on Android |
+| 9.8 | Mobile | Checks and device checklist | Done — device checklist passed (Android) |
 
 Admin stays API-only; the Mobile track only maps the suspended-login message ([phase9-report.md](phase9-report.md) §11).
 
@@ -51,11 +51,11 @@ Admin stays API-only; the Mobile track only maps the suspended-login message ([p
 |------|-------|-------------|--------|
 | 8A.1 | Backend | Notifications: entity, `AddNotifications`, triggers, API | Verified (migration applied by founder) |
 | 8A.2 | Backend | Suggested and trending restaurants | Verified |
-| 8A.3 | Mobile | الرئيسية tab | Implemented — checks pass; **not device-tested** |
-| 8A.4 | Mobile | Notifications chip | Implemented — checks pass; **not device-tested** |
+| 8A.3 | Mobile | الرئيسية tab | Verified on Android |
+| 8A.4 | Mobile | Notifications chip (+ النشاط tab dot, 2026-11-08) | Verified on Android |
 | 8A.5 | Backend | Taste and Taste Match | Verified |
-| 8A.6 | Mobile | Taste on profiles | Implemented — checks pass; **not device-tested** |
-| 8A.7 | Both | Tests and report | Backend done (255/255, smoke 16/16); Mobile checks pass, device checklist not run |
+| 8A.6 | Mobile | Taste on profiles | Verified on Android (after a refresh fix) |
+| 8A.7 | Both | Tests and report | Done — device checklist passed (Android, 2026-11-08) |
 
 ---
 
@@ -65,8 +65,8 @@ Admin stays API-only; the Mobile track only maps the suspended-login message ([p
 |------|-------|-------------|--------|
 | 8.1 | Backend | `Bio`, `AddUserBio`; profile read and edit; logout | Verified (migration applied by founder) |
 | 8.2 | Backend | User reviews, lists, search, `hasPublicProfile` | Verified |
-| 8.3 | Mobile | Profile screens, Settings, people in Search | Implemented — checks pass; **not device-tested** |
-| 8.4 | Both | Tests and report | Backend done (232/232, smoke 24/24); Mobile device checklist not run |
+| 8.3 | Mobile | Profile screens, Settings, people in Search | Verified on Android (2026-11-08) |
+| 8.4 | Both | Tests and report | Done — device checklist passed (Android, 2026-11-08) |
 
 ---
 
@@ -260,10 +260,10 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 5 | QR verified review write | **Complete** (merged to `develop`) |
 | 6 | Social core | **Complete** (merged to `develop` via PR #6, `34ceb80`) |
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
-| 8 | Profiles | **Complete with an open item** (merged via PR #8, `84e320c`; device checklist not run) |
-| 8A | Home, notifications and Taste Match | **Complete with an open item** (merged via PR #9, `b9ebbcc`; device checklist not run) |
-| 9 | Admin and moderation | **Complete with an open item** (merged via PR #10, `983161a`; device checklist not run) |
-| 9A | Review photos | **In progress** (Backend complete 2026-11-08; Mobile not started) |
+| 8 | Profiles | **Complete** (merged via PR #8, `84e320c`; device-tested 2026-11-08) |
+| 8A | Home, notifications and Taste Match | **Complete** (merged via PR #9, `b9ebbcc`; device-tested 2026-11-08) |
+| 9 | Admin and moderation | **Complete** (merged via PR #10, `983161a`; device-tested 2026-11-08) |
+| 9A | Review photos | **Complete, not merged** (Backend and Mobile; device-tested on Android 2026-11-08) |
 | 10 | Hardening and beta | Not started |
 | 11 | Production readiness | Not started |
 

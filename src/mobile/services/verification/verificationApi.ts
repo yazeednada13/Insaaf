@@ -4,8 +4,10 @@ import { apiClient } from '@/services/api/client';
 import type { ApiResponse } from '@/services/api/types';
 import type {
   CreateVerifiedReviewRequest,
+  PhotoRemovedDto,
   ResolvedVisitDto,
   ScanErrorKind,
+  UploadedPhotoDto,
   VerifiedReviewCreatedDto,
 } from '@/types/verification';
 
@@ -69,6 +71,45 @@ export async function resolveVisit(token: string): Promise<ResolvedVisitDto> {
       '/api/v1/verification/visits/resolve',
       { token },
     );
+    return unwrap(response.data);
+  } catch (error) {
+    throw toVerificationApiError(error);
+  }
+}
+
+/** A local, already compressed JPEG ready to upload. */
+export interface PhotoFile {
+  uri: string;
+  name: string;
+  type: 'image/jpeg';
+}
+
+/**
+ * Phase 9A: uploads one photo for the visit token. Repeating it with the same clientUploadId returns
+ * the same photo, so a retry after a lost response never creates a duplicate. Never redeems the token.
+ */
+export async function uploadPhoto(token: string, clientUploadId: string, file: PhotoFile): Promise<UploadedPhotoDto> {
+  const form = new FormData();
+  form.append('token', token);
+  form.append('clientUploadId', clientUploadId);
+  // React Native's FormData accepts a { uri, name, type } file descriptor.
+  form.append('file', file as unknown as Blob);
+
+  try {
+    const response = await apiClient.post<ApiResponse<UploadedPhotoDto>>('/api/v1/verification/photos', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    });
+    return unwrap(response.data);
+  } catch (error) {
+    throw toVerificationApiError(error);
+  }
+}
+
+/** Phase 9A: removes the caller's own photo before it's attached, freeing its slot. */
+export async function deletePhoto(photoId: string): Promise<PhotoRemovedDto> {
+  try {
+    const response = await apiClient.delete<ApiResponse<PhotoRemovedDto>>(`/api/v1/verification/photos/${photoId}`);
     return unwrap(response.data);
   } catch (error) {
     throw toVerificationApiError(error);

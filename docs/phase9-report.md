@@ -3,7 +3,7 @@
 **Date:** 2026-11-07
 **Branch:** `feature/phase9-admin-moderation` (from `develop` after the Phase 8A merge; the founder manages Git)
 **References:** the roadmap (Phase 9), the approved Phase 9 plan (revision 2, decisions D-1…D-10), [decisions.md](decisions.md) ADR-003/ADR-012/ADR-017
-**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track (9.7–9.8) implemented; not device-tested** (§11) · ✅ Phase 9 merged into `develop` (PR #10, `983161a`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track (9.7–9.8) device-tested on Android, 2026-11-08** (§13) · ✅ Phase 9 merged into `develop` (PR #10, `983161a`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -378,3 +378,25 @@ No change. TanStack Query only; the Phase 8 account isolation covers the forced 
 - **Mobile:** `services/auth/authErrors.ts`.
 - **Docs:** `docs/phase9-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`, `README.md`.
 - **One migration:** `AddModeration`. No new dependencies.
+
+---
+
+## 13. Device verification addendum (2026-11-08)
+
+> **How these results were obtained:** run by the founder on an Android phone with the Phase 9A development build, against the local API and SQL Server, and reported item by item in chat. They were not observed by Claude. iOS isn't tested (Phase 10).
+
+| # | Check (§11.7) | Result |
+|---|---|---|
+| 9.1 | A suspended account at sign-in shows "تم إيقاف هذا الحساب. تواصل مع فريق إنصاف." and stays on Login | ✅ Passed |
+| 9.2 | Unsuspend, then sign in | ✅ Passed |
+| 9.3 | A hidden review opened from an old list shows "هذا المحتوى غير متاح." and leaves lists after refresh; unhide restores it | ✅ Passed |
+| 9.4 | A signed-in account that gets suspended returns to Login after its token expires, with no loop | ✅ Passed (the exact delay wasn't recorded) |
+| 9.5 | The next account sees nothing from the suspended one | ✅ Passed |
+
+**Helpers used:**
+- `phase9-admin-user.ps1` (suspend / unsuspend by email) and `phase9a-admin.ps1` (hide / unhide), both through the Admin API.
+- The Admin password was typed at a hidden prompt and not stored.
+
+**Status update:**
+- 9.7 and 9.8 are **verified on Android**.
+- The device checklists of Phases 8, 8A and 9 are now all run. The only remaining release item from these phases is iOS (Phase 10).

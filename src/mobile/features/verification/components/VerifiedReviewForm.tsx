@@ -16,6 +16,8 @@ import { colors, fonts, lineHeights, restaurantLayout, textAlignStart } from '@/
 import { ChevronLeftIcon } from '@/features/restaurants/components/RestaurantIcons';
 import { VerifiedBadge } from '@/features/reviews/components/VerifiedBadge';
 import { RatingStarsInput } from '@/features/verification/components/RatingStarsInput';
+import { AddPhotosButton, ReviewPhotoThumbnails } from '@/features/verification/components/ReviewPhotoPicker';
+import type { PhotoItem } from '@/features/verification/hooks/useReviewPhotos';
 import type { VerifiedRestaurantDto } from '@/types/verification';
 
 /** Matches the backend VerifiedReviewValidator (decision D-F2). */
@@ -54,9 +56,20 @@ interface VerifiedReviewFormProps {
   submitError: string | null;
   onSubmit: () => void;
   onBack: () => void;
+  /** Phase 9A: the selected photos and their upload state. */
+  photos: PhotoItem[];
+  canAddPhotos: boolean;
+  /** True while any photo is compressing or uploading; submitting waits for it. */
+  photosBusy: boolean;
+  /** One line about failed photos, or null. */
+  photoError: string | null;
+  onAddPhotos: () => void;
+  onRetryPhoto: (key: string) => void;
+  onRemovePhoto: (key: string) => void;
 }
 
-// Figma QRScreen.tsx "write" view. "إضافة صور" is hidden: media is deferred.
+// Figma QRScreen.tsx "write" view, including "إضافة صور" (Phase 9A). Figma shows only the button; the
+// selected-photo thumbnails follow decision D-5.
 export function VerifiedReviewForm({
   restaurant,
   ratings,
@@ -67,9 +80,16 @@ export function VerifiedReviewForm({
   submitError,
   onSubmit,
   onBack,
+  photos,
+  canAddPhotos,
+  photosBusy,
+  photoError,
+  onAddPhotos,
+  onRetryPhoto,
+  onRemovePhoto,
 }: VerifiedReviewFormProps) {
   const insets = useSafeAreaInsets();
-  const canSubmit = areRatingsComplete(ratings) && !submitting;
+  const canSubmit = areRatingsComplete(ratings) && !submitting && !photosBusy;
   const scrollRef = useRef<ScrollView>(null);
   const textFocused = useRef(false);
 
@@ -156,9 +176,14 @@ export function VerifiedReviewForm({
             textAlignVertical="top"
             value={text}
           />
-          <Text style={styles.counter}>
-            {text.length}/{REVIEW_TEXT_MAX_LENGTH}
-          </Text>
+          <View style={styles.textFooter}>
+            <Text style={styles.counter}>
+              {text.length}/{REVIEW_TEXT_MAX_LENGTH}
+            </Text>
+            <AddPhotosButton disabled={!canAddPhotos || submitting} onPress={onAddPhotos} />
+          </View>
+          <ReviewPhotoThumbnails items={photos} onRemove={onRemovePhoto} onRetry={onRetryPhoto} />
+          {photoError ? <Text style={styles.photoError}>{photoError}</Text> : null}
         </View>
       </ScrollView>
 
@@ -210,8 +235,21 @@ const styles = StyleSheet.create({
     fontFamily: fonts.numericRegular,
     fontSize: 12,
     lineHeight: lineHeights.xs,
+    textAlign: textAlignStart,
+  },
+  photoError: {
+    color: colors.error,
+    fontFamily: fonts.arabicRegular,
+    fontSize: 12,
+    lineHeight: lineHeights.xs,
     marginTop: 8,
     textAlign: textAlignStart,
+  },
+  textFooter: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
   detailedTitle: {
     marginBottom: 4,

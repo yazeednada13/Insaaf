@@ -29,6 +29,8 @@ import { UserAvatar } from '@/features/reviews/components/UserAvatar';
 import { FollowButton } from '@/features/social/components/FollowButton';
 import type { SocialApiError } from '@/services/social/socialApi';
 import type { UserProfileDto } from '@/types/social';
+import { RefreshFailedNotice } from '@/features/reviews/components/RefreshFailedNotice';
+import { useRefreshOnFocus } from '@/features/reviews/hooks/useRefreshOnFocus';
 
 function goBack() {
   if (router.canGoBack()) {
@@ -124,6 +126,7 @@ function ProfileView({ title, showBack, showSettings, query }: ProfileViewProps)
   const insets = useSafeAreaInsets();
   const profile = query.data;
   const reviewsQuery = useUserReviewsQuery(profile?.id);
+  useRefreshOnFocus(reviewsQuery);
   const reviews = reviewsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   const renderEmpty = () => {
@@ -185,7 +188,12 @@ function ProfileView({ title, showBack, showSettings, query }: ProfileViewProps)
           ListFooterComponent={
             reviewsQuery.isFetchingNextPage ? <ActivityIndicator color={colors.primary} style={styles.loading} /> : null
           }
-          ListHeaderComponent={<ProfileHeader profile={profile} />}
+          ListHeaderComponent={
+            <>
+              <ProfileHeader profile={profile} />
+              <RefreshFailedNotice visible={reviewsQuery.isRefetchError} />
+            </>
+          }
           contentContainerStyle={styles.content}
           data={reviews}
           keyExtractor={(review) => review.id}

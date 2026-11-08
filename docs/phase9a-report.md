@@ -3,7 +3,7 @@
 **Date:** 2026-11-08
 **Branch:** `feature/phase9a-review-photos` (from `develop` after the Phase 9 merge; the founder manages Git)
 **References:** the roadmap (Phase 9A), the approved Phase 9A plan (revision 5, decisions D-1…D-17), [decisions.md](decisions.md) ADR-011/ADR-017/ADR-018
-**Report status:** ✅ **Backend Track complete** · ⏳ Mobile Track not started (waiting for `Phase 9A — Mobile`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete, device-tested on Android** (§11)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -338,4 +338,151 @@ If any step fails, the row stays `Deleting` and cleanup retries it.
 ---
 
 ## 11. Mobile Track
-⏳ **Not started.** Waiting for the founder's instruction: `Phase 9A — Mobile`.
+
+**Date:** 2026-11-08.
+
+### 11.1 Overview
+| ID | Task | Status | Evidence |
+|---|---|---|---|
+| 9A.5 | "إضافة صور" in the review form: pick, compress, preview, upload, retry, remove; send only uploaded ids | ✅ Verified on Android | typecheck, lint, bundles; founder's device run (§11.7) |
+| 9A.6 | Photos on `ReviewCard` (up to 3, "+N") and Review Detail; refresh triggers; refresh-failure notice | ✅ Verified on Android | Same |
+| 9A.7 (Mobile) | Checks and device checklist | ✅ | Automated checks pass; **all 13 device cases reported passed**; iOS not tested |
+
+**Applied decisions:**
+| # | Implementation |
+|---|---|
+| D-4 | `expo-image-picker` ~57.0.21 (library only) and `expo-image-manipulator` ~57.0.22. A new EAS development build was required |
+| D-5 | 72×72 thumbnails on sand: spinner, retry overlay, ×. No Figma design for them |
+| D-8 | Tapping a photo does nothing (no gallery) |
+| D-12 | With failed photos, a confirmation "بعض الصور لم تُرفع. إرسال التقييم بدونها؟"; only uploaded ids are sent |
+| D-14 | Refetch on screen focus (if stale), on app resume (`focusManager` + `AppState`), and every 5 minutes on a focused photo screen |
+| D-16 | "تعذر تحديث المحتوى. اسحب للتحديث." while older data is shown after a failed refetch |
+
+**Deviations from the plan's wording (same behaviour):**
+1. **`clientUploadId`** comes from a small `Math.random` UUID v4 helper (`utils/uuid.ts`) instead of a native crypto module. It only needs to be unique per user and token, not secret.
+2. **Retry policy:** 409, 503 and network errors are retried automatically up to 3 times, 2 s apart, with the same id. 410 retries with a new id.
+3. **Compression failure** marks the photo failed with no retry; the user removes it.
+
+### 11.2 Application structure (new/modified)
+| File | Responsibility |
+|---|---|
+| `features/verification/hooks/useReviewPhotos.ts` | Per-photo state, compression, upload with retries, remove, `markFailed` |
+| `features/verification/components/ReviewPhotoPicker.tsx` | "إضافة صور" button (Figma icon) and thumbnails |
+| `features/reviews/components/ReviewPhotoStrip.tsx` | Card (3 + "+N") and detail rows, with a sand placeholder on error |
+| `features/reviews/hooks/useRefreshOnFocus.ts` | Focus refetch when stale; 5-minute interval while focused and active |
+| `features/reviews/components/RefreshFailedNotice.tsx` | The refresh-failure notice |
+| `utils/uuid.ts` | `clientUploadId` |
+
+**Modified:**
+- `VerifiedReviewForm.tsx`, `ScanScreen.tsx`.
+- `verificationApi.ts` (`uploadPhoto` multipart, `deletePhoto`), `types/verification.ts`, `types/review.ts` (`photos`).
+- `ReviewCard.tsx`, `ReviewDetailScreen.tsx`, `FeedScreen.tsx`, `HomeScreen.tsx`, `RestaurantDetailScreen.tsx`, `ProfileScreens.tsx`.
+- `app/_layout.tsx` (`focusManager`), `app.json` (image-picker plugin), `package.json`.
+
+**Also changed during the device run:**
+- `useVerificationMutations.ts` (taste refresh), `BottomNav.tsx` (unread dot), `FeedScreen.tsx` (chip count and colours) — see the Phase 8A report §13.
+- `AuthFooterLink.tsx` (baseline fix, §11.7).
+
+### 11.3 User journeys and states
+- **Scan → write:**
+  1. "إضافة صور" opens the library (up to the remaining slots).
+  2. Each photo compresses (≤ 2048 px, JPEG 0.8) and uploads on its own.
+  3. Spinner → done, or failed with retry and ×.
+  4. Submit is disabled while anything is uploading. With failures it asks first, then sends only uploaded ids, in order.
+- **Server says `invalid_photo`:** the token is kept; the sent photos turn failed, with "تعذّر إرفاق بعض الصور. أعد رفعها أو أرسل بدونها.".
+- **Photo errors in Arabic:** too large, unsupported, limit, token claimed, rate limited, generic failure.
+- **Viewing:**
+  - Cards show up to 3 photos, with "+N" on the third. Review Detail shows them all in one row.
+  - A photo that fails to load keeps the sand placeholder.
+  - After removal or hiding, the photo leaves on the next successful refresh.
+
+### 11.4 State management
+- **Server state:** TanStack Query only.
+- **Selected photos:** local state in `useReviewPhotos`; no global store.
+- **New:** an app-wide `focusManager` wired to `AppState`, so active stale queries refetch on resume. Photo screens also refetch on focus and every 5 minutes while focused.
+- **After a review is created:** `['users']`, `['reviews']` and `['home']` are invalidated (device fix).
+
+### 11.5 API data flow
+- **Upload:** `useReviewPhotos` → `verificationApi.uploadPhoto` → `apiClient` (multipart, Bearer, refresh interceptor) → `POST /api/v1/verification/photos` → `{ id }`.
+- **Submit:** `ScanScreen` → `createVerifiedReview({ …, photoIds })`.
+- **Display:** `photos[].url` (relative) is prefixed with `API_BASE_URL` → anonymous `GET /api/v1/review-photos/{id}`.
+
+### 11.6 RTL and Figma
+- **From Figma:**
+  - The "إضافة صور" button and icon, in the text card's bottom row.
+  - Card photos: up to 3, 4:3, rounded, with "+N".
+  - Detail photos: every photo in one row, rounded 16.
+- **No Figma design:** the thumbnails and their states, the failure confirmation, the photo error line, the refresh-failure notice, the النشاط unread dot.
+- **RTL:** the × uses `end`, rows follow the layout direction. Checked by the founder on Android.
+
+### 11.7 Testing and integration
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ |
+| `expo lint` | ✅ 0 errors; 1 older warning in `services/api/client.ts` |
+| `expo export` Android (1584 modules) and iOS (1460 modules) | ✅ |
+| Backend APIs on SQL Server | ✅ Smoke 16/16, probes 7/7 (§7) |
+| **Device checklist (13 cases), Android** | ✅ **All reported passed by the founder** |
+| iOS | ❌ Not tested (Phase 10) |
+
+> The device results were run by the founder on an Android phone with the new development build, against the local API, and reported in chat ("all done, including the photos"). They were not observed by Claude. Item-by-item timings (e.g. how long a removed photo took to disappear on an open screen) weren't reported.
+
+**Device cases run:**
+1. 3 photos upload.
+2. Partial failure with airplane mode, then retry.
+3. Confirmation, then sending without the failed photo.
+4. Card and detail display.
+5. Removal on an already-open screen.
+6. Removal with pull-to-refresh.
+7. The 5-photo limit.
+8. Another account on a claimed token.
+9. Return to the tab, and resume.
+10. Failed refetch shows the notice, then a successful one.
+11. Remove before sending.
+12. Hide and unhide.
+13. Account switch.
+
+**Defects found on the device and fixed:**
+1. **The camera wouldn't open or ask permission on Android.**
+   - **Cause:** `"cameraPermission": false` in the `expo-image-picker` plugin config blocks `android.permission.CAMERA` for the whole app (`tools:node="remove"`), which broke QR scanning.
+   - **Fix:** the value is now the same Arabic camera text as `expo-camera`. `expo config --type introspect` confirms CAMERA is requested; only `RECORD_AUDIO` is removed.
+   - Needed a new EAS build; re-tested by the founder.
+2. **Login footer:** "إنشاء حساب" sat below the baseline of "ليس لديك حساب؟".
+   - **Cause:** a `Pressable` view nested inside `Text`.
+   - **Fix:** the link is a nested `Text` with `onPress`. Applies to Login, Register and Forgot Password.
+   - Typecheck, lint and bundles pass. **Not yet re-checked on the device.**
+3. Taste refresh, chip colours and the النشاط dot: Phase 8A report §13.
+
+### 11.8 Educational summary (Mobile)
+- **One upload per photo, keyed by `clientUploadId`:** a retry after a lost response returns the same photo instead of a duplicate. That's why the id is created once per picked photo, not per attempt.
+- **Uploads never touch the token:** the review submission alone redeems it. So a failed photo can always be retried or dropped.
+- **Draw from data, not from caches:** native image caches can't be told to forget a photo. The app shows only the photos in the latest successful response and refetches at well-defined moments.
+- **Config plugins change the native app:** one wrong permission flag removed the camera for the whole app. It's invisible to typecheck and bundles, which is why device builds matter.
+
+---
+
+## 12. Consolidated Phase 9A status
+| ID | Track | Status |
+|---|---|---|
+| 9A.1–9A.4 | Backend | ✅ Verified (340/340 tests, probes 7/7 ×4, smoke 16/16 on SQL Server) |
+| 9A.5–9A.6 | Mobile | ✅ Verified on Android (founder-reported device run) |
+| 9A.7 | Both | ✅ Backend and Mobile checks done |
+
+**The Phase 9A gate** ("A verified review can include photos, shown on review cards and Review Detail, and Admin can remove any photo") is proven at API level on SQL Server, and on an Android device as reported by the founder.
+
+### Open items and founder actions
+1. **iOS** is untested (Phase 10), including photo-library permission text and caching.
+2. **Check the login footer fix** on the device: reload Metro.
+3. **Production storage** (cloud, Linux native assets for SkiaSharp) comes in Phase 11.
+4. **Test data** in the development database and `%LOCALAPPDATA%\Insaaf\review-photos`:
+   - smoke and probe accounts;
+   - the "Smoke9A" restaurant;
+   - two "مطعم تجربة الصور" test restaurants (active), with their reviews and photos;
+   - probe tokens.
+
+### Files changed in Phase 9A (summary)
+- **Backend:** the files in §2.
+- **Mobile:** the files in §11.2.
+- **Docs:** `phase9a-report.md`, and §13 addenda in `phase8-report.md`, `phase8a-report.md` and `phase9-report.md`; also `project-progress.md`, `decisions.md` (ADR-018), `implementation-plan.md` and `README.md`.
+- **One migration:** `AddReviewPhotos`.
+- **New packages:** SkiaSharp (backend), `expo-image-picker` and `expo-image-manipulator` (mobile).

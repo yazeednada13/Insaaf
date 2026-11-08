@@ -14,7 +14,7 @@ export function useResolveVisitMutation() {
   });
 }
 
-/** On success the restaurant's detail, the discovery lists and its reviews are refetched. */
+/** On success the restaurant, its reviews and the author's own data (taste, counts, lists) are refetched. */
 export function useCreateVerifiedReviewMutation() {
   const queryClient = useQueryClient();
 
@@ -24,6 +24,10 @@ export function useCreateVerifiedReviewMutation() {
       void queryClient.invalidateQueries({ queryKey: ['restaurants', 'detail', restaurantId] });
       void queryClient.invalidateQueries({ queryKey: ['restaurants', 'list'] });
       void queryClient.invalidateQueries({ queryKey: ['reviews', 'restaurant', restaurantId] });
+      // The author's taste, profile counts, own review lists and Home suggestions change too.
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      void queryClient.invalidateQueries({ queryKey: ['home'] });
     },
   });
 }

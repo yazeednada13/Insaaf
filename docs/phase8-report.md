@@ -3,7 +3,7 @@
 **Date:** 2026-11-05
 **Branch:** `feature/phase8-profiles` (from `develop` after the Phase 7 merge; the founder manages Git)
 **References:** the approved Master Plan (Phase 8), the approved Phase 8 plan (decisions D-1…D-14), [decisions.md](decisions.md) ADR-003/ADR-015, Figma Make `DfKJchmPebiHH9dRYaYMuS` (`ProfileScreen.tsx`, `EditProfileScreen.tsx`, `SettingsScreen.tsx`, `SearchScreen.tsx`)
-**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track implemented, not tested on a device** (§11.7) · ✅ Phase 8 merged into `develop` (PR #8, `84e320c`)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track device-tested on Android, 2026-11-08** (§13) · ✅ Phase 8 merged into `develop` (PR #8, `84e320c`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
@@ -322,3 +322,29 @@ Screens → `features/profile/hooks` or `features/social/hooks` → `socialApi` 
 
 ### Files changed in Phase 8 (summary)
 Backend files in §2, Mobile files in §11.2, plus `docs/phase8-report.md`, `project-progress.md`, `implementation-plan.md`, `decisions.md`. One migration: `AddUserBio`. No new dependencies.
+
+---
+
+## 13. Device verification addendum (2026-11-08)
+
+> **How these results were obtained:** run by the founder on an Android phone with the Phase 9A development build, against the local API and SQL Server, and reported item by item in chat. They were not observed by Claude. iOS isn't tested (Phase 10).
+
+| # | Check | Result |
+|---|---|---|
+| 8.1 | ملفي: identity, counts, "تقييماتي" | ✅ Passed |
+| 8.2 | Edit Profile: name and bio, keyboard | ✅ Passed |
+| 8.3 | `username_taken` under the field | ✅ Passed |
+| 8.4 | A name opens the profile; Back returns to the origin tab | ✅ Passed |
+| 8.5 | Follow / unfollow synced across profile, Review Detail and lists | ✅ Passed |
+| 8.6 | Followers and following lists, empty state | ✅ Passed |
+| 8.7 | Search: الكل / المطاعم / الأشخاص | ✅ Passed |
+| 8.8 | An Admin's name is shown but not pressable | ✅ Passed, once the Admin had written a comment (first run had no Admin content) |
+| 8.9 | Offline follow rolls back with a message | ✅ Passed |
+| 8.10 | Settings → sign-out confirmation names every device | ✅ Passed |
+| 8.11 | Another account sees nothing from the previous one | ✅ Passed |
+| 8.12 | RTL on these screens | ✅ Passed |
+
+**Status update:**
+- 8.3 and 8.4 (Mobile) are now **verified on Android**.
+- The open item from §12 (the device checklist) is **closed**.
+- The checklist run is the founder's consolidated 12-item list derived from §11.3 and §11.7. The original 14 items weren't kept item by item in this report.
