@@ -17,7 +17,7 @@ An Arabic, RTL-first mobile app for trustworthy restaurant reviews and social fo
 | 7 | Feed and following | Complete |
 | 8 | Profiles | Complete with an open item: device checklist not run |
 | 8A | Home, notifications and Taste Match | Complete with an open item: device checklist not run |
-| 9 | Admin and moderation | Backend verified; Mobile message implemented, not device-tested (not merged); Admin is API-only |
+| 9 | Admin and moderation | Complete with an open item: device checklist not run; Admin is API-only |
 | 9A | Review photos | Not started |
 | 10 | Hardening and beta (including iOS testing) | Not started |
 | 11 | Production readiness | Not started |

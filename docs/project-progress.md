@@ -6,11 +6,11 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 9 — Admin and moderation (**Backend verified; Mobile 9.7 implemented, not device-tested**; not merged) |
+| **CURRENT PHASE** | — (Phase 9 merged; Phase 9A planning) |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phases 5–8A (Phase 8A merged into `develop`, PR #9, `b9ebbcc`); Phase 8 and 8A Mobile not device-tested; see [phase8a-report.md](phase8a-report.md). Earlier: [phase8-report.md](phase8-report.md) |
-| **NEXT** | Founder: review [phase9-report.md](phase9-report.md); Git checkpoint and PR; run the Phase 8, 8A and 9 device checklists before beta |
+| **COMPLETED** | Phases 5–9 (Phase 9 merged into `develop`, PR #10, `983161a`); Phase 8, 8A and 9 Mobile not device-tested; see [phase9-report.md](phase9-report.md). Earlier: [phase8a-report.md](phase8a-report.md) |
+| **NEXT** | Phase 9A planning (review photos); run the Phase 8, 8A and 9 device checklists before beta |
 | **BLOCKERS** | None. Open: Phase 8, 8A and 9 device checklists not run (still unresolved release items) (sign-out and account isolation first); iOS untested, planned for Phase 10 |
 
 ## Phase 9 checklist
@@ -248,7 +248,7 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 7 | Feed and following | **Complete** (merged to `develop` via PR #7, `cbc6d31`) |
 | 8 | Profiles | **Complete with an open item** (merged via PR #8, `84e320c`; device checklist not run) |
 | 8A | Home, notifications and Taste Match | **Complete with an open item** (merged via PR #9, `b9ebbcc`; device checklist not run) |
-| 9 | Admin and moderation | **In progress** (Backend verified 307/307, smoke 19/19; Mobile 9.7 implemented, not device-tested; not merged) |
+| 9 | Admin and moderation | **Complete with an open item** (merged via PR #10, `983161a`; device checklist not run) |
 | 9A | Review photos | Not started |
 | 10 | Hardening and beta | Not started |
 | 11 | Production readiness | Not started |

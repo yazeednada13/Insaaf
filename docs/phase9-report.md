@@ -3,7 +3,7 @@
 **Date:** 2026-11-07
 **Branch:** `feature/phase9-admin-moderation` (from `develop` after the Phase 8A merge; the founder manages Git)
 **References:** the roadmap (Phase 9), the approved Phase 9 plan (revision 2, decisions D-1…D-10), [decisions.md](decisions.md) ADR-003/ADR-012/ADR-017
-**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track (9.7–9.8) implemented; not device-tested** (§11)
+**Report status:** ✅ **Backend Track complete** · ⚠️ **Mobile Track (9.7–9.8) implemented; not device-tested** (§11) · ✅ Phase 9 merged into `develop` (PR #10, `983161a`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 
