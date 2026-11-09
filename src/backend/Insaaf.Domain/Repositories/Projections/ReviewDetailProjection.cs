@@ -22,4 +22,7 @@ public sealed record ReviewDetailProjection(
     bool IsLikedByViewer,
     bool IsReviewerFollowedByViewer,
     bool ReviewerHasPublicProfile = true,
-    IReadOnlyList<ReviewPhotoProjection>? Photos = null);
+    IReadOnlyList<ReviewPhotoProjection>? Photos = null,
+    bool IsSavedByViewer = false,
+    ReviewReplyProjection? Reply = null,
+    string? ReviewerAvatarKey = null);

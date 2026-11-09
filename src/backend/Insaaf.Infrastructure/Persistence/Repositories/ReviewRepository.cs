@@ -58,7 +58,13 @@ public sealed class ReviewRepository : IReviewRepository
                         .Where(photo => photo.ReviewId == review.Id && photo.Status == ReviewPhotoStatus.Ready)
                         .OrderBy(photo => photo.SortOrder)
                         .Select(photo => new ReviewPhotoProjection(photo.Id, photo.Width ?? 0, photo.Height ?? 0))
-                        .ToList()))
+                        .ToList(),
+                    _dbContext.SavedReviews.Any(saved => saved.ReviewId == review.Id && saved.UserId == criteria.ViewerUserId),
+                    _dbContext.ReviewReplies
+                        .Where(reply => reply.ReviewId == review.Id)
+                        .Select(reply => new ReviewReplyProjection(reply.Text, reply.CreatedAt, reply.UpdatedAt))
+                        .FirstOrDefault(),
+                    _dbContext.AdminUserIds().Contains(user.Id) ? null : user.AvatarKey))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ReviewListItemProjection>
@@ -107,7 +113,13 @@ public sealed class ReviewRepository : IReviewRepository
                         .Where(photo => photo.ReviewId == review.Id && photo.Status == ReviewPhotoStatus.Ready)
                         .OrderBy(photo => photo.SortOrder)
                         .Select(photo => new ReviewPhotoProjection(photo.Id, photo.Width ?? 0, photo.Height ?? 0))
-                        .ToList()))
+                        .ToList(),
+                    _dbContext.SavedReviews.Any(saved => saved.ReviewId == review.Id && saved.UserId == viewerUserId),
+                    _dbContext.ReviewReplies
+                        .Where(reply => reply.ReviewId == review.Id)
+                        .Select(reply => new ReviewReplyProjection(reply.Text, reply.CreatedAt, reply.UpdatedAt))
+                        .FirstOrDefault(),
+                    _dbContext.AdminUserIds().Contains(user.Id) ? null : user.AvatarKey))
             .SingleOrDefaultAsync(cancellationToken);
 
     public Task<IReadOnlyList<FeedItemProjection>> ListByUserAsync(
@@ -139,6 +151,26 @@ public sealed class ReviewRepository : IReviewRepository
 
         return ReadStreamAsync(reviews, viewerUserId, after, take, cancellationToken);
     }
+
+    public Task<IReadOnlyList<FeedItemProjection>> ListSavedAsync(
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        ReadStreamAsync(
+            PublicReviewsOfActiveRestaurants().Where(review =>
+                _dbContext.SavedReviews.Any(saved => saved.UserId == viewerUserId && saved.ReviewId == review.Id)),
+            viewerUserId,
+            after,
+            take,
+            cancellationToken);
+
+    public Task<IReadOnlyList<FeedItemProjection>> ListRecentAsync(
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        ReadStreamAsync(PublicReviewsOfActiveRestaurants(), viewerUserId, after, take, cancellationToken);
 
     private async Task<IReadOnlyList<FeedItemProjection>> ReadStreamAsync(
         IQueryable<Review> reviews,
@@ -185,7 +217,13 @@ public sealed class ReviewRepository : IReviewRepository
                         .Where(photo => photo.ReviewId == row.Review.Id && photo.Status == ReviewPhotoStatus.Ready)
                         .OrderBy(photo => photo.SortOrder)
                         .Select(photo => new ReviewPhotoProjection(photo.Id, photo.Width ?? 0, photo.Height ?? 0))
-                        .ToList()))
+                    .ToList(),
+                _dbContext.SavedReviews.Any(saved => saved.ReviewId == row.Review.Id && saved.UserId == viewerUserId),
+                _dbContext.ReviewReplies
+                    .Where(reply => reply.ReviewId == row.Review.Id)
+                    .Select(reply => new ReviewReplyProjection(reply.Text, reply.CreatedAt, reply.UpdatedAt))
+                    .FirstOrDefault(),
+                _dbContext.AdminUserIds().Contains(row.User.Id) ? null : row.User.AvatarKey))
             .ToListAsync(cancellationToken);
     }
 

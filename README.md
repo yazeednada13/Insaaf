@@ -22,7 +22,7 @@ An Arabic, RTL-first mobile app for trustworthy restaurant reviews and social fo
 | 10 | Hardening (local: security, tests, performance, Figma review, CI, hosting prep) | Not started |
 | 11 | Release (hosting, iOS, beta) | Deferred until hosting and an iPhone are available |
 
-**Open items:** iOS is untested and the app isn't hosted; both are in Phase 11 (deferred).
+**Open items:** iOS is untested and the app isn't hosted; both are in Phase 12 (deferred, ADR-021). Phase 11 (Completion): Backend done, Mobile next.
 
 ## Stack
 

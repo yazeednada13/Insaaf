@@ -10,6 +10,9 @@ public interface IFeedService
 {
     /// <summary>Verified public reviews by users the viewer follows, newest first.</summary>
     Task<FeedResultDto> GetAsync(Guid viewerUserId, FeedQuery query, CancellationToken cancellationToken = default);
+
+    /// <summary>Everyone's verified public reviews, newest first (Phase 11, Home «تقييمات حديثة»).</summary>
+    Task<FeedResultDto> GetRecentAsync(Guid viewerUserId, FeedQuery query, CancellationToken cancellationToken = default);
 }
 
 public sealed class FeedService : IFeedService
@@ -34,6 +37,17 @@ public sealed class FeedService : IFeedService
         return ToResult(rows, query.Limit);
     }
 
+    public async Task<FeedResultDto> GetRecentAsync(
+        Guid viewerUserId,
+        FeedQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        FeedCursorCodec.ValidateLimit(query.Limit);
+        var cursor = FeedCursorCodec.Decode(query.Cursor);
+        var rows = await _reviews.ListRecentAsync(viewerUserId, cursor, query.Limit + 1, cancellationToken);
+        return ToResult(rows, query.Limit);
+    }
+
     /// <summary>Builds a page from <paramref name="limit"/> + 1 rows.</summary>
     public static FeedResultDto ToResult(IReadOnlyList<FeedItemProjection> rows, int limit)
     {
@@ -52,10 +66,12 @@ public sealed class FeedService : IFeedService
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(item.CreatedAt, DateTimeKind.Utc),
             item.IsVerified,
-            new ReviewerDto(item.ReviewerId, item.ReviewerFullName, item.ReviewerUserName, item.ReviewerHasPublicProfile),
+            UserAvatars.Reviewer(item.ReviewerId, item.ReviewerFullName, item.ReviewerUserName, item.ReviewerHasPublicProfile, item.ReviewerAvatarKey),
             new ReviewRestaurantDto(item.RestaurantId, item.RestaurantName, item.RestaurantCity, item.RestaurantAddress),
             item.LikeCount,
             item.CommentCount,
             item.IsLikedByViewer,
-            ReviewPhotos.ToDtos(item.Photos));
+            ReviewPhotos.ToDtos(item.Photos),
+            item.IsSavedByViewer,
+            UserAvatars.Reply(item.Reply));
 }

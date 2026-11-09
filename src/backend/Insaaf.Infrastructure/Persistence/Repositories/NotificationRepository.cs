@@ -22,6 +22,11 @@ public sealed class NotificationRepository : INotificationRepository
         WriteSafelyAsync(
             async () =>
             {
+                if (!await RecipientWantsAsync(notification.RecipientId, notification.Type, cancellationToken))
+                {
+                    return;
+                }
+
                 if (unique && await Matching(
                         notification.RecipientId,
                         notification.ActorId,
@@ -62,6 +67,17 @@ public sealed class NotificationRepository : INotificationRepository
             },
             "remove for comment");
 
+    public Task RemoveForReviewAsync(NotificationType type, Guid reviewId, CancellationToken cancellationToken = default) =>
+        WriteSafelyAsync(
+            async () =>
+            {
+                _dbContext.Notifications.RemoveRange(await _dbContext.Notifications
+                    .Where(notification => notification.Type == type && notification.ReviewId == reviewId)
+                    .ToListAsync(cancellationToken));
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            },
+            "remove for review");
+
     public async Task<IReadOnlyList<NotificationProjection>> ListAsync(
         Guid recipientId,
         FeedCursor? after,
@@ -95,7 +111,10 @@ public sealed class NotificationRepository : INotificationRepository
                 !_dbContext.AdminUserIds().Contains(row.User.Id),
                 row.Notification.ReviewId,
                 row.Notification.CreatedAt,
-                row.Notification.ReadAt))
+                row.Notification.ReadAt,
+                _dbContext.AdminUserIds().Contains(row.User.Id) ? null : row.User.AvatarKey,
+                _dbContext.Reviews.Where(review => review.Id == row.Notification.ReviewId).Select(review => (Guid?)review.RestaurantId).FirstOrDefault(),
+                _dbContext.Reviews.Where(review => review.Id == row.Notification.ReviewId).Select(review => review.Restaurant.Name).FirstOrDefault()))
             .ToListAsync(cancellationToken);
     }
 
@@ -117,6 +136,27 @@ public sealed class NotificationRepository : INotificationRepository
     }
 
     // A notification about a review that's no longer public, or whose restaurant is inactive, is hidden.
+    // Phase 11: in-app notification settings. A missing user counts as "on" (the insert then fails safely).
+    private async Task<bool> RecipientWantsAsync(Guid recipientId, NotificationType type, CancellationToken cancellationToken)
+    {
+        var settings = await _dbContext.Users.AsNoTracking()
+            .Where(user => user.Id == recipientId)
+            .Select(user => new { user.NotifyLikes, user.NotifyComments, user.NotifyFollows })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (settings is null)
+        {
+            return true;
+        }
+
+        return type switch
+        {
+            NotificationType.Like => settings.NotifyLikes,
+            NotificationType.Comment => settings.NotifyComments,
+            NotificationType.Follow => settings.NotifyFollows,
+            _ => true,
+        };
+    }
+
     private IQueryable<Notification> Visible(Guid recipientId) =>
         _dbContext.Notifications
             .AsNoTracking()

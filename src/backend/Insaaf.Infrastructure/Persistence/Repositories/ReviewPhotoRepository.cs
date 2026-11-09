@@ -1,4 +1,4 @@
-using Insaaf.Domain.Entities;
+﻿using Insaaf.Domain.Entities;
 using Insaaf.Domain.Enums;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Rules;
@@ -371,6 +371,36 @@ public sealed class ReviewPhotoRepository : IReviewPhotoRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
         _dbContext.ChangeTracker.Clear();
         return true;
+    }
+
+    public async Task<IReadOnlyList<Insaaf.Domain.Repositories.Projections.RestaurantPhotoProjection>> ListForRestaurantAsync(
+        Guid restaurantId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        var photos = _dbContext.ReviewPhotos.AsNoTracking()
+            .Where(photo => photo.Status == ReviewPhotoStatus.Ready && photo.ReviewId != null && photo.AttachedAt != null)
+            .Where(photo => _dbContext.PublicReviewsOfActiveRestaurants()
+                .Any(review => review.Id == photo.ReviewId && review.RestaurantId == restaurantId));
+
+        if (after is not null)
+        {
+            photos = photos.Where(photo =>
+                photo.AttachedAt < after.CreatedAt || (photo.AttachedAt == after.CreatedAt && photo.Id < after.Id));
+        }
+
+        return await photos
+            .OrderByDescending(photo => photo.AttachedAt)
+            .ThenByDescending(photo => photo.Id)
+            .Take(take)
+            .Select(photo => new Insaaf.Domain.Repositories.Projections.RestaurantPhotoProjection(
+                photo.Id,
+                photo.ReviewId!.Value,
+                photo.Width ?? 0,
+                photo.Height ?? 0,
+                photo.AttachedAt!.Value))
+            .ToListAsync(cancellationToken);
     }
 
     public Task<string?> GetServableKeyAsync(Guid photoId, CancellationToken cancellationToken = default) =>

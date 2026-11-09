@@ -20,6 +20,8 @@ public sealed class SqlServerApiFactory : WebApplicationFactory<Program>
 
     public string PhotoRoot { get; } = Path.Combine(Path.GetTempPath(), $"insaaf-it-photos-{Guid.NewGuid():N}");
 
+    public string Outbox { get; } = Path.Combine(Path.GetTempPath(), $"insaaf-it-outbox-{Guid.NewGuid():N}");
+
     public string ConnectionString => IntegrationSettings.ConnectionString!;
 
     public string EmailPrefix => $"it-{RunId}-";
@@ -37,12 +39,13 @@ public sealed class SqlServerApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Identity:SeedAdmin:Enabled", "false");
         builder.UseSetting("Storage:ReviewPhotos:RootPath", PhotoRoot);
         builder.UseSetting("Storage:ReviewPhotos:CleanupIntervalMinutes", "0");
+        builder.UseSetting("Email:OutboxPath", Outbox);
         // All requests come from one test client, so every limit is raised (limits have their own API tests).
         foreach (var key in new[]
         {
             "VerificationResolvePerMinute", "VerificationCreatePerMinute", "SocialLikePerMinute", "SocialCommentPerMinute",
             "SocialFollowPerMinute", "SocialSearchPerMinute", "VerificationPhotoPerMinute", "AuthLoginPerMinute",
-            "AuthRegisterPerMinute", "AuthRefreshPerMinute",
+            "AuthRegisterPerMinute", "AuthRefreshPerMinute", "AuthForgotPerMinute", "AuthResetPerMinute",
         })
         {
             builder.UseSetting($"RateLimiting:{key}", "100000");
@@ -100,6 +103,11 @@ public sealed class SqlServerApiFactory : WebApplicationFactory<Program>
             if (Directory.Exists(PhotoRoot))
             {
                 Directory.Delete(PhotoRoot, recursive: true);
+            }
+
+            if (Directory.Exists(Outbox))
+            {
+                Directory.Delete(Outbox, recursive: true);
             }
         }
     }

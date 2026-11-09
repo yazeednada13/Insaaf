@@ -88,6 +88,46 @@ public sealed class SkiaImageProcessor : IImageProcessor
         return new ProcessedImage(jpeg, outputWidth, outputHeight, thumbnail);
     }
 
+    public const int AvatarSide = 512;
+
+    public ProcessedImage? ProcessAvatar(ReadOnlyMemory<byte> content)
+    {
+        // The full pipeline first: format checks, size limits, orientation and metadata removal.
+        var processed = Process(content);
+        if (processed is null)
+        {
+            return null;
+        }
+
+        using var source = SKImage.FromEncodedData(processed.Jpeg);
+        if (source is null)
+        {
+            return null;
+        }
+
+        var side = Math.Min(source.Width, source.Height);
+        var crop = SKRectI.Create((source.Width - side) / 2, (source.Height - side) / 2, side, side);
+        var output = Math.Min(side, AvatarSide);
+        using var surface = SKSurface.Create(new SKImageInfo(output, output, SKColorType.Rgba8888, SKAlphaType.Premul));
+        if (surface is null)
+        {
+            return null;
+        }
+
+        surface.Canvas.Clear(SKColors.White);
+        surface.Canvas.DrawImage(source, crop, new SKRect(0, 0, output, output), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
+        surface.Canvas.Flush();
+        using var snapshot = surface.Snapshot();
+        using var encoded = snapshot.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
+        if (encoded is null)
+        {
+            return null;
+        }
+
+        var jpeg = encoded.ToArray();
+        return new ProcessedImage(jpeg, output, output, jpeg);
+    }
+
     // A smaller copy of the already oriented, metadata-free image; null when it's small enough already.
     private static byte[]? Thumbnail(SKImage image, int width, int height)
     {

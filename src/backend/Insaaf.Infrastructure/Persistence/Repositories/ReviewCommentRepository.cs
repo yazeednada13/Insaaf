@@ -18,6 +18,7 @@ public sealed class ReviewCommentRepository : IReviewCommentRepository
         Guid reviewId,
         int page,
         int pageSize,
+        Guid viewerUserId,
         CancellationToken cancellationToken = default)
     {
         var comments = _dbContext.ReviewComments
@@ -31,7 +32,7 @@ public sealed class ReviewCommentRepository : IReviewCommentRepository
                 .OrderBy(comment => comment.CreatedAt)
                 .ThenBy(comment => comment.Id)
                 .Skip((page - 1) * pageSize)
-                .Take(pageSize))
+                .Take(pageSize), viewerUserId)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ReviewCommentProjection>
@@ -43,8 +44,11 @@ public sealed class ReviewCommentRepository : IReviewCommentRepository
         };
     }
 
-    public Task<ReviewCommentProjection?> GetAsync(Guid commentId, CancellationToken cancellationToken = default) =>
-        WithAuthor(_dbContext.ReviewComments.AsNoTracking().Where(comment => comment.Id == commentId))
+    public Task<ReviewCommentProjection?> GetAsync(
+        Guid commentId,
+        Guid viewerUserId = default,
+        CancellationToken cancellationToken = default) =>
+        WithAuthor(_dbContext.ReviewComments.AsNoTracking().Where(comment => comment.Id == commentId), viewerUserId)
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task AddAsync(ReviewComment comment, CancellationToken cancellationToken = default)
@@ -79,7 +83,7 @@ public sealed class ReviewCommentRepository : IReviewCommentRepository
     public Task<int> CountAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
         _dbContext.ReviewComments.CountAsync(comment => comment.ReviewId == reviewId, cancellationToken);
 
-    private IQueryable<ReviewCommentProjection> WithAuthor(IQueryable<ReviewComment> comments) =>
+    private IQueryable<ReviewCommentProjection> WithAuthor(IQueryable<ReviewComment> comments, Guid viewerUserId) =>
         comments.Join(
             _dbContext.Users,
             comment => comment.UserId,
@@ -92,5 +96,8 @@ public sealed class ReviewCommentRepository : IReviewCommentRepository
                 user.Id,
                 user.FullName,
                 user.UserName,
-                !_dbContext.AdminUserIds().Contains(user.Id)));
+                !_dbContext.AdminUserIds().Contains(user.Id),
+                _dbContext.AdminUserIds().Contains(user.Id) ? null : user.AvatarKey,
+                _dbContext.ReviewCommentLikes.Count(like => like.CommentId == comment.Id),
+                _dbContext.ReviewCommentLikes.Any(like => like.CommentId == comment.Id && like.UserId == viewerUserId)));
 }

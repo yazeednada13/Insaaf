@@ -10,15 +10,111 @@ public sealed class AuthService : IAuthService
     private readonly IUserAccountService _userAccountService;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IEmailSender _emailSender;
+
+    public const int MinPasswordLength = 8;
 
     public AuthService(
         IUserAccountService userAccountService,
         ITokenService tokenService,
-        IRefreshTokenService refreshTokenService)
+        IRefreshTokenService refreshTokenService,
+        IEmailSender emailSender)
     {
         _userAccountService = userAccountService;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
+        _emailSender = emailSender;
+    }
+
+    public async Task<ForgotPasswordResultDto> ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var email = request.Email?.Trim();
+        if (string.IsNullOrEmpty(email) || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+        {
+            throw new AuthException("validation_error", "A valid email is required.");
+        }
+
+        var reset = await _userAccountService.GeneratePasswordResetCodeAsync(email, cancellationToken);
+        if (reset is not null)
+        {
+            await _emailSender.SendAsync(
+                new EmailMessage(
+                    reset.Email,
+                    "رمز استعادة كلمة المرور — إنصاف",
+                    $"رمز استعادة كلمة المرور الخاص بك هو: {reset.Code}\n\nالرمز صالح لدقائق قليلة. إذا لم تطلب استعادة كلمة المرور، تجاهل هذه الرسالة."),
+                cancellationToken);
+        }
+
+        return new ForgotPasswordResultDto(true);
+    }
+
+    public async Task<ResetPasswordResultDto> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var email = request.Email?.Trim();
+        var code = request.Code?.Trim();
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code))
+        {
+            throw new AuthException("validation_error", "Email and code are required.");
+        }
+
+        ValidateNewPassword(request.NewPassword);
+        var (result, userId, errors) = await _userAccountService.ResetPasswordWithCodeAsync(email, code, request.NewPassword!, cancellationToken);
+        switch (result)
+        {
+            case PasswordChangeResult.Changed:
+                await _refreshTokenService.RevokeAllForUserAsync(userId!.Value, cancellationToken);
+                return new ResetPasswordResultDto(true);
+            case PasswordChangeResult.InvalidPassword:
+                throw new AuthException("validation_error", string.Join(' ', errors));
+            case PasswordChangeResult.LockedOut:
+                throw new AuthException("too_many_attempts", "Too many attempts. Please try again later.");
+            default:
+                throw new AuthException("invalid_code", "The code is invalid or has expired.");
+        }
+    }
+
+    public async Task<AuthResponseDto> ChangePasswordAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(request.CurrentPassword))
+        {
+            throw new AuthException("validation_error", "The current password is required.");
+        }
+
+        ValidateNewPassword(request.NewPassword);
+        var (result, errors) = await _userAccountService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword!, cancellationToken);
+        switch (result)
+        {
+            case PasswordChangeResult.Changed:
+                break;
+            case PasswordChangeResult.WrongPassword:
+                throw new AuthException("wrong_password", "The current password is incorrect.");
+            case PasswordChangeResult.InvalidPassword:
+                throw new AuthException("validation_error", string.Join(' ', errors));
+            default:
+                throw new AuthException("unauthorized", "Authentication is required.", AuthStatusCodes.Unauthorized);
+        }
+
+        // Every other device is signed out; this one gets fresh tokens.
+        await _refreshTokenService.RevokeAllForUserAsync(userId, cancellationToken);
+        var account = await _userAccountService.GetByIdAsync(userId, cancellationToken)
+            ?? throw new AuthException("unauthorized", "Authentication is required.", AuthStatusCodes.Unauthorized);
+        var roles = await _userAccountService.GetRolesAsync(userId, cancellationToken);
+        return await IssueTokensAsync(userId, account.Email, roles, cancellationToken);
+    }
+
+    private static void ValidateNewPassword(string? password)
+    {
+        if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength)
+        {
+            throw new AuthException("validation_error", $"The new password must be at least {MinPasswordLength} characters.");
+        }
     }
 
     public async Task<AuthResponseDto> RegisterAsync(

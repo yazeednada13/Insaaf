@@ -14,4 +14,10 @@ public interface IImageProcessor
 {
     /// <summary>The processed image, or null when the content isn't a supported image.</summary>
     ProcessedImage? Process(ReadOnlyMemory<byte> content);
+
+    /// <summary>
+    /// A profile photo (Phase 11): the same checks and metadata removal, then a centred square crop of at
+    /// most 512 px. Null when the content isn't a supported image.
+    /// </summary>
+    ProcessedImage? ProcessAvatar(ReadOnlyMemory<byte> content);
 }

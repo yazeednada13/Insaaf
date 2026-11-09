@@ -81,6 +81,16 @@ public interface IReviewPhotoRepository
     /// <summary>Deleting → Purged after its folder was confirmed empty; releases the slot and claim when unattached.</summary>
     Task<bool> PurgeAsync(Guid photoId, Guid visitTokenId, DateTime utcNow, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Ready photos of the restaurant's public reviews, most recently attached first (Phase 11). The same
+    /// visibility as <see cref="GetServableKeyAsync"/>, so every listed photo can be served.
+    /// </summary>
+    Task<IReadOnlyList<Insaaf.Domain.Repositories.Projections.RestaurantPhotoProjection>> ListForRestaurantAsync(
+        Guid restaurantId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default);
+
     /// <summary>The served file of a Ready, attached photo of a public review in an active restaurant.</summary>
     Task<string?> GetServableKeyAsync(Guid photoId, CancellationToken cancellationToken = default);
 

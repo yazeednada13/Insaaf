@@ -65,9 +65,13 @@ public sealed class RestaurantRepository : IRestaurantRepository
         var reviewedIds = _dbContext.PublicReviewsOfActiveRestaurants()
             .Where(review => review.UserId == userId)
             .Select(review => review.RestaurantId);
+        // Categories of reviewed restaurants, plus the ones chosen in Taste Setup (Phase 11).
         var categoryIds = _dbContext.RestaurantCategories
             .Where(join => reviewedIds.Contains(join.RestaurantId))
-            .Select(join => join.CategoryId);
+            .Select(join => join.CategoryId)
+            .Concat(_dbContext.UserFoodPreferences
+                .Where(preference => preference.UserId == userId)
+                .Select(preference => preference.CategoryId));
         var notReviewed = ActiveRestaurants().Where(restaurant => !reviewedIds.Contains(restaurant.Id));
 
         var suggested = await BestRated(notReviewed

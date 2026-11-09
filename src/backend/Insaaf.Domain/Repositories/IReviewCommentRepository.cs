@@ -10,9 +10,13 @@ public interface IReviewCommentRepository
         Guid reviewId,
         int page,
         int pageSize,
+        Guid viewerUserId,
         CancellationToken cancellationToken = default);
 
-    Task<ReviewCommentProjection?> GetAsync(Guid commentId, CancellationToken cancellationToken = default);
+    Task<ReviewCommentProjection?> GetAsync(
+        Guid commentId,
+        Guid viewerUserId = default,
+        CancellationToken cancellationToken = default);
 
     Task AddAsync(ReviewComment comment, CancellationToken cancellationToken = default);
 

@@ -77,7 +77,9 @@ public sealed class UserProfileService : IUserProfileService
     public async Task<UserProfileDto> GetMineAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var profile = await _profiles.GetOwnAsync(userId, cancellationToken) ?? throw UserNotFound();
-        return ToDto(profile, userId);
+        // Phase 11: the app offers Taste Setup until it's done.
+        var taste = await _profiles.GetTastePreferencesAsync(userId, cancellationToken);
+        return ToDto(profile, userId) with { HasCompletedTasteSetup = taste?.CompletedAt is not null };
     }
 
     public async Task<UserProfileDto> UpdateMineAsync(
@@ -197,7 +199,8 @@ public sealed class UserProfileService : IUserProfileService
                     item.UserName,
                     item.ReviewCount,
                     item.FollowerCount,
-                    item.Id == viewerUserId))
+                    item.Id == viewerUserId,
+                    UserAvatars.Url(item.Id, item.AvatarKey)))
                 .ToList(),
             result.Page,
             result.PageSize,
@@ -243,7 +246,8 @@ public sealed class UserProfileService : IUserProfileService
             profile.FollowerCount,
             profile.FollowingCount,
             profile.IsFollowedByViewer,
-            profile.Id == viewerUserId);
+            profile.Id == viewerUserId,
+            UserAvatars.Url(profile.Id, profile.AvatarKey));
 
     private static UserListResultDto ToDto(PagedResult<UserListItemProjection> result, Guid viewerUserId) =>
         new(
@@ -253,7 +257,8 @@ public sealed class UserProfileService : IUserProfileService
                     item.FullName,
                     item.UserName,
                     item.IsFollowedByViewer,
-                    item.Id == viewerUserId))
+                    item.Id == viewerUserId,
+                    UserAvatars.Url(item.Id, item.AvatarKey)))
                 .ToList(),
             result.Page,
             result.PageSize,

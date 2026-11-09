@@ -76,11 +76,12 @@ public sealed class ReviewService : IReviewService
             review.Text,
             DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc),
             review.IsVerified,
-            new ReviewerDto(
+            UserAvatars.Reviewer(
                 review.ReviewerId,
                 review.ReviewerFullName,
                 review.ReviewerUserName,
-                review.ReviewerHasPublicProfile),
+                review.ReviewerHasPublicProfile,
+                review.ReviewerAvatarKey),
             new ReviewRestaurantDto(
                 review.RestaurantId,
                 review.RestaurantName,
@@ -90,7 +91,9 @@ public sealed class ReviewService : IReviewService
             review.CommentCount,
             review.IsLikedByViewer,
             review.IsReviewerFollowedByViewer,
-            ReviewPhotos.ToDtos(review.Photos));
+            ReviewPhotos.ToDtos(review.Photos),
+            review.IsSavedByViewer,
+            UserAvatars.Reply(review.Reply));
     }
 
     private static ReviewListItemDto ToDto(ReviewListItemProjection review) =>
@@ -101,13 +104,16 @@ public sealed class ReviewService : IReviewService
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc),
             review.IsVerified,
-            new ReviewerDto(
+            UserAvatars.Reviewer(
                 review.ReviewerId,
                 review.ReviewerFullName,
                 review.ReviewerUserName,
-                review.ReviewerHasPublicProfile),
+                review.ReviewerHasPublicProfile,
+                review.ReviewerAvatarKey),
             review.LikeCount,
             review.CommentCount,
             review.IsLikedByViewer,
-            ReviewPhotos.ToDtos(review.Photos));
+            ReviewPhotos.ToDtos(review.Photos),
+            review.IsSavedByViewer,
+            UserAvatars.Reply(review.Reply));
 }

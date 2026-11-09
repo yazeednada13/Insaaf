@@ -62,7 +62,7 @@ public sealed class ReviewCommentService : IReviewCommentService
         ThrowIfInvalid(ReviewCommentValidator.Validate(query));
         await EnsureReviewIsPublicAsync(reviewId, cancellationToken);
 
-        var result = await _comments.ListByReviewAsync(reviewId, query.Page, query.PageSize, cancellationToken);
+        var result = await _comments.ListByReviewAsync(reviewId, query.Page, query.PageSize, viewerUserId, cancellationToken);
 
         return new ReviewCommentListResultDto(
             result.Items.Select(comment => ToDto(comment, viewerUserId)).ToList(),
@@ -92,7 +92,7 @@ public sealed class ReviewCommentService : IReviewCommentService
         await _comments.AddAsync(comment, cancellationToken);
         await _notifications.CommentedAsync(reviewId, comment.Id, userId, cancellationToken);
 
-        var created = await _comments.GetAsync(comment.Id, cancellationToken);
+        var created = await _comments.GetAsync(comment.Id, userId, cancellationToken);
         return ToDto(created!, userId);
     }
 
@@ -104,7 +104,7 @@ public sealed class ReviewCommentService : IReviewCommentService
     {
         await EnsureReviewIsPublicAsync(reviewId, cancellationToken);
 
-        var comment = await _comments.GetAsync(commentId, cancellationToken);
+        var comment = await _comments.GetAsync(commentId, cancellationToken: cancellationToken);
         if (comment is null || comment.ReviewId != reviewId)
         {
             throw CommentNotFound();
@@ -153,6 +153,8 @@ public sealed class ReviewCommentService : IReviewCommentService
             comment.Text,
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(comment.CreatedAt, DateTimeKind.Utc),
-            new ReviewerDto(comment.AuthorId, comment.AuthorFullName, comment.AuthorUserName, comment.AuthorHasPublicProfile),
-            comment.AuthorId == viewerUserId);
+            UserAvatars.Reviewer(comment.AuthorId, comment.AuthorFullName, comment.AuthorUserName, comment.AuthorHasPublicProfile, comment.AuthorAvatarKey),
+            comment.AuthorId == viewerUserId,
+            comment.LikeCount,
+            comment.IsLikedByViewer);
 }

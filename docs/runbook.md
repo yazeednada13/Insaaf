@@ -1,6 +1,6 @@
 # Insaaf — Runbook (draft)
 
-**Status:** Draft prepared in Phase 10 (2026-11-09). **Nothing is hosted yet.** Hosting is chosen in Phase 11 (ADR-007, ADR-019). Everything below has been checked locally only, unless it says otherwise.
+**Status:** Draft prepared in Phase 10 (2026-11-09). **Nothing is hosted yet.** Hosting is chosen in Phase 12 (ADR-007, ADR-019, ADR-021). Everything below has been checked locally only, unless it says otherwise.
 
 ---
 
@@ -9,7 +9,7 @@
 |---|---|---|
 | API | ASP.NET Core 9 (`src/backend/Insaaf.API`) | Stateless except for photo files; container recipe in `src/backend/Dockerfile` (not built yet: Docker wasn't available) |
 | Database | SQL Server | Schema from EF Core migrations; **migrations are applied by the founder** |
-| Photo files | A folder per photo under `Storage:ReviewPhotos:RootPath` | Must be persistent storage (a mounted volume); cloud storage comes in Phase 11 |
+| Photo files | A folder per photo under `Storage:ReviewPhotos:RootPath` | Must be persistent storage (a mounted volume); profile photos live in its `avatars/` folder (Phase 11); cloud storage comes in Phase 12 |
 | Mobile app | Expo / React Native | Points at the API via `EXPO_PUBLIC_API_BASE_URL` at build time |
 
 ---
@@ -25,6 +25,7 @@
 | Photo folder | `Storage__ReviewPhotos__RootPath` | ✅ | Persistent volume, outside the app folder (the API refuses a root inside its content root) |
 | Reverse proxies | `ReverseProxy__KnownProxies__0`, `__1`… | If behind a proxy | Enables forwarded headers only for these IPs (correct client IP for rate limits) |
 | Admin seed | `Identity__SeedAdmin__Enabled` | ❌ | Keep `false` in production |
+| Email (Phase 11) | `Email__Provider` (`file` or `smtp`), `Email__From`, `Email__SmtpHost`, `Email__SmtpPort`, `Email__SmtpUserName`, `Email__SmtpPassword`, `Email__SmtpEnableSsl` | ✅ for password reset | `file` writes to `Email__OutboxPath` (default `%LOCALAPPDATA%\Insaaf\outbox`) and is for Development only; production needs `smtp` |
 | Environment | `ASPNETCORE_ENVIRONMENT=Production` | ✅ | Turns off Swagger, turns on HSTS |
 
 **Verified locally (2026-11-09):** with `ASPNETCORE_ENVIRONMENT=Production` and environment-variable configuration:
@@ -61,6 +62,9 @@
   - **Configure** with `dotnet user-secrets set "IntegrationTests:ConnectionString" "Server=localhost;Database=Insaaf_IntegrationTests;Trusted_Connection=True;TrustServerCertificate=True" --project tests/Insaaf.IntegrationTests`, or the environment variable `IntegrationTests__ConnectionString`.
   - **Run** with `dotnet test tests/Insaaf.IntegrationTests`.
   - Each run tags its data (`it-{run}-…@example.com`, restaurants `IT-{run} …`) and deletes it at the end. The seeded restaurants and categories stay.
+- **Password-reset codes in Development:** read them from the outbox folder above; delete old files when you like.
+- **Report queue (Phase 11):** `GET /api/v1/admin/reports`; hide the review if needed (`PUT /admin/reviews/{id}/visibility`), then `PUT /admin/reports/{id}/resolve`.
+- **Official reply (Phase 11):** `PUT /api/v1/admin/reviews/{id}/reply { text }`; `DELETE` removes it.
 - **Photo cleanup:** automatic, hourly (`Storage:ReviewPhotos:CleanupIntervalMinutes`). Logs carry counts only.
 - **Admin actions:** through the Admin API (Swagger in Development, or an HTTP client). Every action is logged as `Admin action {Action} by {AdminId} on {TargetType} {TargetId} at {Timestamp}: {Result}`.
 
@@ -78,5 +82,5 @@
 
 ---
 
-## 6. Open for Phase 11
+## 6. Open for Phase 12
 Hosting choice, TLS certificates, backups and restore drills, log retention (and an audit table if needed), monitoring and alerts, cloud photo storage, CI/CD deployment, iOS builds.

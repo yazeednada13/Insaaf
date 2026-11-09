@@ -8,17 +8,20 @@ public sealed record UserProfileProjection(
     int ReviewCount,
     int FollowerCount,
     int FollowingCount,
-    bool IsFollowedByViewer);
+    bool IsFollowedByViewer,
+    string? AvatarKey = null);
 
 public sealed record UserListItemProjection(
     Guid Id,
     string? FullName,
     string? UserName,
-    bool IsFollowedByViewer);
+    bool IsFollowedByViewer,
+    string? AvatarKey = null);
 
 public sealed record UserSearchItemProjection(
     Guid Id,
     string? FullName,
     string? UserName,
     int ReviewCount,
-    int FollowerCount);
+    int FollowerCount,
+    string? AvatarKey = null);

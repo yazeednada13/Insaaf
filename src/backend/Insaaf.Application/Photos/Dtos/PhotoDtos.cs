@@ -27,6 +27,13 @@ public sealed record ReviewPhotoDto(Guid Id, string Url, string ThumbnailUrl, in
         new(id, $"/api/v1/review-photos/{id}", $"/api/v1/review-photos/{id}?size=thumb", width, height);
 }
 
+/// <summary>A community photo of a restaurant (Phase 11), linked to the review it belongs to.</summary>
+public sealed record RestaurantPhotoDto(Guid Id, Guid ReviewId, string Url, string ThumbnailUrl, int Width, int Height);
+
+public sealed record RestaurantPhotoListResultDto(IReadOnlyList<RestaurantPhotoDto> Items, string? NextCursor);
+
+public sealed record RestaurantPhotosQuery(string? Cursor = null, int Limit = 20);
+
 /// <summary>An image ready to send: the stream and its entity tag.</summary>
 public sealed record ServablePhoto(Stream Content, string ETag) : IAsyncDisposable
 {

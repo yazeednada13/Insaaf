@@ -16,6 +16,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     /// <summary>Each test host stores photos in its own temporary folder, outside the repository.</summary>
     public string PhotoRoot { get; } = Path.Combine(Path.GetTempPath(), $"insaaf-api-photos-{Guid.NewGuid():N}");
 
+    /// <summary>Phase 11: this host's email outbox (password-reset codes), outside the repository.</summary>
+    public string Outbox { get; } = Path.Combine(Path.GetTempPath(), $"insaaf-api-outbox-{Guid.NewGuid():N}");
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -30,6 +33,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("RateLimiting:AuthLoginPerMinute", "100000");
         builder.UseSetting("RateLimiting:AuthRegisterPerMinute", "100000");
         builder.UseSetting("RateLimiting:AuthRefreshPerMinute", "100000");
+        builder.UseSetting("RateLimiting:AuthForgotPerMinute", "100000");
+        builder.UseSetting("RateLimiting:AuthResetPerMinute", "100000");
+        builder.UseSetting("Email:OutboxPath", Outbox);
         ConfigureTestSettings(builder);
     }
 

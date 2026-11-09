@@ -14,4 +14,13 @@ public interface IAuthService
 
     /// <summary>Revokes all the user's refresh tokens, which signs out every device. Repeat-safe.</summary>
     Task LogoutAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Sends a 6-digit reset code when an account has this email; the answer is the same either way.</summary>
+    Task<ForgotPasswordResultDto> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Sets a new password with a valid code, then signs out every device.</summary>
+    Task<ResetPasswordResultDto> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Changes the password, signs out every other device and returns new tokens for this one.</summary>
+    Task<AuthResponseDto> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }

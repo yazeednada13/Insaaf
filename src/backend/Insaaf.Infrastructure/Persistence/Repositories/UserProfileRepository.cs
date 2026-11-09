@@ -1,4 +1,5 @@
 using Insaaf.Domain.Entities;
+using Insaaf.Domain.Enums;
 using Insaaf.Domain.Repositories;
 using Insaaf.Domain.Repositories.Projections;
 using Insaaf.Infrastructure.Identity;
@@ -80,7 +81,8 @@ public sealed class UserProfileRepository : IUserProfileRepository
                 user.UserName,
                 _dbContext.PublicReviewsOfActiveRestaurants().Count(review => review.UserId == user.Id),
                 _dbContext.UserFollows.Count(follow =>
-                    follow.FolloweeId == user.Id && !_dbContext.AdminUserIds().Contains(follow.FollowerId))))
+                    follow.FolloweeId == user.Id && !_dbContext.AdminUserIds().Contains(follow.FollowerId)),
+                user.AvatarKey))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<UserSearchItemProjection>
@@ -91,6 +93,121 @@ public sealed class UserProfileRepository : IUserProfileRepository
             TotalCount = totalCount,
         };
     }
+
+    public async Task<(bool Found, string? PreviousKey)> SetAvatarKeyAsync(
+        Guid userId,
+        string? avatarKey,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _dbContext.Users.SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
+        if (user is null)
+        {
+            return (false, null);
+        }
+
+        var previous = user.AvatarKey;
+        user.AvatarKey = avatarKey;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return (true, previous);
+    }
+
+    public async Task<TastePreferencesProjection?> GetTastePreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _dbContext.Users.AsNoTracking()
+            .Where(item => item.Id == userId)
+            .Select(item => new { item.TastePriorities, item.TasteSetupCompletedAt })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (user is null)
+        {
+            return null;
+        }
+
+        var categories = await _dbContext.UserFoodPreferences.AsNoTracking()
+            .Where(preference => preference.UserId == userId)
+            .Join(_dbContext.Categories, preference => preference.CategoryId, category => category.Id, (_, category) => category)
+            .OrderBy(category => category.Slug)
+            .Select(category => new CategoryProjection(category.Id, category.Name, category.Slug))
+            .ToListAsync(cancellationToken);
+
+        return new TastePreferencesProjection(categories, user.TastePriorities, user.TasteSetupCompletedAt);
+    }
+
+    public async Task<bool> SaveTastePreferencesAsync(
+        Guid userId,
+        IReadOnlyCollection<Guid> categoryIds,
+        TastePriority priorities,
+        DateTime utcNow,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _dbContext.Users.SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
+        if (user is null)
+        {
+            return false;
+        }
+
+        // Replace the whole set in one SaveChanges (one transaction).
+        _dbContext.UserFoodPreferences.RemoveRange(
+            await _dbContext.UserFoodPreferences.Where(preference => preference.UserId == userId).ToListAsync(cancellationToken));
+        _dbContext.UserFoodPreferences.AddRange(categoryIds.Distinct()
+            .Select(categoryId => new UserFoodPreference { UserId = userId, CategoryId = categoryId }));
+        user.TastePriorities = priorities;
+        user.TasteSetupCompletedAt ??= utcNow;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<IReadOnlyList<UserSearchItemProjection>> ListSuggestedAsync(
+        Guid viewerUserId,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        await PublicUsers()
+            .Where(user => user.Id != viewerUserId && user.SuspendedAt == null)
+            .Where(user => !_dbContext.UserFollows.Any(follow => follow.FollowerId == viewerUserId && follow.FolloweeId == user.Id))
+            .Select(user => new
+            {
+                User = user,
+                Reviews = _dbContext.PublicReviewsOfActiveRestaurants().Count(review => review.UserId == user.Id),
+            })
+            .Where(row => row.Reviews > 0)
+            .OrderByDescending(row => row.Reviews)
+            .ThenBy(row => row.User.Id)
+            .Take(take)
+            .Select(row => new UserSearchItemProjection(
+                row.User.Id,
+                row.User.FullName,
+                row.User.UserName,
+                row.Reviews,
+                _dbContext.UserFollows.Count(follow =>
+                    follow.FolloweeId == row.User.Id && !_dbContext.AdminUserIds().Contains(follow.FollowerId)),
+                row.User.AvatarKey))
+            .ToListAsync(cancellationToken);
+
+    public Task<NotificationSettingsProjection?> GetNotificationSettingsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        _dbContext.Users.AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user => new NotificationSettingsProjection(user.NotifyLikes, user.NotifyComments, user.NotifyFollows))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<bool> SetNotificationSettingsAsync(
+        Guid userId,
+        NotificationSettingsProjection settings,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _dbContext.Users.SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.NotifyLikes = settings.Likes;
+        user.NotifyComments = settings.Comments;
+        user.NotifyFollows = settings.Follows;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public Task<string?> GetPublicAvatarKeyAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        PublicUsers().Where(user => user.Id == userId).Select(user => user.AvatarKey).SingleOrDefaultAsync(cancellationToken);
 
     public async Task<TasteProjection> GetTasteAsync(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -140,7 +257,8 @@ public sealed class UserProfileRepository : IUserProfileRepository
                 follow.FolloweeId == user.Id && !_dbContext.AdminUserIds().Contains(follow.FollowerId)),
             _dbContext.UserFollows.Count(follow =>
                 follow.FollowerId == user.Id && !_dbContext.AdminUserIds().Contains(follow.FolloweeId)),
-            _dbContext.UserFollows.Any(follow => follow.FollowerId == viewerUserId && follow.FolloweeId == user.Id)));
+            _dbContext.UserFollows.Any(follow => follow.FollowerId == viewerUserId && follow.FolloweeId == user.Id),
+            _dbContext.AdminUserIds().Contains(user.Id) ? null : user.AvatarKey));
 
     private async Task<PagedResult<UserListItemProjection>> ListAsync(
         IQueryable<FollowRow> rows,
@@ -162,7 +280,8 @@ public sealed class UserProfileRepository : IUserProfileRepository
                 row.User.FullName,
                 row.User.UserName,
                 _dbContext.UserFollows.Any(follow =>
-                    follow.FollowerId == viewerUserId && follow.FolloweeId == row.User.Id)))
+                    follow.FollowerId == viewerUserId && follow.FolloweeId == row.User.Id),
+                row.User.AvatarKey))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<UserListItemProjection>

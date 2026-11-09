@@ -11,7 +11,10 @@ public sealed record NotificationProjection(
     bool ActorHasPublicProfile,
     Guid? ReviewId,
     DateTime CreatedAt,
-    DateTime? ReadAt);
+    DateTime? ReadAt,
+    string? ActorAvatarKey = null,
+    Guid? RestaurantId = null,
+    string? RestaurantName = null);
 
 public sealed record CategoryTasteProjection(string Name, string Slug, int ReviewCount, double AverageRating);
 

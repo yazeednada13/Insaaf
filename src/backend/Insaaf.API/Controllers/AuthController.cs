@@ -77,6 +77,65 @@ public sealed class AuthController : ControllerBase
         }
     }
 
+    // Phase 11: passwords.
+
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthForgotPolicy)]
+    [ProducesResponseType(typeof(ApiResponse<ForgotPasswordResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<ForgotPasswordResultDto>>> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return this.OkEnvelope(await _authService.ForgotPasswordAsync(request, cancellationToken));
+        }
+        catch (AuthException ex)
+        {
+            return this.FailEnvelope<ForgotPasswordResultDto>(ex.Code, ex.Message, ex.StatusCode);
+        }
+    }
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthResetPolicy)]
+    [ProducesResponseType(typeof(ApiResponse<ResetPasswordResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<ResetPasswordResultDto>>> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return this.OkEnvelope(await _authService.ResetPasswordAsync(request, cancellationToken));
+        }
+        catch (AuthException ex)
+        {
+            return this.FailEnvelope<ResetPasswordResultDto>(ex.Code, ex.Message, ex.StatusCode);
+        }
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> ChangePassword(
+        [FromBody] ChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.FailEnvelope<AuthResponseDto>("unauthorized", "Authentication is required.", StatusCodes.Status401Unauthorized);
+        }
+
+        try
+        {
+            return this.OkEnvelope(await _authService.ChangePasswordAsync(userId, request, cancellationToken));
+        }
+        catch (AuthException ex)
+        {
+            return this.FailEnvelope<AuthResponseDto>(ex.Code, ex.Message, ex.StatusCode);
+        }
+    }
+
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitingExtensions.AuthRefreshPolicy)]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]

@@ -19,6 +19,11 @@ public interface INotificationPublisher
     Task FollowedAsync(Guid actorId, Guid followeeId, CancellationToken cancellationToken = default);
 
     Task UnfollowedAsync(Guid actorId, Guid followeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>The restaurant officially replied (Phase 11). The actor is the Admin who wrote it.</summary>
+    Task RepliedAsync(Guid reviewId, Guid adminId, CancellationToken cancellationToken = default);
+
+    Task ReplyDeletedAsync(Guid reviewId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -90,6 +95,21 @@ public sealed class NotificationPublisher : INotificationPublisher
 
     public Task UnfollowedAsync(Guid actorId, Guid followeeId, CancellationToken cancellationToken = default) =>
         _notifications.RemoveAsync(followeeId, actorId, NotificationType.Follow, reviewId: null, cancellationToken);
+
+    public async Task RepliedAsync(Guid reviewId, Guid adminId, CancellationToken cancellationToken = default)
+    {
+        var authorId = await _reviews.GetAuthorIdAsync(reviewId, cancellationToken);
+        if (authorId is not null && authorId != adminId)
+        {
+            await _notifications.AddAsync(
+                Create(authorId.Value, adminId, NotificationType.Reply, reviewId, commentId: null),
+                unique: true,
+                cancellationToken);
+        }
+    }
+
+    public Task ReplyDeletedAsync(Guid reviewId, CancellationToken cancellationToken = default) =>
+        _notifications.RemoveForReviewAsync(NotificationType.Reply, reviewId, cancellationToken);
 
     private Notification Create(Guid recipientId, Guid actorId, NotificationType type, Guid? reviewId, Guid? commentId) =>
         new()

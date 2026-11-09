@@ -6,12 +6,28 @@
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | Phase 10 — Hardening (local): work complete, report written; awaiting CI run and Android check |
+| **CURRENT PHASE** | Phase 11 — Completion: Backend track complete ([phase11-backend-report.md](phase11-backend-report.md)); Mobile not started |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 0–9A (Phase 9A merged into `develop`, PR #11, `a7ddaa0`); Phases 8–9A device-tested on Android 2026-11-08; see [phase9a-report.md](phase9a-report.md). Earlier: [phase9-report.md](phase9-report.md) |
-| **NEXT** | Founder: push for CI, Android check (thumbnails, login footer, Figma pass); then the new final phase for the missing Figma screens (plan first) |
-| **BLOCKERS** | None. iOS untested and no hosting: both moved to Phase 11 (deferred, ADR-019) |
+| **NEXT** | Founder: "Phase 11 — Mobile"; supply the privacy text (or approve a draft) and the support email (D-6). Still open from Phase 10: the CI result and the Android check |
+| **BLOCKERS** | None. iOS untested and no hosting: both in Phase 12 (deferred, ADR-019, ADR-021) |
+
+## Phase 11 checklist
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 11.1 | Backend | Schema, `AddCompletionFeatures` | Verified (applied by the founder to both databases) |
+| 11.2 | Backend | Saved restaurants and reviews | Verified |
+| 11.3 | Backend | Comment likes | Verified |
+| 11.4 | Backend | Review reports, Admin queue | Verified |
+| 11.5 | Backend | Official reply (Admin, «رسمي») | Verified |
+| 11.6 | Backend | Recent reviews, community photos | Verified |
+| 11.7 | Backend | Profile photos | Verified |
+| 11.8 | Backend | Taste Setup, suggested people | Verified |
+| 11.9 | Backend | Password reset and change | Verified |
+| 11.10 | Backend | Notification settings, tests, report | Verified |
+| 11.11–11.21 | Mobile | Splash, Onboarding, Taste Setup, Saved, sheets, photos tab, menus, avatars, share, settings, passwords, report | Not started |
 
 ## Phase 10 checklist
 

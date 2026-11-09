@@ -59,4 +59,5 @@ public sealed record RestaurantDetailDto(
     int ReviewCount,
     bool? IsOpen,
     string? TodayHours,
-    RatingBreakdownDto? RatingBreakdown);
+    RatingBreakdownDto? RatingBreakdown,
+    bool IsSavedByMe = false);

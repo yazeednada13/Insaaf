@@ -20,6 +20,25 @@ public interface IUserAccountService
 
     Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>A 6-digit reset code for the account with this email, or null when there is none (Phase 11).</summary>
+    Task<PasswordResetCode?> GeneratePasswordResetCodeAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets a new password when the code is valid (Phase 11). A wrong code counts as a failed attempt for the
+    /// account lockout, so codes can't be guessed. Returns the account's id on success.
+    /// </summary>
+    Task<(PasswordChangeResult Result, Guid? UserId, IReadOnlyList<string> Errors)> ResetPasswordWithCodeAsync(
+        string email,
+        string code,
+        string newPassword,
+        CancellationToken cancellationToken = default);
+
+    Task<(PasswordChangeResult Result, IReadOnlyList<string> Errors)> ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Updates the profile; the username goes through Identity's validation and normalization.</summary>
     Task<ProfileUpdateResult> UpdateProfileAsync(
         Guid userId,
@@ -28,6 +47,19 @@ public interface IUserAccountService
         string? bio,
         CancellationToken cancellationToken = default);
 }
+
+public enum PasswordChangeResult
+{
+    Changed,
+    InvalidCode,
+    WrongPassword,
+    LockedOut,
+    InvalidPassword,
+    NotFound,
+}
+
+/// <summary>A password-reset code for an account (Phase 11). Never logged.</summary>
+public sealed record PasswordResetCode(Guid UserId, string Email, string Code);
 
 public enum ProfileUpdateResult
 {

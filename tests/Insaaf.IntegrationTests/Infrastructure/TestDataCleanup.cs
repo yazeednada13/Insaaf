@@ -36,6 +36,12 @@ internal static class TestDataCleanup
     private const string Delete = """
         DELETE FROM Notifications WHERE RecipientId IN (SELECT Id FROM @Users) OR ActorId IN (SELECT Id FROM @Users) OR ReviewId IN (SELECT Id FROM @Reviews);
         DELETE FROM ReviewPhotos WHERE Id IN (SELECT Id FROM @Photos);
+        DELETE FROM ReviewCommentLikes WHERE UserId IN (SELECT Id FROM @Users) OR CommentId IN (SELECT Id FROM ReviewComments WHERE UserId IN (SELECT Id FROM @Users) OR ReviewId IN (SELECT Id FROM @Reviews));
+        DELETE FROM SavedReviews WHERE UserId IN (SELECT Id FROM @Users) OR ReviewId IN (SELECT Id FROM @Reviews);
+        DELETE FROM SavedRestaurants WHERE UserId IN (SELECT Id FROM @Users) OR RestaurantId IN (SELECT Id FROM @Restaurants);
+        DELETE FROM ReviewReports WHERE ReporterUserId IN (SELECT Id FROM @Users) OR ReviewId IN (SELECT Id FROM @Reviews);
+        DELETE FROM ReviewReplies WHERE ReviewId IN (SELECT Id FROM @Reviews);
+        DELETE FROM UserFoodPreferences WHERE UserId IN (SELECT Id FROM @Users);
         DELETE FROM ReviewLikes WHERE UserId IN (SELECT Id FROM @Users) OR ReviewId IN (SELECT Id FROM @Reviews);
         DELETE FROM ReviewComments WHERE UserId IN (SELECT Id FROM @Users) OR ReviewId IN (SELECT Id FROM @Reviews);
         DELETE FROM UserFollows WHERE FollowerId IN (SELECT Id FROM @Users) OR FolloweeId IN (SELECT Id FROM @Users);

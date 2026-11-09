@@ -105,6 +105,80 @@ public sealed class IdentityUserAccountService : IUserAccountService
         return new AccountSignInResult(false, null, Array.Empty<string>());
     }
 
+    // Phase 11: passwords. The reset code comes from Identity's email token provider (a 6-digit time-based
+    // code tied to the security stamp), so a successful reset invalidates it.
+    private const string ResetPurpose = "ResetPassword";
+
+    public async Task<PasswordResetCode?> GeneratePasswordResetCodeAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user?.Email is null)
+        {
+            return null;
+        }
+
+        var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultEmailProvider, ResetPurpose);
+        return new PasswordResetCode(user.Id, user.Email, code);
+    }
+
+    public async Task<(PasswordChangeResult Result, Guid? UserId, IReadOnlyList<string> Errors)> ResetPasswordWithCodeAsync(
+        string email,
+        string code,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            return (PasswordChangeResult.InvalidCode, null, []);
+        }
+
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            return (PasswordChangeResult.LockedOut, null, []);
+        }
+
+        if (!await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultEmailProvider, ResetPurpose, code))
+        {
+            await _userManager.AccessFailedAsync(user);
+            return (PasswordChangeResult.InvalidCode, null, []);
+        }
+
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+        if (!result.Succeeded)
+        {
+            return (PasswordChangeResult.InvalidPassword, null, result.Errors.Select(error => error.Description).ToArray());
+        }
+
+        // The owner proved control of the email: clear failed attempts.
+        await _userManager.ResetAccessFailedCountAsync(user);
+        return (PasswordChangeResult.Changed, user.Id, []);
+    }
+
+    public async Task<(PasswordChangeResult Result, IReadOnlyList<string> Errors)> ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return (PasswordChangeResult.NotFound, []);
+        }
+
+        if (!await _userManager.CheckPasswordAsync(user, currentPassword))
+        {
+            return (PasswordChangeResult.WrongPassword, []);
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        return result.Succeeded
+            ? (PasswordChangeResult.Changed, [])
+            : (PasswordChangeResult.InvalidPassword, result.Errors.Select(error => error.Description).ToArray());
+    }
+
     public async Task<UserAccount?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());

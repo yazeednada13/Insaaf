@@ -19,7 +19,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 
                               Phase 3,5 → Phase 9
                               Phase 7,8 → Phase 8A
                               Phase 6,7,8,9 → Phase 9A
-                              Phase 7,8,8A,9,9A → Phase 10 → Phase 11
+                              Phase 7,8,8A,9,9A → Phase 10 → Phase 11 → Phase 12
 ```
 
 ---
@@ -232,7 +232,44 @@ The roadmap had no task table for this phase; these IDs were added at its planni
 
 ---
 
-## Phase 11 — Release (deferred)
+## Phase 11 — Completion (Figma parity)
+
+**Gate:** Every Figma screen and feature that needs no external account is built, and both tracks are reported.
+
+**Why (founder decision, 2026-11-09, ADR-021):** the last development phase. It closes the design gaps that the Phase 10 Figma review found.
+
+**Tasks** (IDs assigned at the planning gate):
+- **Backend:**
+  - 11.1 schema
+  - 11.2 saved items
+  - 11.3 comment likes
+  - 11.4 reports
+  - 11.5 official reply
+  - 11.6 recent reviews and community photos
+  - 11.7 avatars
+  - 11.8 Taste Setup
+  - 11.9 password reset and change
+  - 11.10 notification settings and the report
+- **Mobile:**
+  - 11.11 Splash
+  - 11.12 Onboarding
+  - 11.13 Taste Setup
+  - 11.14 Saved
+  - 11.15 verified sheet and recent reviews
+  - 11.16 photos tab
+  - 11.17 review menu, reply and comment likes
+  - 11.18 avatars
+  - 11.19 share
+  - 11.20 settings and passwords
+  - 11.21 verification and the report
+
+**Status:** Backend ✅, see [phase11-backend-report.md](phase11-backend-report.md). Mobile not started.
+
+**Excluded:** Google sign-in, skeleton loaders, «صور المطعم», hosting (Phase 12).
+
+---
+
+## Phase 12 — Release (deferred; was Phase 11 before ADR-021)
 
 **Gate:** Production deployed; monitoring; runbook; iOS verified; beta with real testers.
 

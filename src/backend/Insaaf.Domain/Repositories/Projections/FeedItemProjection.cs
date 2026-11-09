@@ -17,4 +17,7 @@ public sealed record FeedItemProjection(
     int CommentCount,
     bool IsLikedByViewer,
     bool ReviewerHasPublicProfile = true,
-    IReadOnlyList<ReviewPhotoProjection>? Photos = null);
+    IReadOnlyList<ReviewPhotoProjection>? Photos = null,
+    bool IsSavedByViewer = false,
+    ReviewReplyProjection? Reply = null,
+    string? ReviewerAvatarKey = null);

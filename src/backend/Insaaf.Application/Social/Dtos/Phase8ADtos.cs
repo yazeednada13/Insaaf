@@ -5,14 +5,20 @@ namespace Insaaf.Application.Social.Dtos;
 
 public sealed record NotificationsQuery(string? Cursor = null, int Limit = 20);
 
-/// <remarks><c>Type</c> is like, comment or follow; the device builds the text. <c>CreatedAt</c> is UTC.</remarks>
+/// <remarks>
+/// <c>Type</c> is like, comment, follow or reply; the device builds the text. For <c>reply</c> (Phase 11)
+/// the actor is the Admin who wrote it, so the device shows <c>Restaurant</c> instead. <c>CreatedAt</c> is UTC.
+/// </remarks>
 public sealed record NotificationDto(
     Guid Id,
     string Type,
     ReviewerDto Actor,
     Guid? ReviewId,
     DateTime CreatedAt,
-    bool IsRead);
+    bool IsRead,
+    NotificationRestaurantDto? Restaurant = null);
+
+public sealed record NotificationRestaurantDto(Guid Id, string Name);
 
 public sealed record NotificationListResultDto(IReadOnlyList<NotificationDto> Items, string? NextCursor);
 

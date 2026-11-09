@@ -65,6 +65,8 @@ public sealed class QueryCountTests
         await _api.SendAsync(HttpMethod.Put, $"/reviews/{reviewId}/like", viewer.AccessToken);
         await _api.SendAsync(HttpMethod.Post, $"/reviews/{reviewId}/comments", viewer.AccessToken, new { text = "تعليق" });
         await _api.SendAsync(HttpMethod.Put, $"/users/{user.Id}/follow", viewer.AccessToken);
+        await _api.SendAsync(HttpMethod.Put, $"/reviews/{reviewId}/save", viewer.AccessToken);
+        await _api.SendAsync(HttpMethod.Post, $"/reviews/{reviewId}/report", viewer.AccessToken, new { reason = "other" });
         await _api.SendAsync(HttpMethod.Put, $"/users/{viewer.Id}/follow", user.AccessToken);
         if (followee is not null)
         {
@@ -95,6 +97,13 @@ public sealed class QueryCountTests
             ("GET /home/suggested", "/home/suggested", viewer),
             ("GET /home/trending", "/home/trending", viewer),
             ("GET /admin/reviews", $"/admin/reviews?restaurantId={restaurantId}", admin),
+            // Phase 11.
+            ("GET /home/recent", "/home/recent", viewer),
+            ("GET /restaurants/{id}/photos", $"/restaurants/{restaurantId}/photos", viewer),
+            ("GET /users/me/saved/reviews", "/users/me/saved/reviews", viewer),
+            ("GET /users/me/saved/restaurants", "/users/me/saved/restaurants", viewer),
+            ("GET /users/suggested", "/users/suggested", viewer),
+            ("GET /admin/reports", "/admin/reports", admin),
         };
 
         var counts = new Dictionary<string, int>();

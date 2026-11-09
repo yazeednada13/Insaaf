@@ -64,15 +64,20 @@ public sealed class NotificationService : INotificationService
             {
                 NotificationType.Like => "like",
                 NotificationType.Comment => "comment",
+                NotificationType.Reply => "reply",
                 _ => "follow",
             },
-            new ReviewerDto(
+            UserAvatars.Reviewer(
                 notification.ActorId,
                 notification.ActorFullName,
                 notification.ActorUserName,
-                notification.ActorHasPublicProfile),
+                notification.ActorHasPublicProfile,
+                notification.ActorAvatarKey),
             notification.ReviewId,
             // datetime2 comes back with Kind=Unspecified; all stored timestamps are UTC.
             DateTime.SpecifyKind(notification.CreatedAt, DateTimeKind.Utc),
-            notification.ReadAt is not null);
+            notification.ReadAt is not null,
+            notification.Type == NotificationType.Reply && notification.RestaurantId is { } restaurantId
+                ? new NotificationRestaurantDto(restaurantId, notification.RestaurantName ?? string.Empty)
+                : null);
 }

@@ -38,6 +38,19 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
 
     public DbSet<ReviewPhoto> ReviewPhotos => Set<ReviewPhoto>();
 
+    // Phase 11.
+    public DbSet<SavedRestaurant> SavedRestaurants => Set<SavedRestaurant>();
+
+    public DbSet<SavedReview> SavedReviews => Set<SavedReview>();
+
+    public DbSet<ReviewCommentLike> ReviewCommentLikes => Set<ReviewCommentLike>();
+
+    public DbSet<ReviewReport> ReviewReports => Set<ReviewReport>();
+
+    public DbSet<ReviewReply> ReviewReplies => Set<ReviewReply>();
+
+    public DbSet<UserFoodPreference> UserFoodPreferences => Set<UserFoodPreference>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -54,5 +67,11 @@ public sealed class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRo
         builder.ApplyConfiguration(new UserFollowConfiguration());
         builder.ApplyConfiguration(new NotificationConfiguration());
         builder.ApplyConfiguration(new ReviewPhotoConfiguration());
+        builder.ApplyConfiguration(new SavedRestaurantConfiguration());
+        builder.ApplyConfiguration(new SavedReviewConfiguration());
+        builder.ApplyConfiguration(new ReviewCommentLikeConfiguration());
+        builder.ApplyConfiguration(new ReviewReportConfiguration());
+        builder.ApplyConfiguration(new ReviewReplyConfiguration());
+        builder.ApplyConfiguration(new UserFoodPreferenceConfiguration());
     }
 }

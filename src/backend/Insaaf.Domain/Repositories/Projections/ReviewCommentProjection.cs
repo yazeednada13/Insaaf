@@ -8,4 +8,7 @@ public sealed record ReviewCommentProjection(
     Guid AuthorId,
     string? AuthorFullName,
     string? AuthorUserName,
-    bool AuthorHasPublicProfile = true);
+    bool AuthorHasPublicProfile = true,
+    string? AuthorAvatarKey = null,
+    int LikeCount = 0,
+    bool IsLikedByViewer = false);

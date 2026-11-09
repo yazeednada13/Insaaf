@@ -352,6 +352,24 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewCommentLike", b =>
+                {
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CommentId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReviewCommentLikes", (string)null);
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.ReviewLike", b =>
                 {
                     b.Property<Guid>("ReviewId")
@@ -462,6 +480,114 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewReply", b =>
+                {
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("WrittenByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ReviewId");
+
+                    b.ToTable("ReviewReplies", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ReporterUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.HasIndex("ResolvedAt", "CreatedAt");
+
+                    b.HasIndex("ReviewId", "ReporterUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ReviewReports_Open_PerReporter")
+                        .HasFilter("[ResolvedAt] IS NULL");
+
+                    b.ToTable("ReviewReports", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.SavedRestaurant", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "RestaurantId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("SavedRestaurants", (string)null);
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.SavedReview", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "ReviewId");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("SavedReviews", (string)null);
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.UserFollow", b =>
                 {
                     b.Property<Guid>("FollowerId")
@@ -481,6 +607,21 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_UserFollows_NotSelf", "[FollowerId] <> [FolloweeId]");
                         });
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.UserFoodPreference", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("UserFoodPreferences", (string)null);
                 });
 
             modelBuilder.Entity("Insaaf.Domain.Entities.VisitToken", b =>
@@ -567,6 +708,10 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AvatarKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Bio")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
@@ -600,6 +745,21 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<bool>("NotifyComments")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NotifyFollows")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NotifyLikes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
@@ -617,6 +777,14 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("SuspendedByUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TastePriorities")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("TasteSetupCompletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -861,6 +1029,21 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewCommentLike", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.ReviewComment", null)
+                        .WithMany()
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.ReviewLike", b =>
                 {
                     b.HasOne("Insaaf.Domain.Entities.Review", null)
@@ -896,6 +1079,60 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewReply", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Review", null)
+                        .WithOne()
+                        .HasForeignKey("Insaaf.Domain.Entities.ReviewReply", "ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.ReviewReport", b =>
+                {
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Domain.Entities.Review", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.SavedRestaurant", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Restaurant", null)
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.SavedReview", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Review", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Insaaf.Domain.Entities.UserFollow", b =>
                 {
                     b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
@@ -907,6 +1144,21 @@ namespace Insaaf.Infrastructure.Persistence.Migrations
                     b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Insaaf.Domain.Entities.UserFoodPreference", b =>
+                {
+                    b.HasOne("Insaaf.Domain.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Insaaf.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

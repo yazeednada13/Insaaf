@@ -93,12 +93,28 @@ public static class DependencyInjection
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserModerationRepository, UserModerationRepository>();
+        services.AddScoped<ISavedRepository, SavedRepository>();
+        services.AddScoped<IReviewCommentLikeRepository, ReviewCommentLikeRepository>();
+        services.AddScoped<IReviewReportRepository, ReviewReportRepository>();
+        services.AddScoped<IReviewReplyRepository, ReviewReplyRepository>();
         services.AddSingleton<IAdminAuditLog, AdminAuditLog>();
 
         // Phase 9A: review photos. Files live outside the repository (checked at startup in Program.cs).
         services.Configure<PhotoStorageOptions>(configuration.GetSection(PhotoStorageOptions.SectionName));
         services.AddSingleton<IPhotoStorage, LocalPhotoStorage>();
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
+        services.AddSingleton<IAvatarStorage, LocalAvatarStorage>();
+
+        // Phase 11: email (password-reset codes). A local outbox unless SMTP is configured.
+        services.Configure<Email.EmailOptions>(configuration.GetSection(Email.EmailOptions.SectionName));
+        if (string.Equals(configuration["Email:Provider"], "smtp", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IEmailSender, Email.SmtpEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, Email.FileEmailSender>();
+        }
         services.AddScoped<IReviewPhotoRepository, ReviewPhotoRepository>();
         services.AddHostedService<ReviewPhotoCleanupHostedService>();
         services.AddSingleton<IVisitTokenCodec, VisitTokenCodec>();

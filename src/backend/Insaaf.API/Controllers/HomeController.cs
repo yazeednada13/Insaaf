@@ -16,10 +16,35 @@ namespace Insaaf.API.Controllers;
 public sealed class HomeController : ControllerBase
 {
     private readonly IHomeService _homeService;
+    private readonly IFeedService _feedService;
 
-    public HomeController(IHomeService homeService)
+    public HomeController(IHomeService homeService, IFeedService feedService)
     {
         _homeService = homeService;
+        _feedService = feedService;
+    }
+
+    /// <summary>«تقييمات حديثة» (Phase 11): everyone's public reviews, newest first, cursor-paged like the feed.</summary>
+    [HttpGet("recent")]
+    [ProducesResponseType(typeof(ApiResponse<FeedResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<FeedResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<FeedResultDto>>> Recent(
+        [FromQuery] FeedQuery query,
+        CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.FailEnvelope<FeedResultDto>("unauthorized", "Authentication is required.", StatusCodes.Status401Unauthorized);
+        }
+
+        try
+        {
+            return this.OkEnvelope(await _feedService.GetRecentAsync(userId, query, cancellationToken));
+        }
+        catch (SocialException ex)
+        {
+            return this.FailEnvelope<FeedResultDto>(ex.Code, ex.Message, ex.StatusCode);
+        }
     }
 
     [HttpGet("suggested")]

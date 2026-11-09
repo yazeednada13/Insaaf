@@ -13,4 +13,7 @@ public sealed record ReviewListItemProjection(
     int CommentCount = 0,
     bool IsLikedByViewer = false,
     bool ReviewerHasPublicProfile = true,
-    IReadOnlyList<ReviewPhotoProjection>? Photos = null);
+    IReadOnlyList<ReviewPhotoProjection>? Photos = null,
+    bool IsSavedByViewer = false,
+    ReviewReplyProjection? Reply = null,
+    string? ReviewerAvatarKey = null);

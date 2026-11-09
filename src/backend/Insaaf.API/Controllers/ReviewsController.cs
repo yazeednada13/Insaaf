@@ -24,16 +24,71 @@ public sealed class ReviewsController : ControllerBase
     private readonly IReviewService _reviewService;
     private readonly IReviewLikeService _likeService;
     private readonly IReviewCommentService _commentService;
+    private readonly ISavedService _savedService;
+    private readonly IReviewCommentLikeService _commentLikeService;
+    private readonly IReviewReportService _reportService;
 
     public ReviewsController(
         IReviewService reviewService,
         IReviewLikeService likeService,
-        IReviewCommentService commentService)
+        IReviewCommentService commentService,
+        ISavedService savedService,
+        IReviewCommentLikeService commentLikeService,
+        IReviewReportService reportService)
     {
+        _reportService = reportService;
         _reviewService = reviewService;
         _likeService = likeService;
         _commentService = commentService;
+        _savedService = savedService;
+        _commentLikeService = commentLikeService;
     }
+
+    // Phase 11: saving (private to the caller) and comment likes.
+
+    [HttpPut("save")]
+    [EnableRateLimiting(RateLimitingExtensions.SocialLikePolicy)]
+    [ProducesResponseType(typeof(ApiResponse<SavedStateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<SavedStateDto>), StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ApiResponse<SavedStateDto>>> Save(Guid id, CancellationToken cancellationToken) =>
+        Run(userId => _savedService.SaveReviewAsync(userId, id, cancellationToken));
+
+    [HttpDelete("save")]
+    [EnableRateLimiting(RateLimitingExtensions.SocialLikePolicy)]
+    [ProducesResponseType(typeof(ApiResponse<SavedStateDto>), StatusCodes.Status200OK)]
+    public Task<ActionResult<ApiResponse<SavedStateDto>>> Unsave(Guid id, CancellationToken cancellationToken) =>
+        Run(userId => _savedService.UnsaveReviewAsync(userId, id, cancellationToken));
+
+    [HttpPost("report")]
+    [EnableRateLimiting(RateLimitingExtensions.SocialCommentPolicy)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewReportedDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewReportedDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewReportedDto>), StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ApiResponse<ReviewReportedDto>>> Report(
+        Guid id,
+        [FromBody] ReportReviewRequest? request,
+        CancellationToken cancellationToken) =>
+        Run(userId => _reportService.ReportAsync(id, userId, request, cancellationToken));
+
+    [HttpPut("comments/{commentId:guid}/like")]
+    [EnableRateLimiting(RateLimitingExtensions.SocialLikePolicy)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewCommentLikeStateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewCommentLikeStateDto>), StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ApiResponse<ReviewCommentLikeStateDto>>> LikeComment(
+        Guid id,
+        Guid commentId,
+        CancellationToken cancellationToken) =>
+        Run(userId => _commentLikeService.LikeAsync(id, commentId, userId, cancellationToken));
+
+    [HttpDelete("comments/{commentId:guid}/like")]
+    [EnableRateLimiting(RateLimitingExtensions.SocialLikePolicy)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewCommentLikeStateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ReviewCommentLikeStateDto>), StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ApiResponse<ReviewCommentLikeStateDto>>> UnlikeComment(
+        Guid id,
+        Guid commentId,
+        CancellationToken cancellationToken) =>
+        Run(userId => _commentLikeService.UnlikeAsync(id, commentId, userId, cancellationToken));
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<ReviewDetailDto>), StatusCodes.Status200OK)]

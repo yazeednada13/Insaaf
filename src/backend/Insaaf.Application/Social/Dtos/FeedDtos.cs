@@ -19,7 +19,9 @@ public sealed record FeedItemDto(
     int LikeCount,
     int CommentCount,
     bool IsLikedByMe,
-    IReadOnlyList<ReviewPhotoDto> Photos);
+    IReadOnlyList<ReviewPhotoDto> Photos,
+    bool IsSavedByMe = false,
+    ReviewReplyDto? RestaurantReply = null);
 
 /// <remarks><c>NextCursor</c> is opaque, and null on the last page.</remarks>
 public sealed record FeedResultDto(IReadOnlyList<FeedItemDto> Items, string? NextCursor);

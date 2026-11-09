@@ -273,6 +273,26 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-021: Completion phase, official replies and Release as Phase 12
+
+**Status:** Accepted
+**Date:** 2026-11-09
+
+**Decision:**
+- **Phase 11 — Completion** is the last development phase. It builds every Figma screen and feature that needs no external account (Phase 10 §7.5 inventory).
+- **Release becomes Phase 12 (deferred).** Wherever ADR-007, ADR-018, ADR-019 and ADR-020 say "Phase 11" for hosting, cloud storage, iOS or the beta, that work is now Phase 12.
+- **Official restaurant replies** are written by an Admin in the restaurant's name, through the Admin API, and shown as «رسمي». There is no restaurant role; roles stay User and Admin. A reply never changes the review or its rating. Only creating a reply notifies the reviewer.
+- **Password reset:** a 6-digit code from Identity's email token provider. A wrong code counts toward the account lockout, and a reset signs out every device. Email goes through `IEmailSender`: a local outbox file in Development, SMTP when hosting (Phase 12).
+- **Google sign-in stays deferred**, because it needs the founder's Google Cloud account.
+- **Profile photos** use their own storage (`IAvatarStorage`, `{photo root}/avatars/`), the review-photo pipeline (no metadata) and a 512 px square crop. Admin accounts never show one.
+- **Taste Setup** stores real categories, which feed «مقترح لك», and priorities, which are stored only.
+- **Saved items** are private, and notification settings cover likes, comments and follows.
+- **Not built:** skeleton loaders (not in the Figma Make source) and «صور المطعم» (there are no restaurant accounts).
+
+**Rationale:** this closes the app's design while keeping the locked decisions: the two roles, the verified-review flow and Clean Architecture. Everything that needs an external account or hosting waits for Phase 12.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

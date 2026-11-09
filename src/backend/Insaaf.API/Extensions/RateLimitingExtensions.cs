@@ -22,6 +22,8 @@ public static class RateLimitingExtensions
     public const string AuthLoginPolicy = "auth-login";
     public const string AuthRegisterPolicy = "auth-register";
     public const string AuthRefreshPolicy = "auth-refresh";
+    public const string AuthForgotPolicy = "auth-forgot";
+    public const string AuthResetPolicy = "auth-reset";
 
     public static IServiceCollection AddInsaafRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
@@ -36,6 +38,9 @@ public static class RateLimitingExtensions
         var loginsPerMinute = configuration.GetValue("RateLimiting:AuthLoginPerMinute", 10);
         var registrationsPerMinute = configuration.GetValue("RateLimiting:AuthRegisterPerMinute", 5);
         var refreshesPerMinute = configuration.GetValue("RateLimiting:AuthRefreshPerMinute", 30);
+        // Phase 11: password reset. The per-account lockout also limits code guesses.
+        var forgotsPerMinute = configuration.GetValue("RateLimiting:AuthForgotPerMinute", 5);
+        var resetsPerMinute = configuration.GetValue("RateLimiting:AuthResetPerMinute", 10);
 
         services.AddRateLimiter(options =>
         {
@@ -58,6 +63,8 @@ public static class RateLimitingExtensions
             options.AddPolicy(AuthLoginPolicy, httpContext => PerIpFixedWindow(httpContext, loginsPerMinute));
             options.AddPolicy(AuthRegisterPolicy, httpContext => PerIpFixedWindow(httpContext, registrationsPerMinute));
             options.AddPolicy(AuthRefreshPolicy, httpContext => PerIpFixedWindow(httpContext, refreshesPerMinute));
+            options.AddPolicy(AuthForgotPolicy, httpContext => PerIpFixedWindow(httpContext, forgotsPerMinute));
+            options.AddPolicy(AuthResetPolicy, httpContext => PerIpFixedWindow(httpContext, resetsPerMinute));
         });
 
         return services;

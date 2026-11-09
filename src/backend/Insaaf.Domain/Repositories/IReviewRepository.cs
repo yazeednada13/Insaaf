@@ -34,6 +34,20 @@ public interface IReviewRepository
         int take,
         CancellationToken cancellationToken = default);
 
+    /// <summary>The viewer's saved reviews that are still public, newest review first (Phase 11).</summary>
+    Task<IReadOnlyList<FeedItemProjection>> ListSavedAsync(
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Everyone's public reviews of active restaurants, newest first (Phase 11, «تقييمات حديثة»).</summary>
+    Task<IReadOnlyList<FeedItemProjection>> ListRecentAsync(
+        Guid viewerUserId,
+        FeedCursor? after,
+        int take,
+        CancellationToken cancellationToken = default);
+
     /// <summary>The review's author, or null when the review doesn't exist.</summary>
     Task<Guid?> GetAuthorIdAsync(Guid reviewId, CancellationToken cancellationToken = default);
 

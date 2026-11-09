@@ -20,12 +20,42 @@ public sealed class AdminModerationController : ControllerBase
 {
     private readonly IReviewModerationService _reviews;
     private readonly IUserModerationService _users;
+    private readonly IReportAndReplyService _reportsAndReplies;
 
-    public AdminModerationController(IReviewModerationService reviews, IUserModerationService users)
+    public AdminModerationController(
+        IReviewModerationService reviews,
+        IUserModerationService users,
+        IReportAndReplyService reportsAndReplies)
     {
         _reviews = reviews;
         _users = users;
+        _reportsAndReplies = reportsAndReplies;
     }
+
+    // Phase 11: the report queue and official replies (written by an Admin in the restaurant's name).
+
+    [HttpGet("reports")]
+    public Task<ActionResult<ApiResponse<AdminReportListResultDto>>> ListReports(
+        [FromQuery] string? status,
+        [FromQuery] string? cursor,
+        [FromQuery] int limit = 20,
+        CancellationToken cancellationToken = default) =>
+        Run(_ => _reportsAndReplies.ListReportsAsync(new AdminReportListQuery(status, cursor, limit), cancellationToken));
+
+    [HttpPut("reports/{id:guid}/resolve")]
+    public Task<ActionResult<ApiResponse<AdminReportDto>>> ResolveReport(Guid id, CancellationToken cancellationToken) =>
+        Run(actorId => _reportsAndReplies.ResolveReportAsync(actorId, id, cancellationToken));
+
+    [HttpPut("reviews/{id:guid}/reply")]
+    public Task<ActionResult<ApiResponse<AdminReviewReplyDto>>> SetReply(
+        Guid id,
+        [FromBody] SetReviewReplyRequest? request,
+        CancellationToken cancellationToken) =>
+        Run(actorId => _reportsAndReplies.SetReplyAsync(actorId, id, request, cancellationToken));
+
+    [HttpDelete("reviews/{id:guid}/reply")]
+    public Task<ActionResult<ApiResponse<AdminReplyDeletedDto>>> DeleteReply(Guid id, CancellationToken cancellationToken) =>
+        Run(actorId => _reportsAndReplies.DeleteReplyAsync(actorId, id, cancellationToken));
 
     [HttpGet("reviews")]
     public Task<ActionResult<ApiResponse<AdminReviewListResultDto>>> ListReviews(
