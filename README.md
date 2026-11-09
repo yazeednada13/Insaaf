@@ -18,11 +18,11 @@ An Arabic, RTL-first mobile app for trustworthy restaurant reviews and social fo
 | 8 | Profiles | Complete |
 | 8A | Home, notifications and Taste Match | Complete |
 | 9 | Admin and moderation | Complete; Admin is API-only |
-| 9A | Review photos | Complete (not merged); device-tested on Android |
-| 10 | Hardening and beta (including iOS testing) | Not started |
-| 11 | Production readiness | Not started |
+| 9A | Review photos | Complete; device-tested on Android |
+| 10 | Hardening (local: security, tests, performance, Figma review, CI, hosting prep) | Not started |
+| 11 | Release (hosting, iOS, beta) | Deferred until hosting and an iPhone are available |
 
-**Open items:** iOS is untested (planned for Phase 10).
+**Open items:** iOS is untested and the app isn't hosted; both are in Phase 11 (deferred).
 
 ## Stack
 

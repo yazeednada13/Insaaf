@@ -240,6 +240,21 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-019: Roadmap — local hardening now, release later
+
+**Status:** Accepted
+**Date:** 2026-11-09
+
+**Decision:** Phases 10 and 11 are re-cut by what can be done without hosting or an iPhone.
+- **Phase 10 — Hardening (local):** security review, dependency checks, the deferred decisions, SQL Server integration tests, performance and Figma reviews on Android, CI without deployment, preparation for hosting, test-data cleanup.
+- **Phase 11 — Release (deferred):** hosting, deployment, cloud storage, monitoring, iOS testing, TestFlight and internal distribution, and the external beta. It starts only when hosting and an iPhone are available.
+
+**Rationale:** the founder has no hosting and no iPhone for now. This keeps every remaining task doable today, and leaves only work that truly needs those resources.
+
+**Consequence:** the original Phase 10 gate (TestFlight, internal distribution) moves to Phase 11. iOS stays untested until Phase 11.
+
+---
+
 ## Pending decisions
 
 | Item | Default |
