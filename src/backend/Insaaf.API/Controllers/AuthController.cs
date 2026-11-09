@@ -6,6 +6,7 @@ using Insaaf.Application.Common.Models;
 using Insaaf.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Insaaf.API.Controllers;
 
@@ -21,6 +22,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthRegisterPolicy)]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(
         [FromBody] RegisterRequest request,
@@ -58,6 +60,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(
         [FromBody] LoginRequest request,
@@ -75,6 +78,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthRefreshPolicy)]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Refresh(
         [FromBody] RefreshRequest request,

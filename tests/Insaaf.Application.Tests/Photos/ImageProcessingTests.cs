@@ -1,4 +1,5 @@
 using System.Text;
+using Insaaf.Application.Photos;
 using Insaaf.Infrastructure.Photos;
 using Microsoft.Extensions.Options;
 using SkiaSharp;
@@ -72,6 +73,49 @@ public sealed class ImageProcessingTests : IDisposable
 
         Assert.Equal(2048, result.Width);
         Assert.Equal(683, result.Height);
+    }
+
+    [Fact]
+    public void Thumbnail_IsAtMost640px_AndAJpegWithoutMetadata()
+    {
+        var jpeg = WithExif(Encode(TwoColor(1600, 1200), SKEncodedImageFormat.Jpeg), orientation: 1);
+
+        var result = _processor.Process(jpeg)!;
+
+        using var codec = SKCodec.Create(SKData.CreateCopy(result.ThumbnailJpeg));
+        Assert.Equal(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
+        Assert.Equal((640, 480), (codec.Info.Width, codec.Info.Height));
+        Assert.DoesNotContain("GPSTESTMARKER", Encoding.ASCII.GetString(result.ThumbnailJpeg));
+        Assert.True(result.ThumbnailJpeg.Length < result.Jpeg.Length);
+    }
+
+    [Fact]
+    public void Thumbnail_OfASmallImage_IsTheImageItself()
+    {
+        var result = _processor.Process(Encode(TwoColor(300, 200), SKEncodedImageFormat.Png))!;
+
+        Assert.Same(result.Jpeg, result.ThumbnailJpeg);
+    }
+
+    [Fact]
+    public async Task Storage_WritesTheThumbnailNextToTheAttempt()
+    {
+        var storage = CreateStorage();
+        var photoId = Guid.NewGuid();
+        var lease = Guid.NewGuid();
+
+        await storage.SaveThumbnailAsync(photoId, lease, new byte[] { 4, 5 });
+        var key = await storage.SaveAttemptAsync(photoId, lease, new byte[] { 1, 2, 3 });
+
+        await using (var thumbnail = await storage.OpenReadAsync(ReviewPhotos.ThumbnailKey(key)))
+        {
+            Assert.Equal(2, thumbnail!.Length);
+        }
+
+        Assert.Equal($"{photoId:N}/{lease:N}.thumb.jpg", ReviewPhotos.ThumbnailKey(key));
+        Assert.Equal(2, (await storage.ListFolderAsync(photoId)).Count);
+        await Assert.ThrowsAsync<IOException>(() => storage.SaveThumbnailAsync(photoId, lease, new byte[] { 6 }));
+        Assert.Null(await storage.OpenReadAsync($"{photoId:N}/{lease:N}.thumb.png"));
     }
 
     [Fact]

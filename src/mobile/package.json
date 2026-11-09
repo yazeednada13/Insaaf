@@ -10,7 +10,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint app features services config constants types",
+    "lint": "expo lint app features services config constants types utils",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

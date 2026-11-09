@@ -1,3 +1,4 @@
+using Insaaf.Application.Photos;
 using Insaaf.Application.Photos.Abstractions;
 
 namespace Insaaf.Application.Tests.Photos;
@@ -34,6 +35,17 @@ public sealed class FakePhotoStorage : IPhotoStorage
 
         Files[key] = (content.ToArray(), WriteTime ?? DateTime.UtcNow);
         return Task.FromResult(key);
+    }
+
+    public Task SaveThumbnailAsync(Guid photoId, Guid leaseId, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default)
+    {
+        if (FailSaves)
+        {
+            throw new IOException("Simulated storage failure.");
+        }
+
+        Files[ReviewPhotos.ThumbnailKey(KeyFor(photoId, leaseId))] = (content.ToArray(), WriteTime ?? DateTime.UtcNow);
+        return Task.CompletedTask;
     }
 
     public Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken = default) =>
@@ -89,6 +101,9 @@ public sealed class NoPhotoStorage : IPhotoStorage
 
     public Task<string> SaveAttemptAsync(Guid photoId, Guid leaseId, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default) =>
         _inner.SaveAttemptAsync(photoId, leaseId, content, cancellationToken);
+
+    public Task SaveThumbnailAsync(Guid photoId, Guid leaseId, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default) =>
+        _inner.SaveThumbnailAsync(photoId, leaseId, content, cancellationToken);
 
     public Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken = default) => _inner.OpenReadAsync(key, cancellationToken);
 

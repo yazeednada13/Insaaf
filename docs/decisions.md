@@ -255,6 +255,24 @@ Significant technical decisions. Read before making architectural changes. Updat
 
 ---
 
+## ADR-020: Hardening decisions (Phase 10)
+
+**Status:** Accepted
+**Date:** 2026-11-09
+
+**Decision:**
+- **Suspension (D-3):** a suspended account keeps its current access token until it expires (at most 15 minutes). Sign-in and refresh are refused at once. There is no per-request database check.
+- **Admin audit (D-4):** structured log lines stay the audit record. An audit table is reconsidered with hosting (Phase 11), when log retention is chosen.
+- **Token lifetimes (D-5):** access token 15 minutes, refresh token 7 days, with rotation and reuse detection.
+- **Auth rate limits (D-10):** per IP, per minute: login 10, register 5, refresh 30. Behind a proxy, `ReverseProxy:KnownProxies` must be set, or every user shares the proxy's IP.
+- **Signing key:** outside Development the API refuses to start with a key under 32 bytes or the committed development key.
+- **Card thumbnails (D-7):** each upload also stores a JPEG of at most 640 px next to the photo (`{leaseId}.thumb.jpg`), with no migration. Cards request `?size=thumb`; Review Detail keeps the full image. Photos uploaded before Phase 10 fall back to the full image.
+- **Integration tests (D-6):** SQL Server tests run against a separate database whose name must contain `IntegrationTests`. They never migrate, and they are skipped without a connection string (as in CI until Phase 11).
+
+**Rationale:** these keep the pilot simple and safe. They close the gaps found by the Phase 10 review without adding infrastructure that only makes sense once hosting exists.
+
+---
+
 ## Pending decisions
 
 | Item | Default |

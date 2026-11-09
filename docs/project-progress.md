@@ -1,17 +1,34 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-11-07
+**Last updated:** 2026-11-09
 
 ## Current state
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | — (Phase 9A merged; Phase 10 not started) |
+| **CURRENT PHASE** | Phase 10 — Hardening (local): work complete, report written; awaiting CI run and Android check |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
 | **COMPLETED** | Phases 0–9A (Phase 9A merged into `develop`, PR #11, `a7ddaa0`); Phases 8–9A device-tested on Android 2026-11-08; see [phase9a-report.md](phase9a-report.md). Earlier: [phase9-report.md](phase9-report.md) |
-| **NEXT** | Founder: check the login footer fix on the device; then `Phase 10` (local hardening, ADR-019) |
+| **NEXT** | Founder: push for CI, Android check (thumbnails, login footer, Figma pass); then the new final phase for the missing Figma screens (plan first) |
 | **BLOCKERS** | None. iOS untested and no hosting: both moved to Phase 11 (deferred, ADR-019) |
+
+## Phase 10 checklist
+
+See [phase10-report.md](phase10-report.md).
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 10.1 | Backend | Security review; F-2, F-3, F-7, F-8 fixed | Verified |
+| 10.2 | Both | Dependency checks and triage | Verified |
+| 10.3 | Backend | Deferred decisions (ADR-020) | Recorded |
+| 10.4 | Backend | SQL Server integration tests | Verified (22/22) |
+| 10.5 | Both | Performance, N+1 checks, card thumbnails | Verified locally; device pending |
+| 10.6 | Mobile | Figma review | Code review done; device pending |
+| 10.7 | Both | CI steps | Changed; GitHub run pending |
+| 10.8 | Backend | Hosting preparation | Verified locally (Docker not built) |
+| 10.9 | Backend | Test-data cleanup | Done by founder |
+| 10.10 | Both | Tests and report | Done |
 
 ## Phase 9A checklist
 

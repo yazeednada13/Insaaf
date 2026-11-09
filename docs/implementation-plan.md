@@ -215,7 +215,9 @@ The roadmap had no task table for this phase; these IDs were added at its planni
 
 **Why the change (founder decision, 2026-11-09, ADR-019):** there is no hosting and no iPhone for now. Everything that can be done locally and on Android moves here; everything that needs a server or iOS moves to Phase 11.
 
-**Scope** (task IDs are assigned at this phase's planning gate):
+**Tasks** (IDs assigned at the planning gate, 2026-11-09): 10.1 security review · 10.2 dependency checks · 10.3 deferred decisions · 10.4 SQL Server integration tests · 10.5 performance and thumbnails · 10.6 Figma review · 10.7 CI · 10.8 hosting preparation · 10.9 test-data cleanup · 10.10 tests and report. Status: [phase10-report.md](phase10-report.md).
+
+**Scope:**
 1. Full security review: auth, Admin, photo uploads, rate limits, logs without personal data, Swagger only in Development, configuration and secrets.
 2. Dependency vulnerability checks (`dotnet list package --vulnerable`, `npm audit`).
 3. Deferred decisions: per-request suspension check versus the 15-minute token, an audit table versus log lines, token lifetimes.

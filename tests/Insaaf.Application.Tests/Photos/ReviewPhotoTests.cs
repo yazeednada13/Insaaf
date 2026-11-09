@@ -426,19 +426,46 @@ public sealed class ReviewPhotoTests
     }
 
     [Fact]
-    public async Task Cleanup_SweepsSupersededAttemptFiles_ButKeepsTheServedOne()
+    public async Task Cleanup_SweepsSupersededAttemptFiles_ButKeepsTheServedOneAndItsThumbnail()
     {
         var token = await IssueAsync();
         var photoId = (await UploadAsync(_authorId, token, Guid.NewGuid())).Photo.Id;
         var served = (await LoadAsync(photoId)).Row.StorageKey!;
-        await _storage.SaveAttemptAsync(photoId, Guid.NewGuid(), new byte[] { 1 });
+        var superseded = Guid.NewGuid();
+        await _storage.SaveThumbnailAsync(photoId, superseded, new byte[] { 1 });
+        await _storage.SaveAttemptAsync(photoId, superseded, new byte[] { 1 });
 
         _now = _now.AddMinutes(11);
         await using var context = CreateContext();
         var report = await CreateCleanup(context).RunOnceAsync();
 
-        Assert.Equal(1, report.FilesSwept);
-        Assert.Equal([served], _storage.Files.Keys);
+        Assert.Equal(2, report.FilesSwept);
+        Assert.Equal(
+            new[] { served, ReviewPhotos.ThumbnailKey(served) }.Order(),
+            _storage.Files.Keys.Order());
+    }
+
+    [Fact]
+    public async Task Thumbnail_IsServedWhenAsked_AndFallsBackToTheFullImageWhenMissing()
+    {
+        var (_, photoIds) = await CreateReviewWithPhotosAsync(1);
+        var photoId = photoIds[0];
+        var key = (await LoadAsync(photoId)).Row.StorageKey!;
+        await using var context = CreateContext();
+        var service = CreatePhotoService(context);
+
+        await using (var full = await service.OpenServableAsync(photoId))
+        await using (var small = await service.OpenServableAsync(photoId, thumbnail: true))
+        {
+            Assert.NotEqual(full!.ETag, small!.ETag);
+            Assert.Contains("thumb", small.ETag);
+        }
+
+        // A photo from before Phase 10 has no thumbnail file: the full image is served for both.
+        _storage.Files.Remove(ReviewPhotos.ThumbnailKey(key));
+        await using var fallback = await service.OpenServableAsync(photoId, thumbnail: true);
+        Assert.NotNull(fallback);
+        Assert.DoesNotContain("thumb", fallback.ETag);
     }
 
     [Fact]

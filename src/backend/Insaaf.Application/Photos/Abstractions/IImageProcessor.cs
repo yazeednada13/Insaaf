@@ -1,7 +1,10 @@
 namespace Insaaf.Application.Photos.Abstractions;
 
-/// <summary>A decoded, re-encoded photo: JPEG bytes with no metadata.</summary>
-public sealed record ProcessedImage(byte[] Jpeg, int Width, int Height);
+/// <summary>
+/// A decoded, re-encoded photo: JPEG bytes with no metadata, plus a smaller copy for cards
+/// (Phase 10, D-7; the same bytes when the photo is already small).
+/// </summary>
+public sealed record ProcessedImage(byte[] Jpeg, int Width, int Height, byte[] ThumbnailJpeg);
 
 /// <summary>
 /// Turns an uploaded file into a safe JPEG (Phase 9A plan §7): decode, refuse anything that isn't a real

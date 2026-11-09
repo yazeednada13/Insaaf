@@ -36,6 +36,10 @@ jobs:
         run: dotnet build src/backend/Insaaf.sln --configuration Release
       - name: Test
         run: dotnet test src/backend/Insaaf.sln --configuration Release --no-build
+      # Report only (Phase 10): lists known vulnerable packages without failing the build.
+      - name: Vulnerable packages (report)
+        continue-on-error: true
+        run: dotnet list src/backend/Insaaf.sln package --vulnerable --include-transitive
 
   mobile:
     name: Mobile lint and typecheck
@@ -58,3 +62,14 @@ jobs:
       - name: Typecheck
         working-directory: src/mobile
         run: npm run typecheck --if-present
+      # Phase 10: the JavaScript bundle must build for both platforms (no native build, no upload).
+      - name: Bundle (Android and iOS)
+        working-directory: src/mobile
+        run: |
+          npx expo export --platform android --output-dir "$RUNNER_TEMP/export-android"
+          npx expo export --platform ios --output-dir "$RUNNER_TEMP/export-ios"
+      # Report only: runtime dependency advisories at critical level, without failing the build.
+      - name: npm audit (report)
+        continue-on-error: true
+        working-directory: src/mobile
+        run: npm audit --omit=dev --audit-level=critical

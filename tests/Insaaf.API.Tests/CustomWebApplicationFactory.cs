@@ -25,6 +25,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Identity:SeedAdmin:Enabled", "false");
         builder.UseSetting("Storage:ReviewPhotos:RootPath", PhotoRoot);
         builder.UseSetting("Storage:ReviewPhotos:CleanupIntervalMinutes", "0");
+        // Every test request comes from the same in-memory client, so auth limits are raised here and
+        // tested on their own host (AuthRateLimitTests).
+        builder.UseSetting("RateLimiting:AuthLoginPerMinute", "100000");
+        builder.UseSetting("RateLimiting:AuthRegisterPerMinute", "100000");
+        builder.UseSetting("RateLimiting:AuthRefreshPerMinute", "100000");
         ConfigureTestSettings(builder);
     }
 

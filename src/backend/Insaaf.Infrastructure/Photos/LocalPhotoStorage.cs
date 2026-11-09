@@ -4,13 +4,15 @@ using Microsoft.Extensions.Options;
 namespace Insaaf.Infrastructure.Photos;
 
 /// <summary>
-/// Local-disk photo storage for development and the pilot (D-1). Layout: <c>{root}/{photoId}/{leaseId}.jpg</c>.
+/// Local-disk photo storage for development and the pilot (D-1). Layout: <c>{root}/{photoId}/{leaseId}.jpg</c>,
+/// plus <c>{leaseId}.thumb.jpg</c> next to it (Phase 10).
 /// Keys are relative (<c>{photoId}/{leaseId}.jpg</c>) and are parsed back into GUIDs before any file
 /// access, so a key can never point outside the root. Phase 11 replaces this class with cloud storage.
 /// </summary>
 public sealed class LocalPhotoStorage : IPhotoStorage
 {
     private const string Extension = ".jpg";
+    private const string ThumbnailExtension = ".thumb.jpg";
     private const string TempSuffix = ".tmp";
 
     private readonly string _root;
@@ -28,7 +30,15 @@ public sealed class LocalPhotoStorage : IPhotoStorage
         ReadOnlyMemory<byte> content,
         CancellationToken cancellationToken = default)
     {
-        var finalPath = PathFor(photoId, leaseId);
+        await WriteNewFileAsync(PathFor(photoId, leaseId, Extension), content, cancellationToken);
+        return KeyFor(photoId, leaseId);
+    }
+
+    public Task SaveThumbnailAsync(Guid photoId, Guid leaseId, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default) =>
+        WriteNewFileAsync(PathFor(photoId, leaseId, ThumbnailExtension), content, cancellationToken);
+
+    private static async Task WriteNewFileAsync(string finalPath, ReadOnlyMemory<byte> content, CancellationToken cancellationToken)
+    {
         var tempPath = finalPath + TempSuffix;
         Directory.CreateDirectory(Path.GetDirectoryName(finalPath)!);
 
@@ -41,7 +51,6 @@ public sealed class LocalPhotoStorage : IPhotoStorage
 
         // The name belongs to this attempt only, so the rename never replaces another attempt's file.
         File.Move(tempPath, finalPath, overwrite: false);
-        return KeyFor(photoId, leaseId);
     }
 
     public Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken = default)
@@ -120,9 +129,9 @@ public sealed class LocalPhotoStorage : IPhotoStorage
 
     private string FolderFor(Guid photoId) => Path.Combine(_root, photoId.ToString("N"));
 
-    private string PathFor(Guid photoId, Guid leaseId) => Path.Combine(FolderFor(photoId), $"{leaseId:N}{Extension}");
+    private string PathFor(Guid photoId, Guid leaseId, string extension) => Path.Combine(FolderFor(photoId), $"{leaseId:N}{extension}");
 
-    // Only "{photoId}/{leaseId}.jpg" (and its ".tmp" when allowed) is accepted; anything else is refused.
+    // Only "{photoId}/{leaseId}.jpg" or ".thumb.jpg" (and their ".tmp" when allowed) is accepted; anything else is refused.
     private string? FilePathForKey(string key, bool allowTemp)
     {
         var parts = key.Split('/');
@@ -133,8 +142,9 @@ public sealed class LocalPhotoStorage : IPhotoStorage
 
         var name = parts[1];
         var bare = allowTemp && name.EndsWith(TempSuffix, StringComparison.Ordinal) ? name[..^TempSuffix.Length] : name;
-        if (!bare.EndsWith(Extension, StringComparison.Ordinal)
-            || !Guid.TryParseExact(bare[..^Extension.Length], "N", out _))
+        var extension = bare.EndsWith(ThumbnailExtension, StringComparison.Ordinal) ? ThumbnailExtension : Extension;
+        if (!bare.EndsWith(extension, StringComparison.Ordinal)
+            || !Guid.TryParseExact(bare[..^extension.Length], "N", out _))
         {
             return null;
         }

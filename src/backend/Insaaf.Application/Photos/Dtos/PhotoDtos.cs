@@ -17,11 +17,14 @@ public static class FileDeletionState
 /// <summary><see cref="Removed"/> means the photo is no longer visible; <see cref="FileDeletion"/> reports the files honestly.</summary>
 public sealed record PhotoRemovedDto(Guid PhotoId, bool Removed, string FileDeletion);
 
-/// <summary>A photo as shown on a review: its URL is a relative API path.</summary>
-public sealed record ReviewPhotoDto(Guid Id, string Url, int Width, int Height)
+/// <summary>
+/// A photo as shown on a review: its URLs are relative API paths. <c>ThumbnailUrl</c> (Phase 10, D-7) is
+/// at most 640 px on its longest side, for cards.
+/// </summary>
+public sealed record ReviewPhotoDto(Guid Id, string Url, string ThumbnailUrl, int Width, int Height)
 {
     public static ReviewPhotoDto From(Guid id, int width, int height) =>
-        new(id, $"/api/v1/review-photos/{id}", width, height);
+        new(id, $"/api/v1/review-photos/{id}", $"/api/v1/review-photos/{id}?size=thumb", width, height);
 }
 
 /// <summary>An image ready to send: the stream and its entity tag.</summary>

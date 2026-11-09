@@ -13,7 +13,7 @@ function photoUri(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `${API_BASE_URL}${url}`;
 }
 
-function Photo({ photo, radius, overlay }: { photo: ReviewPhotoDto; radius: number; overlay?: string }) {
+function Photo({ uri, radius, overlay }: { uri: string; radius: number; overlay?: string }) {
   // A removed or unreachable photo keeps the sand placeholder instead of a broken image (plan section 10).
   const [failed, setFailed] = useState(false);
 
@@ -23,7 +23,7 @@ function Photo({ photo, radius, overlay }: { photo: ReviewPhotoDto; radius: numb
         <Image
           accessibilityIgnoresInvertColors
           onError={() => setFailed(true)}
-          source={{ uri: photoUri(photo.url) }}
+          source={{ uri }}
           style={StyleSheet.absoluteFill}
         />
       )}
@@ -62,8 +62,9 @@ export function ReviewPhotoStrip({ photos, variant }: ReviewPhotoStripProps) {
         <Photo
           key={photo.id}
           overlay={variant === 'card' && index === CARD_LIMIT - 1 && extra > 0 ? `+${extra}` : undefined}
-          photo={photo}
           radius={radius}
+          // Cards load the small copy (Phase 10, D-7); the review screen keeps the full image.
+          uri={photoUri(variant === 'card' ? photo.thumbnailUrl : photo.url)}
         />
       ))}
     </View>

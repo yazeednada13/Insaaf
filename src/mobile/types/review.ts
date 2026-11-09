@@ -8,10 +8,12 @@ export interface ReviewerDto {
   hasPublicProfile: boolean;
 }
 
-/** Phase 9A: a Ready photo of a review. `url` is a relative API path. */
+/** Phase 9A: a Ready photo of a review. Both URLs are relative API paths. */
 export interface ReviewPhotoDto {
   id: string;
   url: string;
+  /** Phase 10: at most 640 px, for cards. */
+  thumbnailUrl: string;
   width: number;
   height: number;
 }
