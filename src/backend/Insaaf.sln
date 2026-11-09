@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insaaf.Application.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insaaf.API.Tests", "..\..\tests\Insaaf.API.Tests\Insaaf.API.Tests.csproj", "{3DC16310-E807-488D-9806-59265F8D4BBE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insaaf.IntegrationTests", "..\..\tests\Insaaf.IntegrationTests\Insaaf.IntegrationTests.csproj", "{A046DE46-925C-4CB4-856A-0B8A0DDE7453}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{3DC16310-E807-488D-9806-59265F8D4BBE}.Release|x64.Build.0 = Release|Any CPU
 		{3DC16310-E807-488D-9806-59265F8D4BBE}.Release|x86.ActiveCfg = Release|Any CPU
 		{3DC16310-E807-488D-9806-59265F8D4BBE}.Release|x86.Build.0 = Release|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Debug|x64.Build.0 = Debug|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Debug|x86.Build.0 = Debug|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Release|x64.ActiveCfg = Release|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Release|x64.Build.0 = Release|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Release|x86.ActiveCfg = Release|Any CPU
+		{A046DE46-925C-4CB4-856A-0B8A0DDE7453}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

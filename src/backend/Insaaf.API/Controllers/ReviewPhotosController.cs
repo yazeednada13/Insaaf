@@ -22,10 +22,16 @@ public sealed class ReviewPhotosController : ControllerBase
         _photos = photos;
     }
 
+    /// <summary>The photo; <c>?size=thumb</c> returns the card size (at most 640 px, Phase 10). Other sizes are 404.</summary>
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Get(Guid id, [FromQuery] string? size, CancellationToken cancellationToken)
     {
-        var photo = await _photos.OpenServableAsync(id, cancellationToken);
+        if (size is not null && size != "thumb")
+        {
+            return NotFound();
+        }
+
+        var photo = await _photos.OpenServableAsync(id, thumbnail: size == "thumb", cancellationToken);
         if (photo is null)
         {
             return NotFound();

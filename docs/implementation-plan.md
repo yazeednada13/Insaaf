@@ -209,19 +209,40 @@ The roadmap had no task table for this phase; these IDs were added at its planni
 
 ---
 
-## Phase 10 — Hardening and beta
+## Phase 10 — Hardening (local)
 
-**Gate:** Beta checklist; TestFlight/internal distribution ready
+**Gate:** Security review done and its findings fixed or recorded; repeatable SQL Server integration tests; performance and Figma reviews on Android done; CI runs build, tests and lint; the project is prepared for hosting without deploying it.
 
-Integration tests, perf, UI audit vs Figma, security review.
+**Why the change (founder decision, 2026-11-09, ADR-019):** there is no hosting and no iPhone for now. Everything that can be done locally and on Android moves here; everything that needs a server or iOS moves to Phase 11.
+
+**Tasks** (IDs assigned at the planning gate, 2026-11-09): 10.1 security review · 10.2 dependency checks · 10.3 deferred decisions · 10.4 SQL Server integration tests · 10.5 performance and thumbnails · 10.6 Figma review · 10.7 CI · 10.8 hosting preparation · 10.9 test-data cleanup · 10.10 tests and report. Status: [phase10-report.md](phase10-report.md).
+
+**Scope:**
+1. Full security review: auth, Admin, photo uploads, rate limits, logs without personal data, Swagger only in Development, configuration and secrets.
+2. Dependency vulnerability checks (`dotnet list package --vulnerable`, `npm audit`).
+3. Deferred decisions: per-request suspension check versus the 15-minute token, an audit table versus log lines, token lifetimes.
+4. Repeatable SQL Server integration tests from the smoke scripts and probes.
+5. Performance: queries and indexes; lists and photos on Android.
+6. UI review against Figma on Android, screen by screen.
+7. CI on GitHub: build, tests and lint (no deployment).
+8. Preparation for hosting without deploying: health checks, production configuration, a draft runbook, a Dockerfile, SkiaSharp Linux native assets.
+9. A cleanup tool for development test data (smoke and probe accounts, test restaurants and their photos).
+
+**Excluded:** hosting, deployment, cloud storage, monitoring in production, iOS testing, TestFlight, external beta (Phase 11).
 
 ---
 
-## Phase 11 — Production readiness
+## Phase 11 — Release (deferred)
 
-**Gate:** Production deployed; monitoring; runbook
+**Gate:** Production deployed; monitoring; runbook; iOS verified; beta with real testers.
 
-**Hosting selection** (Azure App Service + Azure SQL = current candidate). CI/CD for chosen provider. No cloud in Phases 0–10.
+**Starts only when** the founder has hosting and an iPhone available. Not scheduled.
+
+**Scope:**
+- Hosting selection (Azure App Service + Azure SQL is the current candidate, ADR-007), deployment, CI/CD for the chosen provider.
+- Photo storage in the cloud (behind `IPhotoStorage`), signed URLs or CDN if needed, production monitoring and log retention, final runbook.
+- iOS testing (RTL, permissions, camera, photos, caching), TestFlight and Android internal distribution.
+- Beta with real testers.
 
 ---
 

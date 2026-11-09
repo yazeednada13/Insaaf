@@ -16,6 +16,12 @@ public interface IPhotoStorage
     /// <summary>Writes the attempt's file (temp file, then a rename that never overwrites). Returns its key.</summary>
     Task<string> SaveAttemptAsync(Guid photoId, Guid leaseId, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Writes the attempt's thumbnail next to its file (Phase 10, D-7), the same way. Its key is
+    /// <see cref="ReviewPhotos.ThumbnailKey"/> of the attempt's key, so no database column is needed.
+    /// </summary>
+    Task SaveThumbnailAsync(Guid photoId, Guid leaseId, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default);
+
     /// <summary>The file for a key, or null when it doesn't exist.</summary>
     Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken = default);
 

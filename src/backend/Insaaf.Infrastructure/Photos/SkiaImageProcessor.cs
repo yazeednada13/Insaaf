@@ -13,6 +13,10 @@ public sealed class SkiaImageProcessor : IImageProcessor
     public const int MaxOutputSide = 2048;
     public const int JpegQuality = 85;
 
+    // Phase 10 (D-7): the card copy. Card tiles are about a third of the screen width.
+    public const int ThumbnailSide = 640;
+    public const int ThumbnailQuality = 80;
+
     // Refuse decompression bombs before allocating pixels.
     private const int MaxInputSide = 12_000;
     private const long MaxInputPixels = 50_000_000;
@@ -74,7 +78,44 @@ public sealed class SkiaImageProcessor : IImageProcessor
         canvas.Flush();
         using var snapshot = surface.Snapshot();
         using var encoded = snapshot.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
-        return encoded is null ? null : new ProcessedImage(encoded.ToArray(), outputWidth, outputHeight);
+        if (encoded is null)
+        {
+            return null;
+        }
+
+        var jpeg = encoded.ToArray();
+        var thumbnail = Thumbnail(snapshot, outputWidth, outputHeight) ?? jpeg;
+        return new ProcessedImage(jpeg, outputWidth, outputHeight, thumbnail);
+    }
+
+    // A smaller copy of the already oriented, metadata-free image; null when it's small enough already.
+    private static byte[]? Thumbnail(SKImage image, int width, int height)
+    {
+        var scale = (float)ThumbnailSide / Math.Max(width, height);
+        if (scale >= 1f)
+        {
+            return null;
+        }
+
+        var info = new SKImageInfo(
+            Math.Max(1, (int)Math.Round(width * scale)),
+            Math.Max(1, (int)Math.Round(height * scale)),
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info);
+        if (surface is null)
+        {
+            return null;
+        }
+
+        surface.Canvas.DrawImage(
+            image,
+            new SKRect(0, 0, info.Width, info.Height),
+            new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
+        surface.Canvas.Flush();
+        using var snapshot = surface.Snapshot();
+        using var encoded = snapshot.Encode(SKEncodedImageFormat.Jpeg, ThumbnailQuality);
+        return encoded?.ToArray();
     }
 
     // Maps source pixels (w × h) to the upright image:

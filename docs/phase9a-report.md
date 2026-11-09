@@ -3,7 +3,7 @@
 **Date:** 2026-11-08
 **Branch:** `feature/phase9a-review-photos` (from `develop` after the Phase 9 merge; the founder manages Git)
 **References:** the roadmap (Phase 9A), the approved Phase 9A plan (revision 5, decisions D-1…D-17), [decisions.md](decisions.md) ADR-011/ADR-017/ADR-018
-**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete, device-tested on Android** (§11)
+**Report status:** ✅ **Backend Track complete** · ✅ **Mobile Track complete, device-tested on Android** (§11) · ✅ Phase 9A merged into `develop` (PR #11, `a7ddaa0`)
 
 > This report separates three things: what was **verified by running it**, what was **checked by reading the code**, and what is **not verified**.
 

@@ -100,6 +100,42 @@ public sealed class PhotoEndpointsTests : IClassFixture<CustomWebApplicationFact
     }
 
     [Fact]
+    public async Task Thumbnail_IsServedForCards_AtMost640px_WithItsOwnETag()
+    {
+        var token = await IssueTokenAsync();
+        var author = await _api.RegisterAsync();
+        var photo = await ReadAsync<UploadedPhotoDto>(await UploadAsync(author, token, Guid.NewGuid(), Jpeg(1600, 1200)));
+        var review = await _api.SendAsync(HttpMethod.Post, "/api/v1/verification/reviews", author, new
+        {
+            token, rating = 4, foodRating = 4, serviceRating = 4, valueRating = 4, atmosphereRating = 4, text = "صورة كبيرة",
+            photoIds = new[] { photo.Id },
+        });
+        var reviewId = (await ReadAsync<VerifiedReviewCreatedDto>(review)).ReviewId;
+
+        var detail = await ReadAsync<ReviewDetailDto>(await _api.SendAsync(HttpMethod.Get, $"/api/v1/reviews/{reviewId}", author));
+        var dto = Assert.Single(detail.Photos);
+        Assert.Equal($"/api/v1/review-photos/{photo.Id}?size=thumb", dto.ThumbnailUrl);
+
+        var full = await _client.GetAsync(dto.Url);
+        var small = await _client.GetAsync(dto.ThumbnailUrl);
+        Assert.Equal(HttpStatusCode.OK, small.StatusCode);
+        Assert.Equal("image/jpeg", small.Content.Headers.ContentType!.MediaType);
+        Assert.True(small.Headers.CacheControl!.NoCache);
+        Assert.NotEqual(full.Headers.ETag, small.Headers.ETag);
+        using (var bitmap = SKBitmap.Decode(await small.Content.ReadAsByteArrayAsync()))
+        {
+            Assert.Equal((640, 480), (bitmap.Width, bitmap.Height));
+        }
+
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync($"/api/v1/review-photos/{photo.Id}?size=huge")).StatusCode);
+
+        // Moderation applies to the thumbnail as well.
+        var admin = await _api.AdminTokenAsync();
+        await _api.SendAsync(HttpMethod.Put, $"/api/v1/admin/reviews/{reviewId}/visibility", admin, new { hidden = true });
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(dto.ThumbnailUrl)).StatusCode);
+    }
+
+    [Fact]
     public async Task Uploads_AreRefusedForBadFilesAndOtherUsers_AndNeverRedeemTheToken()
     {
         var token = await IssueTokenAsync();
@@ -211,9 +247,9 @@ public sealed class PhotoEndpointsTests : IClassFixture<CustomWebApplicationFact
         return (await ReadAsync<IssuedVisitTokensDto>(issued)).Payloads.Single();
     }
 
-    private static byte[] Jpeg()
+    private static byte[] Jpeg(int width = 32, int height = 24)
     {
-        using var bitmap = new SKBitmap(32, 24);
+        using var bitmap = new SKBitmap(width, height);
         bitmap.Erase(SKColors.SeaGreen);
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, 90);

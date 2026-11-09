@@ -1,17 +1,34 @@
 # Insaaf — Project Progress
 
-**Last updated:** 2026-11-07
+**Last updated:** 2026-11-09
 
 ## Current state
 
 | Field | Value |
 |-------|-------|
-| **CURRENT PHASE** | 9A — Review photos (**Backend and Mobile complete**; device-tested on Android; not merged) |
+| **CURRENT PHASE** | Phase 10 — Hardening (local): work complete, report written; awaiting CI run and Android check |
 | **CURRENT FEATURE** | — |
 | **CURRENT TASK** | — |
-| **COMPLETED** | Phases 5–9 (Phase 9 merged into `develop`, PR #10, `983161a`); Phase 8, 8A and 9 Mobile not device-tested; see [phase9-report.md](phase9-report.md). Earlier: [phase8a-report.md](phase8a-report.md) |
-| **NEXT** | Founder: review [phase9a-report.md](phase9a-report.md); check the login footer fix on the device; Git checkpoint and PR; then Phase 10 |
-| **BLOCKERS** | None. Phase 8, 8A, 9 and 9A device checklists run on Android (2026-11-08, founder-reported). Open: iOS untested (Phase 10) |
+| **COMPLETED** | Phases 0–9A (Phase 9A merged into `develop`, PR #11, `a7ddaa0`); Phases 8–9A device-tested on Android 2026-11-08; see [phase9a-report.md](phase9a-report.md). Earlier: [phase9-report.md](phase9-report.md) |
+| **NEXT** | Founder: push for CI, Android check (thumbnails, login footer, Figma pass); then the new final phase for the missing Figma screens (plan first) |
+| **BLOCKERS** | None. iOS untested and no hosting: both moved to Phase 11 (deferred, ADR-019) |
+
+## Phase 10 checklist
+
+See [phase10-report.md](phase10-report.md).
+
+| Task | Track | Description | Status |
+|------|-------|-------------|--------|
+| 10.1 | Backend | Security review; F-2, F-3, F-7, F-8 fixed | Verified |
+| 10.2 | Both | Dependency checks and triage | Verified |
+| 10.3 | Backend | Deferred decisions (ADR-020) | Recorded |
+| 10.4 | Backend | SQL Server integration tests | Verified (22/22) |
+| 10.5 | Both | Performance, N+1 checks, card thumbnails | Verified locally; device pending |
+| 10.6 | Mobile | Figma review | Code review done; device pending |
+| 10.7 | Both | CI steps | Changed; GitHub run pending |
+| 10.8 | Backend | Hosting preparation | Verified locally (Docker not built) |
+| 10.9 | Backend | Test-data cleanup | Done by founder |
+| 10.10 | Both | Tests and report | Done |
 
 ## Phase 9A checklist
 
@@ -263,9 +280,9 @@ Login/Register screens are implemented against the Figma Make source (`AuthScree
 | 8 | Profiles | **Complete** (merged via PR #8, `84e320c`; device-tested 2026-11-08) |
 | 8A | Home, notifications and Taste Match | **Complete** (merged via PR #9, `b9ebbcc`; device-tested 2026-11-08) |
 | 9 | Admin and moderation | **Complete** (merged via PR #10, `983161a`; device-tested 2026-11-08) |
-| 9A | Review photos | **Complete, not merged** (Backend and Mobile; device-tested on Android 2026-11-08) |
-| 10 | Hardening and beta | Not started |
-| 11 | Production readiness | Not started |
+| 9A | Review photos | **Complete** (merged via PR #11, `a7ddaa0`; device-tested on Android 2026-11-08) |
+| 10 | Hardening (local) | Not started (re-cut by ADR-019) |
+| 11 | Release (hosting, iOS, beta) | Deferred until hosting and an iPhone are available (ADR-019) |
 
 ---
 

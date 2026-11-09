@@ -155,7 +155,9 @@ public sealed class ReviewPhotoCleanupService : IReviewPhotoCleanupService
         var removed = 0;
         foreach (var file in await _storage.ListFolderAsync(folder.PhotoId, cancellationToken))
         {
-            var isKept = keep is not null && (file.Key == keep || file.Key == keep + ".tmp");
+            var thumbnail = keep is null ? null : ReviewPhotos.ThumbnailKey(keep);
+            var isKept = keep is not null
+                && (file.Key == keep || file.Key == keep + ".tmp" || file.Key == thumbnail || file.Key == thumbnail + ".tmp");
             if (!isKept && file.LastWriteUtc < now - LeftoverFileAge)
             {
                 await _storage.DeleteFileAsync(file.Key, cancellationToken);

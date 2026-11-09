@@ -3,7 +3,11 @@ using Insaaf.API.Middleware;
 using Insaaf.Application;
 using Insaaf.Infrastructure;
 using Insaaf.Infrastructure.Identity;
+using Insaaf.Infrastructure.Health;
 using Insaaf.Infrastructure.Photos;
+using System.Net;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using Insaaf.Infrastructure.Persistence.Seeding;
 using Serilog;
@@ -27,6 +31,24 @@ try
     builder.Services.AddInsaafRateLimiting(builder.Configuration);
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddInsaafSwagger();
+    // Phase 10 (10.8): liveness and readiness probes for a future host.
+    builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+    // Behind a reverse proxy (Phase 11), trust forwarded headers only from the configured proxies.
+    var knownProxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
+    if (knownProxies.Length > 0)
+    {
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            foreach (var proxy in knownProxies)
+            {
+                options.KnownProxies.Add(IPAddress.Parse(proxy));
+            }
+        });
+    }
+
+    // Phase 10 (F-7): outside Development, refuse a weak or committed JWT signing key.
+    SecurityExtensions.EnsureProductionSigningKey(builder.Configuration, builder.Environment);
 
     var app = builder.Build();
 
@@ -35,7 +57,13 @@ try
         app.Services.GetRequiredService<IOptions<PhotoStorageOptions>>().Value.ResolveRoot(),
         app.Environment.ContentRootPath);
 
+    if (knownProxies.Length > 0)
+    {
+        app.UseForwardedHeaders();
+    }
+
     app.UseExceptionHandling();
+    app.UseInsaafSecurityHeaders();
 
     if (app.Environment.IsDevelopment())
     {
@@ -49,6 +77,11 @@ try
 
     if (!app.Configuration.GetValue<bool>("UseInMemoryDatabase"))
     {
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHsts();
+        }
+
         app.UseHttpsRedirection();
     }
 
@@ -57,6 +90,9 @@ try
     // After authentication so verification limits are partitioned per user.
     app.UseRateLimiter();
     app.MapControllers();
+    // Liveness: the process answers. Readiness: it can also reach the database. No details in the body.
+    app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+    app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
 
     app.Lifetime.ApplicationStarted.Register(() =>
     {

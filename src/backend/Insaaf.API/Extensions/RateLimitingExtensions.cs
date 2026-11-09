@@ -19,6 +19,9 @@ public static class RateLimitingExtensions
     public const string SocialFollowPolicy = "social-follow";
     public const string SocialSearchPolicy = "social-search";
     public const string VerificationPhotoPolicy = "verification-photo";
+    public const string AuthLoginPolicy = "auth-login";
+    public const string AuthRegisterPolicy = "auth-register";
+    public const string AuthRefreshPolicy = "auth-refresh";
 
     public static IServiceCollection AddInsaafRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
@@ -29,6 +32,10 @@ public static class RateLimitingExtensions
         var followsPerMinute = configuration.GetValue("RateLimiting:SocialFollowPerMinute", 30);
         var searchesPerMinute = configuration.GetValue("RateLimiting:SocialSearchPerMinute", 60);
         var photosPerMinute = configuration.GetValue("RateLimiting:VerificationPhotoPerMinute", 30);
+        // Phase 10 (F-3): anonymous auth routes are limited per client IP, on top of the per-account lockout.
+        var loginsPerMinute = configuration.GetValue("RateLimiting:AuthLoginPerMinute", 10);
+        var registrationsPerMinute = configuration.GetValue("RateLimiting:AuthRegisterPerMinute", 5);
+        var refreshesPerMinute = configuration.GetValue("RateLimiting:AuthRefreshPerMinute", 30);
 
         services.AddRateLimiter(options =>
         {
@@ -48,10 +55,24 @@ public static class RateLimitingExtensions
             options.AddPolicy(SocialFollowPolicy, httpContext => PerUserFixedWindow(httpContext, followsPerMinute));
             options.AddPolicy(SocialSearchPolicy, httpContext => PerUserFixedWindow(httpContext, searchesPerMinute));
             options.AddPolicy(VerificationPhotoPolicy, httpContext => PerUserFixedWindow(httpContext, photosPerMinute));
+            options.AddPolicy(AuthLoginPolicy, httpContext => PerIpFixedWindow(httpContext, loginsPerMinute));
+            options.AddPolicy(AuthRegisterPolicy, httpContext => PerIpFixedWindow(httpContext, registrationsPerMinute));
+            options.AddPolicy(AuthRefreshPolicy, httpContext => PerIpFixedWindow(httpContext, refreshesPerMinute));
         });
 
         return services;
     }
+
+    // Behind a reverse proxy, the client IP comes from forwarded headers (configured when hosting, Phase 11).
+    private static RateLimitPartition<string> PerIpFixedWindow(HttpContext httpContext, int permitsPerMinute) =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = permitsPerMinute,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            });
 
     private static RateLimitPartition<string> PerUserFixedWindow(HttpContext httpContext, int permitsPerMinute)
     {

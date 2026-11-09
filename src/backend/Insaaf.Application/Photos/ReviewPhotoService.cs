@@ -26,7 +26,8 @@ public interface IReviewPhotoService
     Task<PhotoRemovedDto> DeleteOwnAsync(Guid userId, Guid photoId, CancellationToken cancellationToken = default);
 
     /// <summary>The image of a Ready, attached photo of a public review, or null.</summary>
-    Task<ServablePhoto?> OpenServableAsync(Guid photoId, CancellationToken cancellationToken = default);
+    /// <summary>The image of a servable photo; <paramref name="thumbnail"/> asks for the card size (Phase 10, D-7).</summary>
+    Task<ServablePhoto?> OpenServableAsync(Guid photoId, bool thumbnail = false, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -177,12 +178,23 @@ public sealed class ReviewPhotoService : IReviewPhotoService
         return new PhotoRemovedDto(photoId, true, fileDeletion ?? throw NotFound());
     }
 
-    public async Task<ServablePhoto?> OpenServableAsync(Guid photoId, CancellationToken cancellationToken = default)
+    public async Task<ServablePhoto?> OpenServableAsync(Guid photoId, bool thumbnail = false, CancellationToken cancellationToken = default)
     {
         var key = await _photos.GetServableKeyAsync(photoId, cancellationToken);
         if (key is null)
         {
             return null;
+        }
+
+        // Photos uploaded before Phase 10 have no thumbnail: the full image is served instead.
+        if (thumbnail)
+        {
+            var thumbnailKey = ReviewPhotos.ThumbnailKey(key);
+            var small = await _storage.OpenReadAsync(thumbnailKey, cancellationToken);
+            if (small is not null)
+            {
+                return new ServablePhoto(small, $"\"{thumbnailKey.Replace('/', '-')}\"");
+            }
         }
 
         var content = await _storage.OpenReadAsync(key, cancellationToken);
@@ -235,6 +247,8 @@ public sealed class ReviewPhotoService : IReviewPhotoService
             timeout.CancelAfter(ProcessingTimeout);
             try
             {
+                // The thumbnail first: once the photo file exists, its thumbnail does too.
+                await _storage.SaveThumbnailAsync(photoId, leaseId, processed.ThumbnailJpeg, timeout.Token);
                 key = await _storage.SaveAttemptAsync(photoId, leaseId, processed.Jpeg, timeout.Token);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or OperationCanceledException)
